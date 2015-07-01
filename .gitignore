@@ -1,0 +1,12 @@
+
+.project
+
+.jshintrc
+
+.settings
+
+app/bower_components
+
+.tern-project
+
+node_modules

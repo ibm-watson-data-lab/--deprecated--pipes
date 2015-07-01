@@ -1,0 +1,30 @@
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-6">
+					<span>{{selectedConnection.name}}</span>
+				</div>
+				<div class="col-md-6">
+					
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="panel-body">
+		<ul class="nav nav-tabs">
+			<li role="presentation" ui-sref-active="active">
+				<a ui-sref="home.connectionDetails.tab({tab:'basic'})">Connection</a>
+			</li>
+			<li role="presentation" ui-sref-active="active">
+				<a ui-sref="home.connectionDetails.tab({tab:'monitoring'})">Monitoring</a>
+			</li>
+		</ul>
+		
+		<div ui-view>
+		</div>
+	</div>
+	<div class="panel-footer">
+		Footer Goes here
+	</div>
+</div>

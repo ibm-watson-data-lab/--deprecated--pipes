@@ -1,0 +1,22 @@
+html,body,.container-fluid
+{
+    height:100%;
+}
+
+.container-fluid
+{
+    display:table;
+    width: 100%;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+.row
+{
+    height: 100%;
+    display: table-row;
+}
+
+.no-float2 {
+    float: none; /* thanks baxabbit */
+}
