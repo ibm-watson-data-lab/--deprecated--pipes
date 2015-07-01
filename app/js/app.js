@@ -121,9 +121,8 @@ var mainApp = angular.module('dataMovingApp', [
  }]
 )
 
-.controller('connectionDetailController', ['$scope', '$http', '$location', '$state', '$stateParams','connectionsService', 'salesforceService',
-  function($scope, $http, $location, $state, $stateParams, connectionsService, salesforceService) {
-	//$state.go("tab", "{tab:'basic'}");
+.controller('connectionDetailController', ['$scope', '$http', '$location', '$stateParams','connectionsService', 'salesforceService',
+  function($scope, $http, $location, $stateParams, connectionsService, salesforceService) {
 	$scope.selectedConnection = connectionsService.findConnection( $stateParams.id);
 	
 	$scope.saveConnection = function(){

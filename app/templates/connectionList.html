@@ -9,7 +9,7 @@
 		
 		<ul class="nav nav-pills nav-stacked">
 			<li ng-repeat="connection in connections|filter:query as results" ui-sref-active="active">
-				<a ui-sref="home.connectionDetails({id:connection._id})">{{ (connection.new ? "*" : "") + connection.name}} </a>
+				<a ui-sref="home.connectionDetails.tab({tab:'basic', id:connection._id})">{{ (connection.new ? "*" : "") + connection.name}} </a>
 			</li>
 			<li class="animate-repeat" ng-if="results.length == 0"><strong>No results</strong></li>
 		</ul>
