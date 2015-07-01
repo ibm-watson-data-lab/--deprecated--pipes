@@ -113,7 +113,8 @@ pipeDb.listConnections = function( callback ){
 		db.view('application', allConnectionsView, {'include_docs':true},
 			function(err, data) {
 				if ( err ){
-					return callback( err );
+					//No connections yet, return empty array
+					return callback( null, [] );
 				}
 				return callback( null, _.map( data.rows, function( row ){
 					return outboundPayload(row.doc);

@@ -1,6 +1,6 @@
 {
-  "name": "data-moving-tool",
-  "description": "Data Moving Tool",
+  "name": "pipes",
+  "description": "CDS Data Pipes Tool",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
