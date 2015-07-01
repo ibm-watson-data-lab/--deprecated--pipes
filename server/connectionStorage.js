@@ -13,7 +13,7 @@ var allConnectionsView = "all_connections";
 
 var pipeDb = new cloudant(dbName, {
 	views:{
-		 allConnectionsView:{
+		 "all_connections":{
 			 map: function(doc){
 				 emit( doc._id, {'_id': doc._id} );
 			 }
@@ -85,6 +85,7 @@ pipeDb.saveConnection = function( conn, callback ){
 		conn._id = null;
 		delete conn["new"];
 	}
+	
 	this.getConnection( conn._id, function( err, connection ){
 		if ( !err ){
 			//Connection already exist, fetch the revision
@@ -93,7 +94,7 @@ pipeDb.saveConnection = function( conn, callback ){
 			
 			conn = inboundPayload( connection, conn );
 		}
-		
+
 		this.run( function( err, db ){
 			if ( err ){
 				return callback(err);
