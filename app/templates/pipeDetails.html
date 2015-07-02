@@ -1,0 +1,40 @@
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-6">
+					<span>{{selectedPipe.name}}</span>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="panel-body">
+		<ul class="nav nav-tabs">
+			<li role="presentation" ui-sref-active="active">
+				<a ui-sref="home.pipeDetails.tab({tab:'basic'})">Pipe</a>
+			</li>
+			<li role="presentation" ui-sref-active="active">
+				<a ui-sref="home.pipeDetails.tab({tab:'monitoring'})">Monitoring</a>
+			</li>
+		</ul>
+		
+		<div ui-view>
+		</div>
+	</div>
+	<div class="panel-footer">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="btn-group btn-group pull-right" role="group">
+						<button type="button" ng-class="['btn', 'btn-default']" ng-click="runNow()">
+							Run now
+						</button>
+						<button type="button" ng-class="['btn', 'btn-default' ]" ng-click="savePipe()">
+							Save
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

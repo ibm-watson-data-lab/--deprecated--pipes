@@ -1,26 +1,26 @@
 'use strict';
 
-var cachedConnections = [];	//cache of existing connections
-var newConnections = [];	//placeholder for newly created connections
+var cachedPipes = [];	//cache of existing pipes
+var newPipes = [];	//placeholder for newly created newPipe
 
-angular.module('connections', [],function() {
+angular.module('pipes', [],function() {
 
 })
 
-.factory('connectionsService',function($q, $http){ 
+.factory('pipesService',function($q, $http){ 
 	function cache(){
-		return _.union( cachedConnections, newConnections )
+		return _.union( cachedPipes, newPipes )
 	}
 	
     return {
-        listConnections: function(){        	
+        listPipes: function(){        	
         	var deferred = $q.defer();
-        	if ( cachedConnections.length > 0 ){
+        	if ( cachedPipes.length > 0 ){
         		deferred.resolve( cache() );
         	}else{
-	        	$http.get('/connections')
+	        	$http.get('/pipes')
 	        		.success(function(data) {
-	        			cachedConnections = data;
+	        			cachedPipes = data;
 	        			deferred.resolve( cache() );
 	        		})
 	        		.error( function (data, status, headers, config ){
@@ -29,19 +29,19 @@ angular.module('connections', [],function() {
         	}        	
         	return deferred.promise;
         },
-        findConnection: function( id ){
+        findPipe: function( id ){
         	return _.find( cache(), function( conn ){
         		return conn._id === id;
         	});
         },
-        removeConnection: function( id ){
+        removePipe: function( id ){
         	var deferred = $q.defer();
-        	var conn = this.findConnection( id );
+        	var conn = this.findPipe( id );
         	if ( !conn ){
-        		return deferred.reject("Unable to find connection for " + id );
+        		return deferred.reject("Unable to find pipe for " + id );
         	}
         	
-        	$http.delete('/connections/' + id)
+        	$http.delete('/pipes/' + id)
         		.success(function(data) {
         			deferred.resolve();
         		})
@@ -51,33 +51,33 @@ angular.module('connections', [],function() {
         	
         	return deferred.promise;
         },
-        createConnection: function(){
+        createPipe: function(){
         	var deferred = $q.defer();
         	var seq = 1;
         	var name;
         	while ( true ){
-        		name = "Connection " + seq++;
-        		if ( ! _.find( newConnections, function( conn ){
+        		name = "Pipe " + seq++;
+        		if ( ! _.find( newPipes, function( conn ){
         			return conn.name == name;
         		})){
         			break;
         		}
         	}
         	
-        	var newConnection = {
+        	var newPipe = {
         		name: name,
         		_id: name,
         		loginUrl: "https://login.salesforce.com",
         		"new": true
         	};
         	
-        	newConnections.push( newConnection );
-        	deferred.resolve( newConnection );
+        	newPipes.push( newPipe );
+        	deferred.resolve( newPipe );
         	return deferred.promise;
         },
-        saveConnection: function( connection ){
+        savePipe: function( pipe ){
         	var deferred = $q.defer();
-        	$http.post('/connections', connection, {json: true})
+        	$http.post('/pipes', pipe, {json: true})
         		.success(function(data) {
         			deferred.resolve();
         		})

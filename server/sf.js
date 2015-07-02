@@ -8,7 +8,8 @@
 var jsforce = require('jsforce');
 var _ = require('lodash');
 var async = require('async');
-var pipeDb = require('./connectionStorage');
+var pipeDb = require('./pipeStorage');
+var pipeRunner = require("./pipeRunner");
 var misc = require("./misc");
 
 //Test data
@@ -35,58 +36,80 @@ var testConfig = new function(){
 	}
 };
 
-function sf( connId ){
-	this.connId = connId;	//Remember our connection id which should never change
+function sf( pipeId ){
+	this.pipeId = pipeId;	//Remember our pipe id which should never change
 	
 	//Private APIs
-	var getConnection = function( callback ){
-		pipeDb.getConnection( this.connId, function( err, connection ){
+	var getPipe = function( callback, noFilterForOutbound ){
+		pipeDb.getPipe( this.pipeId, function( err, pipe ){
 			if ( err ){
 				return callback( err );
 			}
 			
-			callback( null, connection );			
-		}.bind(this));
+			callback( null, pipe );			
+		}.bind(this), noFilterForOutbound || false);
 	}.bind(this);
 	
-	var getOAuthConfig = function( connection ){
-		return new jsforce.OAuth2({
-			 loginUrl: connection.loginUrl || "https://login.salesforce.com",
-			 clientId: connection.clientId,
-		     clientSecret: connection.clientSecret,
-		     redirectUri: "https://127.0.0.1:8082/authCallback"
-		});
-	}
-	
 	//Public APIs
-	this.connect = function( req, res, callback ){
-		getConnection( function( err, connection ){
-			if ( err ){
-				return callback( err );
-			}
-			console.log( "Trying to connect using : " + JSON.stringify( connection ) );
-			//Redirect authorization
-			res.redirect( getOAuthConfig( connection ).getAuthorizationUrl({ scope : 'api id web', state: connection._id }));
-			
+	this.getOAuthConfig = function( pipe ){
+		return new jsforce.OAuth2({
+			 loginUrl: pipe.loginUrl || "https://login.salesforce.com",
+			 clientId: pipe.clientId,
+		     clientSecret: pipe.clientSecret,
+		     redirectUri: "https://127.0.0.1:8082/authCallback"
 		});
 	};
 	
-	this.authorize = function( code, callback ){
-		getConnection( function( err, toolConnection ){
+	this.connect = function( req, res, callback ){
+		getPipe( function( err, pipe ){
 			if ( err ){
 				return callback( err );
 			}
-			console.log("Authorizing connection using : " + JSON.stringify( toolConnection ));
-			var conn = new jsforce.Connection({ oauth2 : getOAuthConfig( toolConnection ) });
+			console.log( "Trying to connect using : " + JSON.stringify( pipe ) );
+			//Redirect authorization
+			res.redirect( this.getOAuthConfig( pipe ).getAuthorizationUrl({ scope : 'api id web', state: pipe._id }));
+			
+		}.bind( this ));
+	};
+	
+	this.authorize = function( code, callback ){
+		getPipe( function( err, pipe ){
+			if ( err ){
+				return callback( err );
+			}
+			console.log("Authorizing pipe using : " + JSON.stringify( pipe ));
+			var conn = new jsforce.Connection({ oauth2 : this.getOAuthConfig( pipe ) });
 			if ( !conn || !code ){
 				return callback( "Unable to get SalesForce Connection" );
 			}
 			
 			conn.authorize(code, function(err, userInfo){
-				return callback( err, userInfo, conn, toolConnection );
+				return callback( err, userInfo, conn, pipe );
 			});			
-		});		
-	}
+		}.bind( this ));		
+	};
+	
+	this.run = function( callback ){
+		getPipe( function( err, pipe ){
+			if ( err ){
+				return callback( err );
+			}
+			console.log( "Running pipe using : " + JSON.stringify( pipe ) );
+			if ( pipe.run ){
+				//Can't create a new run while a run is in progress
+				return callback( "Error: a run is already in progress " );
+			}
+			
+			var pipeRunnerInstance = new pipeRunner( this, pipe );			
+			pipeRunnerInstance.newRun( function( err, pipeRun ){
+				if ( err ){
+					//Couldn't start the run
+					return callback( err );
+				}
+				return callback( null, pipeRun );
+			});
+		}.bind( this ), true);
+	};
 
 }
 

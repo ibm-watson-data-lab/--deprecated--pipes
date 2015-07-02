@@ -2,7 +2,7 @@
 
 /* Main App Module */
 var mainApp = angular.module('dataMovingApp', [
-  'connections',
+  'pipes',
   'salesforce',
   'ngCookies',
   'ngResource',
@@ -27,38 +27,38 @@ var mainApp = angular.module('dataMovingApp', [
         .state('home', {
             url:'',
             views: {
-	            'connectionList': {
-	                templateUrl: '/templates/connectionList.html',
-	                controller: 'connectionsController'
+	            'pipeList': {
+	                templateUrl: '/templates/pipeList.html',
+	                controller: 'pipesController'
 	            },
-	            'connectionDetails':{
+	            'pipeDetails':{
 	            	templateUrl: "/templates/home.html"
 	            }
 	        }
         })
-        .state('home.connectionDetails', {
+        .state('home.pipeDetails', {
             url:'/:id',
             resolve:{
             	//Return a promise that will be resolved before the controller is instantiated
-		        connectionList:  function(connectionsService){
-		           return connectionsService.listConnections();
+		        pipeList:  function(pipesService){
+		           return pipesService.listPipes();
 		        }
             },
             views: {
-            	'connectionDetails@' : {
-            		templateUrl: '/templates/connectionDetails.html',
-            	   	controller: 'connectionDetailController'
+            	'pipeDetails@' : {
+            		templateUrl: '/templates/pipeDetails.html',
+            	   	controller: 'pipeDetailController'
             	}
             }
         })
-        .state('home.connectionDetails.tab',{
-        	parent: 'home.connectionDetails',
+        .state('home.pipeDetails.tab',{
+        	parent: 'home.pipeDetails',
     		url:'/tab/:tab',
 			templateUrl: function (stateParams){
 				if ( !stateParams.tab ){
 					return '/templates/home.html';
 				}
-				return '/templates/connectionDetails.' + stateParams.tab + '.html';
+				return '/templates/pipeDetails.' + stateParams.tab + '.html';
             },
 			controller: ['$scope', '$stateParams', function($scope, $stateParams){
 				$scope.tabName = $stateParams.tab;
@@ -79,41 +79,41 @@ var mainApp = angular.module('dataMovingApp', [
  }]
 )
 
-.controller('connectionsController', ['$scope', '$rootScope', '$http', '$location', 'connectionsService',
-  function($scope, $rootScope, $http, $location, connectionsService) {
+.controller('pipesController', ['$scope', '$rootScope', '$http', '$location', 'pipesService',
+  function($scope, $rootScope, $http, $location, pipesService) {
 	
-	function listConnections(){
-		connectionsService.listConnections().then( 
-			function(connections){
-				$scope.connections = connections;
+	function listPipes(){
+		pipesService.listPipes().then( 
+			function(pipes){
+				$scope.pipes = pipes;
 			},function( reason ){
-				console.log("error reading list of connections: " + reason );
+				console.log("error reading list of pipes: " + reason );
 			}
 		);
 	}
 	
-	listConnections();
+	listPipes();
 	
-	$scope.createNewConnection = function(){
-		connectionsService.createConnection()
-		.then( function( connection ){
-			listConnections();
+	$scope.createNewPipe = function(){
+		pipesService.createPipe()
+		.then( function( pipe ){
+			listPipes();
 			$scope.$apply();
 		}, function( reason ){
-			alert("Unable to create new connection: " + reason );
+			alert("Unable to create new pipe: " + reason );
 		});
 	}
 	
-	$scope.removeConnection = function(){
+	$scope.removePipe = function(){
 		if ( !$rootScope.$stateParams.id ){
-			alert("No Connection selected");
+			alert("No Pipe selected");
 		}else{
-			connectionsService.removeConnection( $rootScope.$stateParams.id ).then(
+			pipesService.removePipe( $rootScope.$stateParams.id ).then(
 				function(){
-					console.log("Connection " + $rootScope.$stateParams.id + " successfully removed");
+					console.log("Pipe " + $rootScope.$stateParams.id + " successfully removed");
 				},
 				function( err ){
-					alert("Unable to remove the connection: " + err );
+					alert("Unable to remove the pipe: " + err );
 				}
 			);
 		}
@@ -121,17 +121,17 @@ var mainApp = angular.module('dataMovingApp', [
  }]
 )
 
-.controller('connectionDetailController', ['$scope', '$http', '$location', '$stateParams','connectionsService', 'salesforceService',
-  function($scope, $http, $location, $stateParams, connectionsService, salesforceService) {
-	$scope.selectedConnection = connectionsService.findConnection( $stateParams.id);
+.controller('pipeDetailController', ['$scope', '$http', '$location', '$stateParams','pipesService', 'salesforceService',
+  function($scope, $http, $location, $stateParams, pipesService, salesforceService) {
+	$scope.selectedPipe = pipesService.findPipe( $stateParams.id);
 	
-	$scope.saveConnection = function(){
-		connectionsService.saveConnection( $scope.selectedConnection ).then(
+	$scope.savePipe = function(){
+		pipesService.savePipe( $scope.selectedPipe ).then(
 			function(){
-				console.log("Connection " + $scope.selectedConnection._id + " successfully saved");
+				console.log("Pipe " + $scope.selectedPipe._id + " successfully saved");
 			},
 			function( err ){
-				alert("Unable to save connection: " + err );
+				alert("Unable to save pipe: " + err );
 			}
 		);
 	}
@@ -141,7 +141,7 @@ var mainApp = angular.module('dataMovingApp', [
 	}
 	
 	$scope.connect = function(){
-		var loginWindow = window.open("/sf/" + $scope.selectedConnection._id);
+		var loginWindow = window.open("/sf/" + $scope.selectedPipe._id);
 		if ( loginWindow ){
 			var timer = setInterval( function(){
 				if ( loginWindow.closed ){
@@ -155,8 +155,19 @@ var mainApp = angular.module('dataMovingApp', [
 	}
 	
 	$scope.selectTable = function(table){
-		$scope.selectedConnection.selectedTableName = table.name;
-		$scope.selectedConnection.selectAllTables = false;
+		$scope.selectedPipe.selectedTableId = table.name;
+		$scope.selectedPipe.selectAllTables = false;
+	}
+	
+	$scope.runNow = function(){
+		salesforceService.runPipe( $scope.selectedPipe ).then(
+			function(){
+				console.log("Pipe " + $scope.selectedPipe._id + " successfully started");
+			},
+			function( err ){
+				alert("Error while running pipe: " + err );
+			}
+		);
 	}
  }]
 )

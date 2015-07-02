@@ -41,7 +41,7 @@ if ('development' === env || 'test' === env) {
 
 //Configure the endpoints
 require("./server/sfAPI")(app);	//Saleforce
-require("./server/connectionAPI")(app);	//Connection configuration
+require("./server/pipeAPI")(app);	//Pipe configuration
 
 var port = process.env.VCAP_APP_PORT || process.env.DEV_PORT;
 var connected = function() {

@@ -8,22 +8,22 @@
 var sf = require('./sf');
 var _ = require('lodash');
 var async = require('async');
-var pipeDb = require('./connectionStorage');
+var pipeDb = require('./pipeStorage');
 var misc = require("./misc");
 
 module.exports = function( app ){	
 	app.get("/authCallback", function( req, res ){
 		var code = req.param('code');
-		var connId = req.param('state');
+		var pipeId = req.param('state');
 		
-		if ( !code || !connId ){
+		if ( !code || !pipeId ){
 			return misc.jsonError( res, "No code or state specified in OAuth callback request");
 		}
 		
-		console.log("OAuth callback called with connection id: " + connId );
-		var sfObject = new sf( connId );
+		console.log("OAuth callback called with pipe id: " + pipeId );
+		var sfObject = new sf( pipeId );
 		
-		sfObject.authorize(code, function(err, userInfo, jsForceConnection, toolConnection ){
+		sfObject.authorize(code, function(err, userInfo, jsForceConnection, pipe ){
 			if (err) { 
 				return misc.jsonError( res, err );
 			}
@@ -73,8 +73,8 @@ module.exports = function( app ){
 					console.log( tables[i].name + " : " + tables[i].labelPlural );
 				}
 
-				toolConnection.tables = tables;
-				toolConnection.sf = {
+				pipe.tables = tables;
+				pipe.sf = {
 						accessToken: jsForceConnection.accessToken,
 						refreshToken: jsForceConnection.refreshToken,
 						instanceUrl: jsForceConnection.instanceUrl,
@@ -82,8 +82,8 @@ module.exports = function( app ){
 						orgId: userInfo.organizationId
 				};
 
-				//Save the connection
-				pipeDb.saveConnection( toolConnection, function( err, data ){
+				//Save the pipe
+				pipeDb.savePipe( pipe, function( err, data ){
 					if ( err ){
 						return json.miscError( res, err );
 					}
@@ -102,6 +102,17 @@ module.exports = function( app ){
 				return misc.jsonError( res, err );
 			}
 			return res.json( results );
+		});
+	});
+	
+	app.post("/sf/:id", function( req, res ){
+		var sfConnection = new sf( req.params.id );
+		sfConnection.run( function( err, run ){
+			if ( err ){
+				return misc.jsonError( res, err );
+			}
+			//Return a 202 accepted code to the client with information about the run
+			return res.status( 202 ).json( run.getId() );
 		});
 	});
 }

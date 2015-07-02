@@ -2,7 +2,7 @@
 <html lang="en" ng-app="dataMovingApp">
 <head>
   <meta charset="utf-8">
-  <title>Data Moving Tool</title>
+  <title>Pipes</title>
   <script src="bower_components/angular/angular.js"></script>
   <script src="bower_components/angular-resource/angular-resource.js"></script>
   <script src="bower_components/angular-cookies/angular-cookies.js"></script>
@@ -11,13 +11,14 @@
   <script src="bower_components/angular-ui-router/release/angular-ui-router.js"></script>
   <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/bootstrap.icon-large.min.css">
   <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.min.css" type="text/css"/>
   <script src="bower_components/jquery/dist/jquery.min.js"></script>
   <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
   <script src="bower_components/lodash/dist/lodash.min.js"></script>
   <script src="js/app.js"></script>
-  <script src="js/connections.js"></script>
+  <script src="js/pipes.js"></script>
   <script src="js/salesforce.js"></script>
 </head>
 <body>	
@@ -29,9 +30,9 @@
 	
 	<div class="container-fluid" style="margin-top:60px">
 		<div class="row">
-			<div class="col-md-2" ui-view="connectionList">
+			<div class="col-md-2" ui-view="pipeList">
 			</div>
-			<div class="col-md-8" ui-view="connectionDetails">
+			<div class="col-md-8" ui-view="pipeDetails">
 			</div>
 			<div class="col-md-2">
 			</div>
