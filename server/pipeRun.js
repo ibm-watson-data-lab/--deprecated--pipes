@@ -14,6 +14,7 @@ function pipeRun( pipe, jsForceConnection ){
 		type : "run",
 		startTime : null,
 		endTime : null,
+		pipeId: pipe._id
 	}
 	this.conn = jsForceConnection;
 	
