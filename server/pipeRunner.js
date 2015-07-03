@@ -23,7 +23,25 @@ function pipeRunner( sf, pipe ){
 	}.bind( this );
 	
 	var genViewsManager = function(){
-		return new cloudant.views('_design/application');
+		var tables = getSourceTables();
+		var viewsManager = [];
+		_.forEach( tables, function( table ){
+			var manager = new cloudant.views('_design/' + table.name);
+			manager.addView(
+				table.labelPlural || table.label || table.name,
+				JSON.parse("{"+
+					"\"map\": \"function(doc){" +
+						"if ( doc.pt_type === '" + table.name + "'){" +
+							"emit( doc._id, {'_id': doc._id} );" +
+						"}" +
+					"}\"" +
+				"}"
+				), 1 //Version
+			);
+			viewsManager.push( manager );
+		})
+		return viewsManager;
+		
 	}.bind( this );
 	
 	/**

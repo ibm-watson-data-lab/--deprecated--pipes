@@ -102,6 +102,8 @@ function storage( serviceDbName, viewsManager ){
 										if ( version < viewDef.version ){
 											recreateDesignDoc = true;
 										}
+									}else{
+										recreateDesignDoc = true;
 									}
 								});
 							}						

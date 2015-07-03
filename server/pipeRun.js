@@ -49,9 +49,11 @@ function pipeRun( pipe, jsForceConnection ){
 			});
 		})
 		.on("end", function(query) {
+			console.log("Finished processing table " + table.name + ". Stats: " + JSON.stringify(stats)); 
 			return callback(null, stats);
 		})
 		.on("error", function(err) {
+			console.log("Error while processing table " + table.name + ". Error is " + err );
 			return callback( err );
 		})
 		.run({ autoFetch : true, maxFetch : 4000 });
