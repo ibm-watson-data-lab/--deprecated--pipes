@@ -1,9 +1,7 @@
 'use strict';
 
 /**
- * Watson Tooling Service Manager main module
- * 
- *   Service Manager provide lifecycle management for the tooling instances
+ * CDS Pipe Tool main module
  * 
  * @author David Taieb
  */

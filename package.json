@@ -1,14 +1,18 @@
 {
-  "name": "data-moving-tool",
+  "name": "pipes",
   "version": "0.1.0",
   "description": "Tool for moving data to the cloud: e.g. Salesforce to Cloud",
   "main": "server.js",
   "scripts": {
   	"postinstall": "bower cache clean && bower install"
   },
-  "repository": "",
+  "repository": "https://github.com/ibm-cds-labs/pipes",
   "keywords": [
-    "tracking"
+    "dataworks",
+    "Salesforce",
+    "dashDb",
+    "Cloudant",
+    "Data Movement"
   ],
   "dependencies": {
         "express": "^4.10.6",
@@ -20,7 +24,8 @@
         "cfenv": "*",
         "jsforce": "^1.4.1",
         "morgan": "^1.6.0",
-        "when": "~3.7.3"
+        "when": "~3.7.3",
+        "moment": "2.10.3"
    },
    "devDependencies": {
         "mocha": "*"

@@ -107,27 +107,14 @@ pipeDb.savePipe = function( pipe, callback ){
 		delete pipe["new"];
 	}
 	
-	this.getPipe( pipe._id, function( err, storedPipe ){
-		if ( !err ){
-			//storedPipe already exist, fetch the revision
-			pipe._rev = storedPipe._rev;
-			pipe._id = storedPipe._id;
-			
-			pipe = inboundPayload( storedPipe, pipe );
+	this.upsert( pipe._id, function( storedPipe ){
+		return inboundPayload( storedPipe, pipe );
+	}, function( err, data ){
+		if ( err ){
+			return callback( err );
 		}
-
-		this.run( function( err, db ){
-			if ( err ){
-				return callback(err);
-			}
-			db.insert( pipe, pipe._id, function( err, data ){
-				if ( err ){
-					return callback(err);
-				}
-				return callback( null, outboundPayload(data) );
-			});
-		});
-	}.bind( this ), true);
+		return callback( null, outboundPayload(data) );
+	});
 }
 
 pipeDb.listPipes = function( callback ){
@@ -167,24 +154,29 @@ pipeDb.removePipe = function( id, callback ){
 }
 
 /**
- * Create a new Run for specified pipe
+ * Create or Save a Run for specified pipe
  */
-pipeDb.createNewRun = function(pipe, run, callback){	
-	this.upsert( null, function( doc ){
+pipeDb.saveRun = function(pipe, run, callback){	
+	this.upsert( run._id, function( doc ){
 		return run;
 	}, function( err, runDoc ){
 		if ( err ){
 			return callback( err );
 		}
 		
-		//Add the run to doc
-		this.upsert( pipe._id, function( storedPipe ){
-			storedPipe.run = runDoc._id;
-		}, function( err ){
-			if ( err ){
-				return callback( err );
-			}			
-		})
+		//Add the run to doc if needed
+		if ( pipe.run !== runDoc._id ){
+			this.upsert( pipe._id, function( storedPipe ){
+				if ( !runDoc.status ){
+					storedPipe.run = runDoc._id;
+				}
+				return storedPipe;
+			}, function( err ){
+				if ( err ){
+					return callback( err );
+				}			
+			});
+		}
 		return callback( null, runDoc );
 	}.bind(this));
 }

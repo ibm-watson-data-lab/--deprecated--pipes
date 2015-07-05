@@ -47,11 +47,11 @@ function pipeRunner( sf, pipe ){
 				JSON.parse("{"+
 					"\"map\": \"function(doc){" +
 						"if ( doc.pt_type === '" + table.name + "'){" +
-							"emit( doc._id, {'_id': doc._id} );" +
+							"emit( doc._id, {'_id': doc._id, 'rev': doc._rev } );" +
 						"}" +
 					"}\"" +
 				"}"
-				), 1 //Version
+				), 2 //Version
 			);
 			viewsManager.push( manager );
 		})

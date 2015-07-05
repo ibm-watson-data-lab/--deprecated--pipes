@@ -26,7 +26,7 @@ angular.module('salesforce', [],function() {
         			deferred.resolve( data );
         		})
         		.error( function (data, status, headers, config ){
-        			deferred.reject( status );
+        			deferred.reject( (data && data.error) || status );
         		});
         	
         	return deferred.promise;

@@ -97,7 +97,9 @@ function sf( pipeId ){
 			console.log( "Running pipe using : " + JSON.stringify( pipe ) );
 			if ( pipe.run ){
 				//Can't create a new run while a run is in progress
-				return callback( "Error: a run is already in progress " );
+				var message = "Error: a run is already in progress for pipe " + pipe.name;
+				console.log( message );
+				return callback( message );
 			}
 			
 			var pipeRunnerInstance = new pipeRunner( this, pipe );			

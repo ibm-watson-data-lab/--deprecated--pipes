@@ -162,6 +162,8 @@ function storage( serviceDbName, viewsManager ){
 		return callback( null, self.storageDb );
 	};
 	
+	this.savesInProgress = {};
+	
 	/**
 	 * Update doc if exists, insert a new one if not
 	 * @param: docId
@@ -173,27 +175,54 @@ function storage( serviceDbName, viewsManager ){
 			if ( err ){
 				return callback(err);
 			}
-			db.get( docId, { include_docs: true }, function( err, body ){
-				var id = body && body._id;
-				var rev = body && body._rev;
-				//Let caller modify doc if already exists, caller can replace with entirely new doc, however, doc id will be reestablished if doc
-				//already exists
+			
+			var insert = function( body ){
+				//Let caller modify doc if already exists, caller can replace with entirely new doc, however, doc id will be reestablished if doc already exists
+				var id = body && (body._id || body.id);
+				var rev = body && (body._rev || body.rev);
 				body = callback( body );				
 				if ( body ){
-					if ( id && rev ){
-						body._id = id;
-						body._rev = rev;
-					}
-					
+					body._id = body._id || id || undefined;
+					body._rev = body._rev || rev || undefined;
 					db.insert( body, body._id, function( err, data ){
+						if ( id && this.savesInProgress.hasOwnProperty( id )){
+							delete this.savesInProgress[id];
+						}
 						if ( err ){
+							console.log( "Error while saving doc: " + err );
 							return done(err);
 						}
-						return done( null, data );
-					});
+						//always set the id and rev if available
+						body._id = (data && (data.id || data._id)) || body._id;
+						body._rev = (data && (data.rev || data._rev)) || body._rev;
+						return done( null, body );
+					}.bind( this ));
+				}else{
+					//Caller didn't give us the data, return error
+					return done("Error during upsert: Caller didn't return a valid document");
 				}
+			}.bind( this );
+			
+			if ( !docId ){
+				return insert( null );
+			}
+			
+			if ( this.savesInProgress.hasOwnProperty( docId ) ){
+				console.log("Deferring save of document: " + docId );
+				//Wait for the other save to finish
+				return setTimeout( function(){
+					return this.upsert( docId, callback, done );
+				}.bind(this), 1000 );
+			}
+			
+			//Mark this document as being saved
+			this.savesInProgress[docId] = true;
+			
+			//We have a docId, load it
+			db.get( docId, { include_docs: true }, function( err, body ){				
+				return insert( body );
 			});
-		});
+		}.bind(this));
 	};
 	
 	/**
@@ -212,7 +241,7 @@ function storage( serviceDbName, viewsManager ){
 							return callback( err );
 						}
 						var docs = _.map( data.rows, function( row ){
-							return {id: row.id || row._id, rev: row.rev||row._rev};
+							return {id: row.id || row.value._id, rev: row.value.rev||row.value._rev};
 						});					
 						return callback( null, docs );
                 	});

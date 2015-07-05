@@ -8,13 +8,15 @@
 var pipeDb = require("./pipeStorage");
 var _ = require("lodash");
 var async = require("async");
+var moment = require("moment");
 
 function pipeRun( pipe, jsForceConnection ){
 	this.pipe = pipe;
 	this.runDoc = {
 		type : "run",
-		startTime : null,
+		startTime : moment(),
 		endTime : null,
+		elapsedTime: 0,
 		pipeId: pipe._id
 	}
 	this.conn = jsForceConnection;
@@ -27,7 +29,8 @@ function pipeRun( pipe, jsForceConnection ){
 	var processTable = function( table, runListener, callback ){
 		var stats = {
 			tableName : table.name,
-			numRecords: 0
+			numRecords: 0,
+			errors: []
 		};
 		var selectStmt = "SELECT ";
 		var first = true;
@@ -45,6 +48,7 @@ function pipeRun( pipe, jsForceConnection ){
 			record.pt_type = table.name; 
 			runListener.onNewRecord( record, stats, function( err, savedItem ){
 				if ( err ){
+					stats.errors.push( err );
 					return callback( err );
 				}				
 			});
@@ -55,6 +59,7 @@ function pipeRun( pipe, jsForceConnection ){
 		})
 		.on("error", function(err) {
 			console.log("Error while processing table " + table.name + ". Error is " + err );
+			stats.errors.push( err );
 			return callback( err );
 		})
 		.run({ autoFetch : true, maxFetch : 4000 });
@@ -67,39 +72,79 @@ function pipeRun( pipe, jsForceConnection ){
 			}
 			return storedPipe;
 		}, function( err, doc ){
-			
+			if ( err ){
+				console.log( "Error while saving pipe information: " + err );
+			}
 		});
-	}
+		
+		//Compute the final stats and save the run
+		var runDoc = this.runDoc;
+		runDoc.numRecords = 0;
+		runDoc.stats = {};
+		var hasErrors = false;
+		_.forEach( statsArray, function(stats){
+			runDoc.stats[stats.tableName] = stats;
+			//Aggregate records for this table
+			runDoc.numRecords += stats.numRecords;
+			if ( stats.errors.length > 0 ){
+				hasErrors = true;
+			}
+		});
+		
+		if ( err ){
+			runDoc.status = "Unsuccessful run: " + err;
+		}else if( hasErrors ){
+			runDoc.status = "Succesfully completed with errors";
+		}else{
+			runDoc.status = "Successfully completed";
+		}
+		
+		//Set the end time and elapsed time
+		runDoc.endTime = moment();
+		runDoc.elapsedTime = moment.duration( runDoc.endTime.diff( runDoc.startTime ) ).humanize();
+		
+		
+		pipeDb.saveRun( pipe, runDoc, function( err, runDoc ){
+			if ( err ){
+				console.log("Unable to save run information: " + err );
+			}
+		})
+	}.bind(this);
 	
 	//Public APIs
 	this.processSourceTables = function( tables, runListener ){
 		//Create a new run document for this pipe in the cloudant db
-		pipeDb.createNewRun( pipe, this.runDoc,function( err, runDoc ){
+		pipeDb.saveRun( pipe, this.runDoc,function( err, runDoc ){
 			if ( err ){
 				return err;
 			}
 			//Save the running doc
 			this.runDoc = runDoc;
 			
-			var processTableFunctions = [];
-			if ( _.isFunction( runListener.beforeProcessTable ) ){
-				processTableFunctions.push( function(table, callback ){
-					runListener.beforeProcessTable(table, callback );
+			var getProcessTableFunctions = function( table ){
+				var processTableFunctions = [];
+				if ( _.isFunction( runListener.beforeProcessTable ) ){
+					processTableFunctions.push( function( callback ){
+						runListener.beforeProcessTable(table, callback );
+					});
+				}
+				processTableFunctions.push( function( callback ){
+					processTable( table, runListener, function( err, stats ){
+						if ( err ){
+							return callback( err );
+						}
+						//Process for this table was successful, roll up the stats
+						return callback( null, stats );
+					});		
 				});
+				return processTableFunctions;
 			}
-			processTableFunctions.push( function( table, callback ){
-				processTable( table, runListener, function( err, stats ){
-					if ( err ){
-						return callback( err );
-					}
-					//Process for this table was successful, roll up the stats
-					return callback( null, stats );
-				});		
-			});
 			
 			async.map( tables, function( table, callback ){
 				//Call the processTable with runListener events in series
-				async.applyEachSeries( processTableFunctions, table, callback );
+				async.series( getProcessTableFunctions(table), function( err, results){
+					return callback(err, _.find( results, function( result ){return result != null}));
+				});
 			}, function( err, statsArray ){
 				//Call when all tables have finished processing
 				finish( err, statsArray );
