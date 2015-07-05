@@ -13,6 +13,10 @@ angular.module('pipes', [],function() {
 	}
 	
     return {
+    	allTables: {
+    		labelPlural: "All Tables",
+    		name: null
+    	},
         listPipes: function(){        	
         	var deferred = $q.defer();
         	if ( cachedPipes.length > 0 ){

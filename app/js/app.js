@@ -154,9 +154,17 @@ var mainApp = angular.module('dataMovingApp', [
 		}
 	}
 	
+	$scope.getTablesList = function(){
+		var tables = [ pipesService.allTables ];
+		_.forEach( $scope.selectedPipe.tables, function( table ){
+			tables.push( table );
+		});
+		return tables;
+	}
+	
 	$scope.selectTable = function(table){
+		$scope.selectedPipe.selectedTableName = table.labelPlural;
 		$scope.selectedPipe.selectedTableId = table.name;
-		$scope.selectedPipe.selectAllTables = false;
 	}
 	
 	$scope.runNow = function(){
