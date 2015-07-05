@@ -76,7 +76,7 @@ function outboundPayload( pipe ){
 		});
 	}
 	
-	if ( result.hasOwnProperty( "sf ") ){
+	if ( result.hasOwnProperty( "sf") ){
 		delete result.sf;
 	}
 	return result;

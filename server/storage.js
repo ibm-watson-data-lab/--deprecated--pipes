@@ -194,7 +194,63 @@ function storage( serviceDbName, viewsManager ){
 				}
 			});
 		});
-	}
+	};
+	
+	/**
+	 * Delete all docs in a view
+	 */
+	this.deleteDocsFromView = function( designName, viewName, callback ){
+		console.log("Deleting all docs in view: " + designName + " / " + viewName );
+		this.run( function( err, db ){
+			if ( err ){
+				return callback( err );
+			}
+			async.waterfall([
+                function( callback ){
+                	db.view(designName, viewName, function(err, data) {
+						if ( err ){
+							return callback( err );
+						}
+						var docs = _.map( data.rows, function( row ){
+							return {id: row.id || row._id, rev: row.rev||row._rev};
+						});					
+						return callback( null, docs );
+                	});
+                },
+                function( docs, callback ){
+                	if ( docs.length == 0 || docs[0].rev ){
+                		//We either have no docs to delete, or rev is already retrieved
+                		return callback( null, docs );
+                	}
+                	
+                	//Call bulk api to fetch revs
+                	db.fetchRevs( { keys: _.map( docs, function(doc){
+                			return doc.id;
+                		})}, function( err, body ){
+                			if ( err ){
+                				return callback( err );
+                			}
+                			return callback( null, _.map(body.rows, function( row ){
+                					return {id:row.id, rev: row.value.rev};
+                				}) 
+                			);
+                		}
+                	);
+                },
+                function( docs, callback ){
+                	//Delete all docs one by one
+                	async.each( docs, function( doc, callback ){
+                		db.destroy( doc.id, doc.rev, callback );
+                	}, function( err ){
+                		return callback( err );
+                	});
+                }],
+                function( err, results ){
+					return callback( err );
+				}
+			);
+		});
+	};
 }
 
 //Extend event Emitter

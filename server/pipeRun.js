@@ -6,6 +6,7 @@
 */
 
 var pipeDb = require("./pipeStorage");
+var _ = require("lodash");
 var async = require("async");
 
 function pipeRun( pipe, jsForceConnection ){
@@ -79,14 +80,26 @@ function pipeRun( pipe, jsForceConnection ){
 			}
 			//Save the running doc
 			this.runDoc = runDoc;
-			async.map( tables, function( table, callback ){
+			
+			var processTableFunctions = [];
+			if ( _.isFunction( runListener.beforeProcessTable ) ){
+				processTableFunctions.push( function(table, callback ){
+					runListener.beforeProcessTable(table, callback );
+				});
+			}
+			processTableFunctions.push( function( table, callback ){
 				processTable( table, runListener, function( err, stats ){
 					if ( err ){
 						return callback( err );
 					}
 					//Process for this table was successful, roll up the stats
 					return callback( null, stats );
-				});			
+				});		
+			});
+			
+			async.map( tables, function( table, callback ){
+				//Call the processTable with runListener events in series
+				async.applyEachSeries( processTableFunctions, table, callback );
 			}, function( err, statsArray ){
 				//Call when all tables have finished processing
 				finish( err, statsArray );

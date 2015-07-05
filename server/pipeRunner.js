@@ -10,6 +10,7 @@ var _ = require("lodash");
 var async = require("async");
 var pipeRun = require("./pipeRun");
 var jsforce = require("jsforce");
+var pipeDb = require("./pipeStorage");
 
 function pipeRunner( sf, pipe ){
 	this.pipe = pipe;
@@ -22,13 +23,27 @@ function pipeRunner( sf, pipe ){
 		}
 	}.bind( this );
 	
+	/**
+	 * Return the design doc associated with table
+	 */
+	var getDesignDocForTable = function( table ){
+		return '_design/' + table.name;
+	};
+	
+	/**
+	 * Return the view name associated with a table
+	 */
+	var getViewNameForTable = function( table ){
+		return table.labelPlural || table.label || table.name;
+	};
+	
 	var genViewsManager = function(){
 		var tables = getSourceTables();
 		var viewsManager = [];
 		_.forEach( tables, function( table ){
-			var manager = new cloudant.views('_design/' + table.name);
+			var manager = new cloudant.views( getDesignDocForTable(table) );
 			manager.addView(
-				table.labelPlural || table.label || table.name,
+				getViewNameForTable(table),
 				JSON.parse("{"+
 					"\"map\": \"function(doc){" +
 						"if ( doc.pt_type === '" + table.name + "'){" +
@@ -80,7 +95,20 @@ function pipeRunner( sf, pipe ){
 			oauth2 : this.sf.getOAuthConfig( this.pipe ),
 			instanceUrl : pipe.sf.instanceUrl,
 			accessToken : pipe.sf.accessToken,
-			refreshToken : pipe.sf.refreshToken || null
+			refreshToken : pipe.sf.refreshToken || null,
+			logLevel: "DEBUG"
+		});
+		
+		conn.on("refresh", function(accessToken, res) {
+			console.log("Got a refreshed token: " + accessToken );
+			//Refresh the token for next time
+			pipe.sf.accessToken = accessToken;
+			//Save the pipe
+			pipeDb.savePipe( pipe, function( err, data ){
+				if ( err ){
+					console.log( "Error saving the refreshed token: " + err );
+				}
+			})
 		});
 		
 		var pipeRunInstance = new pipeRun( this.pipe, conn );
@@ -99,6 +127,10 @@ function pipeRunner( sf, pipe ){
 						return callback( null, data );
 					});
 				});
+			},
+			this.beforeProcessTable = function( table, callback ){
+				console.log("Delete all documents for table " + table.name);
+				targetDb.deleteDocsFromView( table.name, getViewNameForTable(table), callback );
 			}
 		};
 		

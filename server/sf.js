@@ -67,7 +67,7 @@ function sf( pipeId ){
 			}
 			console.log( "Trying to connect using : " + JSON.stringify( pipe ) );
 			//Redirect authorization
-			res.redirect( this.getOAuthConfig( pipe ).getAuthorizationUrl({ scope : 'api id web', state: pipe._id }));
+			res.redirect( this.getOAuthConfig( pipe ).getAuthorizationUrl({ scope : 'api id web refresh_token', state: pipe._id }));
 			
 		}.bind( this ));
 	};
