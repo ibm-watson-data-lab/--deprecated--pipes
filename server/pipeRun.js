@@ -39,8 +39,7 @@ function pipeRun( pipe, jsForceConnection ){
 			first = false;
 		});
 		selectStmt += " FROM " + table.name;
-		console.log( selectStmt );
-
+		//console.log( selectStmt );
 		this.conn.query(selectStmt)
 		.on("record", function(record) {
 			stats.numRecords++;
@@ -49,18 +48,17 @@ function pipeRun( pipe, jsForceConnection ){
 			runListener.onNewRecord( record, stats, function( err, savedItem ){
 				if ( err ){
 					stats.errors.push( err );
-					return callback( err );
+					//return callback( err );
 				}				
 			});
 		})
-		.on("end", function(query) {
-			console.log("Finished processing table " + table.name + ". Stats: " + JSON.stringify(stats)); 
+		.on("end", function(query) { 
 			return callback(null, stats);
 		})
 		.on("error", function(err) {
 			console.log("Error while processing table " + table.name + ". Error is " + err );
 			stats.errors.push( err );
-			return callback( err );
+			return callback( null, stats );	//Do not stop other tables to go through
 		})
 		.run({ autoFetch : true, maxFetch : 4000 });
 	}.bind(this);
@@ -142,10 +140,16 @@ function pipeRun( pipe, jsForceConnection ){
 			
 			async.map( tables, function( table, callback ){
 				//Call the processTable with runListener events in series
+				console.log("Starting processing table : " + table.name );
 				async.series( getProcessTableFunctions(table), function( err, results){
-					return callback(err, _.find( results, function( result ){return result != null}));
+					var stats =  _.find( results, function( result ){
+						return result != null
+					});
+					console.log("Finished processing table " + table.name + ". Stats: " + JSON.stringify(stats));
+					return callback(err, stats );
 				});
 			}, function( err, statsArray ){
+				console.log("Step1 for run complete, writing stats...");
 				//Call when all tables have finished processing
 				finish( err, statsArray );
 			});

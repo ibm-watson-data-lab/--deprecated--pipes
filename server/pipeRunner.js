@@ -96,7 +96,7 @@ function pipeRunner( sf, pipe ){
 			instanceUrl : pipe.sf.instanceUrl,
 			accessToken : pipe.sf.accessToken,
 			refreshToken : pipe.sf.refreshToken || null,
-			logLevel: "DEBUG"
+			logLevel2: "DEBUG"
 		});
 		
 		conn.on("refresh", function(accessToken, res) {

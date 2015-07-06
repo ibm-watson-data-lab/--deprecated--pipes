@@ -182,14 +182,28 @@ function storage( serviceDbName, viewsManager ){
 				var rev = body && (body._rev || body.rev);
 				body = callback( body );				
 				if ( body ){
-					body._id = body._id || id || undefined;
-					body._rev = body._rev || rev || undefined;
+					body._id = id || body._id || undefined;
+					body._rev = rev || body._rev || undefined;
+					
+					if ( docId ){
+						if ( this.savesInProgress.hasOwnProperty( docId ) ){
+							console.log("Deferring save of document: " + docId );
+							//Wait for the other save to finish
+							return setTimeout( function(){
+								return this.upsert( docId, callback, done );
+							}.bind(this), 500 );
+						}
+	
+						//Mark this document as being saved
+						this.savesInProgress[docId] = true;
+					}
+					
 					db.insert( body, body._id, function( err, data ){
 						if ( id && this.savesInProgress.hasOwnProperty( id )){
 							delete this.savesInProgress[id];
 						}
 						if ( err ){
-							console.log( "Error while saving doc: " + err );
+							console.log( "Error while saving doc: " + err + ".Doc id: " + body._id + " Doc rev: " + body._rev);
 							return done(err);
 						}
 						//always set the id and rev if available
@@ -207,17 +221,6 @@ function storage( serviceDbName, viewsManager ){
 				return insert( null );
 			}
 			
-			if ( this.savesInProgress.hasOwnProperty( docId ) ){
-				console.log("Deferring save of document: " + docId );
-				//Wait for the other save to finish
-				return setTimeout( function(){
-					return this.upsert( docId, callback, done );
-				}.bind(this), 1000 );
-			}
-			
-			//Mark this document as being saved
-			this.savesInProgress[docId] = true;
-			
 			//We have a docId, load it
 			db.get( docId, { include_docs: true }, function( err, body ){				
 				return insert( body );
@@ -229,7 +232,7 @@ function storage( serviceDbName, viewsManager ){
 	 * Delete all docs in a view
 	 */
 	this.deleteDocsFromView = function( designName, viewName, callback ){
-		console.log("Deleting all docs in view: " + designName + " / " + viewName );
+		//console.log("Deleting all docs in view: " + designName + " / " + viewName );
 		this.run( function( err, db ){
 			if ( err ){
 				return callback( err );
