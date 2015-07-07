@@ -11,6 +11,22 @@
 var _ = require('lodash');
 
 module.exports = {
+	appHost: null,
+	appPort: 0,
+	getHostUrl: function(){
+		if ( this.appHost == null ){
+			return null;
+		}
+		
+		var url = this.appHost;
+		if ( this.appHost.indexOf("://") < 0 ){
+			url = "https://" + this.appHost;
+		}
+		if ( this.appPort > 0 ){
+			url += ":" + this.appPort;
+		}
+		return url;
+	},
 	jsonError : function( res, code, err ){		
 		if ( !err ){
 			err = code;

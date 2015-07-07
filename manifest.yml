@@ -1,0 +1,10 @@
+---
+applications:
+- name: pipes
+  memory: 512M
+  instances: 1
+  host: pipes
+  domain: mybluemix.net
+  disk_quota: 1024M
+  command: node server.js
+  path: .

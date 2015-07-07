@@ -18,7 +18,7 @@ var async = require('async');
 
 //Discover cloudant service info and initialize connection
 var cloudantUrl = process.env.CLOUDANT_URL;
-var storageServiceName = process.env.CLOUDANT_SERVICE_NAME || new RegExp(".*cloudant.*");
+var storageServiceName = process.env.CLOUDANT_SERVICE_NAME || new RegExp(".*cloudant.*", "i");
 var cloudantService = cloudantUrl ? 
 		{ 
 			name : "Cloudant Url", 
@@ -140,7 +140,7 @@ function storage( serviceDbName, viewsManager ){
 		
 	when.promise( this.initCouchDb )
 		.then( function() {
-			console.log("Cloudant database successfully initialized");
+			console.log("Cloudant database %s successfully initialized", self.serviceDbName);
 			self.emit("cloudant_ready");
 		})
 		.otherwise( function(err) {
@@ -165,6 +165,20 @@ function storage( serviceDbName, viewsManager ){
 	this.savesInProgress = {};
 	
 	/**
+	 * getDoc: helper function that fetch a document from the database
+	 * @param docId: documentId
+	 * @param callback(err, doc)
+	 */
+	this.getDoc = function( docId, callback ){
+		this.run( function( err, db ){
+			if ( err ){
+				return callback(err);
+			}
+			db.get( docId, { include_docs: true }, callback );
+		})
+	};
+	
+	/**
 	 * Update doc if exists, insert a new one if not
 	 * @param: docId
 	 * @param: callback(doc), return updated document
@@ -184,19 +198,6 @@ function storage( serviceDbName, viewsManager ){
 				if ( body ){
 					body._id = id || body._id || undefined;
 					body._rev = rev || body._rev || undefined;
-					
-					if ( docId ){
-						if ( this.savesInProgress.hasOwnProperty( docId ) ){
-							console.log("Deferring save of document: " + docId );
-							//Wait for the other save to finish
-							return setTimeout( function(){
-								return this.upsert( docId, callback, done );
-							}.bind(this), 500 );
-						}
-	
-						//Mark this document as being saved
-						this.savesInProgress[docId] = true;
-					}
 					
 					db.insert( body, body._id, function( err, data ){
 						if ( id && this.savesInProgress.hasOwnProperty( id )){
@@ -220,6 +221,17 @@ function storage( serviceDbName, viewsManager ){
 			if ( !docId ){
 				return insert( null );
 			}
+			
+			if ( this.savesInProgress.hasOwnProperty( docId ) ){
+				console.log("Deferring save of document: " + docId );
+				//Wait for the other save to finish
+				return setTimeout( function(){
+					return this.upsert( docId, callback, done );
+				}.bind(this), 500 );
+			}
+
+			//Mark this document as being saved
+			this.savesInProgress[docId] = true;
 			
 			//We have a docId, load it
 			db.get( docId, { include_docs: true }, function( err, body ){				

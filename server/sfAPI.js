@@ -11,7 +11,7 @@ var async = require('async');
 var pipeDb = require('./pipeStorage');
 var misc = require("./misc");
 
-module.exports = function( app ){	
+module.exports = function( app ){
 	app.get("/authCallback", function( req, res ){
 		var code = req.param('code');
 		var pipeId = req.param('state');

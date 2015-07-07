@@ -9,10 +9,11 @@
 var express = require('express');
 var fs = require('fs');
 var path = require('path');
-var https = require('https');
 var bodyParser = require('body-parser');
 var errorHandler = require('errorhandler');
 var morgan = require('morgan');
+var misc = require('./server/misc');
+var appEnv = require("cfenv").getAppEnv();
 
 var cfEnv = require("cfenv");
 var appEnv = cfEnv.getAppEnv();
@@ -43,7 +44,7 @@ require("./server/pipeAPI")(app);	//Pipe configuration
 
 var port = process.env.VCAP_APP_PORT || process.env.DEV_PORT;
 var connected = function() {
-	console.log("Data Moving Tool started on port %s : %s", port, Date(Date.now()));
+	console.log("Data Moving Tool started port %s : %s", port, Date(Date.now()));
 };
 
 var options = {
@@ -52,9 +53,13 @@ var options = {
 };
 
 if (process.env.VCAP_APP_HOST){
-	https.createServer(options, app).listen(process.env.VCAP_APP_PORT,
+	misc.appHost = appEnv.urls[0];
+	require('http').createServer(app).listen(port,
                          process.env.VCAP_APP_HOST,
                          connected);
 }else{
-	https.createServer(options, app).listen(port,connected);
+	//Running locally. Salesforce requires authCallbacks to use SSL by default
+	misc.appHost = "https://127.0.0.1";
+	misc.appPort = port;
+	require('https').createServer(options, app).listen(port,connected);
 }

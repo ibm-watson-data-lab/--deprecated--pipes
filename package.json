@@ -4,7 +4,7 @@
   "description": "Tool for moving data to the cloud: e.g. Salesforce to Cloud",
   "main": "server.js",
   "scripts": {
-  	"postinstall": "bower cache clean && bower install"
+  	"postinstall2": "bower cache clean && bower install"
   },
   "repository": "https://github.com/ibm-cds-labs/pipes",
   "keywords": [

@@ -78,21 +78,15 @@ function pipeRunner( sf, pipe ){
 		return pipe.tables;
 	}.bind( this );
 	
-	
-	//Public APIs
-	this.newRun = function( callback ){
-		var err = validate();
-		if ( err ){
-			return callback( err );
-		}
-		
-		//Create a Cloudant connection
-		var dbName =  (process.env.CLOUDANT_DB_NAME || "pipe_db_") + pipe._id;
-		var targetDb = new cloudant.db(dbName, genViewsManager());
-		
+	/**
+	 * doRun: internal api to execute a run
+	 * @param targetDb: target cloudant database
+	 * @param callback
+	 */
+	var doRun = function(targetDb, callback){
 		//Create jsForce connection
 		var conn = new jsforce.Connection({
-			oauth2 : this.sf.getOAuthConfig( this.pipe ),
+			oauth2 : this.sf.getOAuthConfig( pipe ),
 			instanceUrl : pipe.sf.instanceUrl,
 			accessToken : pipe.sf.accessToken,
 			refreshToken : pipe.sf.refreshToken || null,
@@ -137,6 +131,26 @@ function pipeRunner( sf, pipe ){
 		//Process the tables
 		pipeRunInstance.processSourceTables( getSourceTables(), pipeRunListener );
 		return callback( null, pipeRunInstance );
+	}.bind(this);	
+	
+	//Public APIs
+	this.newRun = function( callback ){
+		var err = validate();
+		if ( err ){
+			return callback( err );
+		}
+		
+		//Create a Cloudant connection
+		var dbName =  (process.env.CLOUDANT_DB_NAME || "pipe_db_") + pipe._id;
+		var targetDb = new cloudant.db(dbName, genViewsManager());
+		targetDb.on( "cloudant_ready", function(){
+			console.log("Data Pipe Configuration database (" + dbName + ") ready");
+			doRun( targetDb, callback );
+		});
+
+		targetDb.on("cloudant_error", function(){
+			return callback("Fatal error from Cloudant database: unable to initialize " + dbName);
+		});
 	};
 }
 

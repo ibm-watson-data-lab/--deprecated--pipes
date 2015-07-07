@@ -49,17 +49,12 @@ pipeDb.on("cloudant_error", function(){
 //Get pipe by Id
 pipeDb.getPipe = function( id, callback, noFilterForOutbound ){
 	noFilterForOutbound = noFilterForOutbound || false;
-	this.run( function( err, db ){
+	this.getDoc( id, function( err, body ){
 		if ( err ){
-			return callback(err);
+			return callback( err );
 		}
-		db.get( id, { include_docs: true }, function( err, body ){
-				if ( err ){
-					return callback( err );
-				}
-				return callback( null, noFilterForOutbound ? body : outboundPayload( body ) );
-			})
-		});		
+		return callback( null, noFilterForOutbound ? body : outboundPayload( body ) );
+	});
 };
 
 /**
@@ -86,12 +81,12 @@ function outboundPayload( pipe ){
  * Merge the pipe with the stored value, restoring any fields that have been filtered during outbound
  */
 function inboundPayload( storedPipe, pipe ){
-	if ( storedPipe.hasOwnProperty( "tables" ) ){
+	if ( storedPipe && storedPipe.hasOwnProperty( "tables" ) ){
 		pipe.tables = storedPipe.tables;
 	}
 	
 	if ( !pipe.hasOwnProperty("sf") ){
-		if ( storedPipe.hasOwnProperty( "sf" ) ){
+		if ( storedPipe && storedPipe.hasOwnProperty( "sf" ) ){
 			pipe.sf = storedPipe.sf;
 		}
 	}
@@ -179,6 +174,13 @@ pipeDb.saveRun = function(pipe, run, callback){
 		}
 		return callback( null, runDoc );
 	}.bind(this));
+}
+
+/**
+ * fetch a run document by Id from the database
+ */
+pipeDb.getRun = function( runId, callback ){
+	this.getDoc( runId, callback );
 }
 
 module.exports = pipeDb;
