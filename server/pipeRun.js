@@ -9,6 +9,7 @@ var pipeDb = require("./pipeStorage");
 var _ = require("lodash");
 var async = require("async");
 var moment = require("moment");
+var global = require("./global");
 
 function pipeRun( pipe, jsForceConnection ){
 	this.pipe = pipe;
@@ -24,9 +25,11 @@ function pipeRun( pipe, jsForceConnection ){
 	//Private APIs
 	/**
 	 * @param: table: json object representing the source table
+	 * @param runListener
+	 * @param targetDb: the target db to write data to
 	 * @callback: function( err, stats )
 	 */
-	var processTable = function( table, runListener, callback ){
+	var processTable = function( table, runListener, targetDb, callback ){
 		var stats = {
 			tableName : table.name,
 			numRecords: 0,
@@ -40,27 +43,58 @@ function pipeRun( pipe, jsForceConnection ){
 		});
 		selectStmt += " FROM " + table.name;
 		//console.log( selectStmt );
+		
+		//Batch the docs to minimize number of requests
+		var batch = { batchDocs: [] };
+		var maxBatchSize = 100;
+		
+		var processBatch = function( force, callback ){
+			if ( batch.batchDocs.length > 0 && (force || batch.batchDocs.length >= maxBatchSize) ){
+				var thisBatch = { batchDocs:batch.batchDocs};
+				//Release the array for the next batch
+				batch.batchDocs = [];
+				runListener.onNewBatch( targetDb, thisBatch.batchDocs, stats, function( err, savedItem ){
+					if ( err ){
+						stats.errors.push( err );
+					}
+					delete thisBatch.batchDocs;
+					if ( callback ){
+						callback( err );
+					}
+				});
+			}else if ( callback ){
+				callback();
+			}
+		}
+		
 		this.conn.query(selectStmt)
 		.on("record", function(record) {
 			stats.numRecords++;
+
 			//Add the type to the record
 			record.pt_type = table.name; 
-			runListener.onNewRecord( record, stats, function( err, savedItem ){
-				if ( err ){
-					stats.errors.push( err );
-					//return callback( err );
-				}				
-			});
+			
+			batch.batchDocs.push( record );
+			processBatch( false );
 		})
-		.on("end", function(query) { 
-			return callback(null, stats);
+		.on("end", function(query) {
+			console.log("total in database : " + query.totalSize);
+			console.log("total fetched : " + query.totalFetched);
+			
+			processBatch( true, function( err ){
+				return callback(null, stats);
+			});			
+		})
+		.on("fetch", function(){
+			//Call garbage collector between fetches
+			global.gc();
 		})
 		.on("error", function(err) {
 			console.log("Error while processing table " + table.name + ". Error is " + err );
 			stats.errors.push( err );
 			return callback( null, stats );	//Do not stop other tables to go through
 		})
-		.run({ autoFetch : true, maxFetch : 4000 });
+		.run({ autoFetch : true, maxFetch : 30000 });
 	}.bind(this);
 	
 	var finish = function( err, statsArray ){
@@ -80,14 +114,19 @@ function pipeRun( pipe, jsForceConnection ){
 		runDoc.numRecords = 0;
 		runDoc.stats = {};
 		var hasErrors = false;
-		_.forEach( statsArray, function(stats){
-			runDoc.stats[stats.tableName] = stats;
-			//Aggregate records for this table
-			runDoc.numRecords += stats.numRecords;
-			if ( stats.errors.length > 0 ){
-				hasErrors = true;
-			}
-		});
+		
+		if ( _.isArray( statsArray ) ){
+			_.forEach( statsArray, function(stats){
+				if ( stats ){
+					runDoc.stats[stats.tableName] = stats;
+					//Aggregate records for this table
+					runDoc.numRecords += stats.numRecords;
+					if ( stats.errors.length > 0 ){
+						hasErrors = true;
+					}
+				}
+			});
+		}
 		
 		if ( err ){
 			runDoc.status = "Unsuccessful run: " + err;
@@ -121,13 +160,21 @@ function pipeRun( pipe, jsForceConnection ){
 			
 			var getProcessTableFunctions = function( table ){
 				var processTableFunctions = [];
+				var targetDb = null;
 				if ( _.isFunction( runListener.beforeProcessTable ) ){
 					processTableFunctions.push( function( callback ){
-						runListener.beforeProcessTable(table, callback );
+						runListener.beforeProcessTable(table, function( err, result){
+							if ( err ){
+								return callback(err);
+							}
+							//result is targetDb
+							targetDb = result;
+							return callback(null);	//Make sure to return no results!
+						});
 					});
 				}
 				processTableFunctions.push( function( callback ){
-					processTable( table, runListener, function( err, stats ){
+					processTable( table, runListener, targetDb, function( err, stats ){
 						if ( err ){
 							return callback( err );
 						}

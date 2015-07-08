@@ -10,7 +10,7 @@ var _ = require('lodash');
 var async = require('async');
 var pipeDb = require('./pipeStorage');
 var pipeRunner = require("./pipeRunner");
-var misc = require("./misc");
+var global = require("./global");
 
 //Test data
 var testConfig = new function(){
@@ -18,14 +18,14 @@ var testConfig = new function(){
 			 loginUrl: "https://login.salesforce.com",
 			 clientId: "3MVG98SW_UPr.JFgLYoFuZUV8udi_s_hhQnh76fvudHrj40npYfGHLQYuHJ8iQV2VN6cAoxzXa3WLSEfzDdGk",
 		     clientSecret: "1389549770213154921",
-		     redirectUri: misc.getHostUrl() + "/authCallback"
+		     redirectUri: global.getHostUrl() + "/authCallback"
 		});
 
 	this.oAuthConfigCDSSandbox = new jsforce.OAuth2({
 			 loginUrl: "https://test.salesforce.com",
 			 clientId: "3MVG9_7ddP9KqTzdj6CqVC0uI_RpkkogtVDUV1GgYAxxIWTY.naY.FtEYMwCtwOuivHaIp0uRRDaMMeWbv574",
 		     clientSecret: "5717758873660437002",
-		     redirectUri: misc.getHostUrl() + "/authCallback"
+		     redirectUri: global.getHostUrl() + "/authCallback"
 		});
 
 	this.configCDSSandbox = {
@@ -56,7 +56,7 @@ function sf( pipeId ){
 			 loginUrl: pipe.loginUrl || "https://login.salesforce.com",
 			 clientId: pipe.clientId,
 		     clientSecret: pipe.clientSecret,
-		     redirectUri: misc.getHostUrl() + "/authCallback"
+		     redirectUri: global.getHostUrl() + "/authCallback"
 		});
 	};
 	

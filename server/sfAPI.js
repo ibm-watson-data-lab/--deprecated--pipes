@@ -9,7 +9,7 @@ var sf = require('./sf');
 var _ = require('lodash');
 var async = require('async');
 var pipeDb = require('./pipeStorage');
-var misc = require("./misc");
+var global = require("./global");
 
 module.exports = function( app ){
 	app.get("/authCallback", function( req, res ){
@@ -17,7 +17,7 @@ module.exports = function( app ){
 		var pipeId = req.param('state');
 		
 		if ( !code || !pipeId ){
-			return misc.jsonError( res, "No code or state specified in OAuth callback request");
+			return global.jsonError( res, "No code or state specified in OAuth callback request");
 		}
 		
 		console.log("OAuth callback called with pipe id: " + pipeId );
@@ -25,7 +25,7 @@ module.exports = function( app ){
 		
 		sfObject.authorize(code, function(err, userInfo, jsForceConnection, pipe ){
 			if (err) { 
-				return misc.jsonError( res, err );
+				return global.jsonError( res, err );
 			}
 			
 			var tables = [];
@@ -66,7 +66,7 @@ module.exports = function( app ){
 				}
 			], function( err, results ){
 				if ( err ){
-					return misc.jsonError( res, err );
+					return global.jsonError( res, err );
 				}
 				
 				for ( var i = 0 ; i < tables.length; i++ ){
@@ -85,7 +85,7 @@ module.exports = function( app ){
 				//Save the pipe
 				pipeDb.savePipe( pipe, function( err, data ){
 					if ( err ){
-						return json.miscError( res, err );
+						return global.jsonError( res, err );
 					}
 
 					res.send("<html><head><script>window.close()</script></head><body></body></html>");
@@ -99,7 +99,7 @@ module.exports = function( app ){
 		var sfConnection = new sf( req.params.id );
 		sfConnection.connect( req, res, function (err, results ){
 			if ( err ){
-				return misc.jsonError( res, err );
+				return global.jsonError( res, err );
 			}
 			return res.json( results );
 		});
@@ -109,7 +109,7 @@ module.exports = function( app ){
 		var sfConnection = new sf( req.params.id );
 		sfConnection.run( function( err, run ){
 			if ( err ){
-				return misc.jsonError( res, err );
+				return global.jsonError( res, err );
 			}
 			//Return a 202 accepted code to the client with information about the run
 			return res.status( 202 ).json( run.getId() );

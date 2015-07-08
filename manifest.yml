@@ -6,5 +6,5 @@ applications:
   host: pipes
   domain: mybluemix.net
   disk_quota: 1024M
-  command: node server.js
+  command: node --expose-gc server.js
   path: .

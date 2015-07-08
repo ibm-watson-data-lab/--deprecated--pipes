@@ -12,7 +12,7 @@ var path = require('path');
 var bodyParser = require('body-parser');
 var errorHandler = require('errorhandler');
 var morgan = require('morgan');
-var misc = require('./server/misc');
+var global = require('./server/global');
 var appEnv = require("cfenv").getAppEnv();
 
 var cfEnv = require("cfenv");
@@ -53,13 +53,13 @@ var options = {
 };
 
 if (process.env.VCAP_APP_HOST){
-	misc.appHost = appEnv.urls[0];
+	global.appHost = appEnv.urls[0];
 	require('http').createServer(app).listen(port,
                          process.env.VCAP_APP_HOST,
                          connected);
 }else{
 	//Running locally. Salesforce requires authCallbacks to use SSL by default
-	misc.appHost = "https://127.0.0.1";
-	misc.appPort = port;
+	global.appHost = "https://127.0.0.1";
+	global.appPort = port;
 	require('https').createServer(options, app).listen(port,connected);
 }

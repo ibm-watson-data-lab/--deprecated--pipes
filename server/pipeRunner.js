@@ -37,8 +37,11 @@ function pipeRunner( sf, pipe ){
 		return table.labelPlural || table.label || table.name;
 	};
 	
-	var genViewsManager = function(){
-		var tables = getSourceTables();
+	var genViewsManager = function(table){
+		var tables = table || getSourceTables();
+		if ( !_.isArray( tables ) ){
+			tables = [tables];
+		}
 		var viewsManager = [];
 		_.forEach( tables, function( table ){
 			var manager = new cloudant.views( getDesignDocForTable(table) );
@@ -80,10 +83,9 @@ function pipeRunner( sf, pipe ){
 	
 	/**
 	 * doRun: internal api to execute a run
-	 * @param targetDb: target cloudant database
 	 * @param callback
 	 */
-	var doRun = function(targetDb, callback){
+	var doRun = function(callback){
 		//Create jsForce connection
 		var conn = new jsforce.Connection({
 			oauth2 : this.sf.getOAuthConfig( pipe ),
@@ -109,12 +111,13 @@ function pipeRunner( sf, pipe ){
 		
 		//Main listener of the run instance
 		var pipeRunListener = new function(){
-			this.onNewRecord = function( record, stats, callback ){
+			this.onNewBatch = function( targetDb, batchDocs,stats, callback ){
 				targetDb.run( function( err, db ){
 					if ( err ){
 						return callback(err);
 					}
-					db.insert( record, function( err, data ){
+					//Update docs in bulks
+					db.bulk( {"docs": batchDocs}, function( err, data ){
 						if ( err ){
 							return callback(err);
 						}
@@ -123,8 +126,32 @@ function pipeRunner( sf, pipe ){
 				});
 			},
 			this.beforeProcessTable = function( table, callback ){
-				console.log("Delete all documents for table " + table.name);
-				targetDb.deleteDocsFromView( table.name, getViewNameForTable(table), callback );
+				//One database per table, create it now
+				var dbName =  "sf_" + table.name.toLowerCase();
+				var targetDb = new cloudant.db(dbName, genViewsManager( table ));
+				targetDb.on( "cloudant_ready", function(){
+					console.log("Data Pipe Configuration database (" + dbName + ") ready");
+					console.log("Delete all documents for table %s in database %s", table.name, dbName);
+					targetDb.destroyAndRecreate( function( err ){
+						if ( err ){
+							return callback(err);
+						}
+						return callback( null, targetDb);
+					});
+					
+					//Since we are now putting all docs from a SF table in its own database, we don't need to do a selective delete, instead
+					//do a wholesale destroy of the db
+//					targetDb.deleteDocsFromView( table.name, getViewNameForTable(table), function( err, results){
+//						if ( err ){
+//							return callback(err);
+//						}
+//						return callback( null, targetDb);
+//					})
+				});
+
+				targetDb.on("cloudant_error", function(){
+					return callback("Fatal error from Cloudant database: unable to initialize " + dbName);
+				});
 			}
 		};
 		
@@ -140,17 +167,7 @@ function pipeRunner( sf, pipe ){
 			return callback( err );
 		}
 		
-		//Create a Cloudant connection
-		var dbName =  (process.env.CLOUDANT_DB_NAME || "pipe_db_") + pipe._id;
-		var targetDb = new cloudant.db(dbName, genViewsManager());
-		targetDb.on( "cloudant_ready", function(){
-			console.log("Data Pipe Configuration database (" + dbName + ") ready");
-			doRun( targetDb, callback );
-		});
-
-		targetDb.on("cloudant_error", function(){
-			return callback("Fatal error from Cloudant database: unable to initialize " + dbName);
-		});
+		doRun( callback );
 	};
 }
 

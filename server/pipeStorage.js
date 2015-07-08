@@ -40,6 +40,28 @@ var pipeDb = new cloudant.db(dbName, viewsManager );
 
 pipeDb.on( "cloudant_ready", function(){
 	console.log("Data Pipe Configuration database (" + dbName + ") ready");
+	
+	//Check pipes for references to stale runs
+	pipeDb.listPipes( function( err, pipes ){
+		if ( err ){
+			//should not happen
+			return console.log( err );
+		}
+		_.forEach( pipes, function( pipe ){
+			if ( pipe.run ){
+				pipeDb.upsert( pipe._id, function( storedPipe ){
+					if ( storedPipe && storedPipe.hasOwnProperty("run") ){
+						delete storedPipe["run"];
+					}
+					return storedPipe;
+				}, function( err, doc ){
+					if ( err ){
+						console.log("Unable to break reference to stale run " + err );
+					}
+				});
+			}
+		});
+	});
 });
 
 pipeDb.on("cloudant_error", function(){

@@ -25,7 +25,7 @@
         "jsforce": "^1.4.1",
         "morgan": "^1.6.0",
         "when": "~3.7.3",
-        "moment": "2.10.3"
+        "moment": "^2.10.3"
    },
    "devDependencies": {
         "mocha": "*"

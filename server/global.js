@@ -3,7 +3,7 @@
 /**
  * CDS Labs module
  * 
- *   Misc routine
+ *   Global singleton object
  * 
  * @author David Taieb
  */
@@ -26,6 +26,15 @@ module.exports = {
 			url += ":" + this.appPort;
 		}
 		return url;
+	},
+	gc: function(){
+		if ( global.gc ){
+			//Check the memory usage to decide whether to invoke the gc or not
+			var mem = process.memoryUsage();
+			if ( (mem.heapUsed / mem.heapTotal) * 100 > 80 ){	//Heap is 80% or more filled
+				global.gc();
+			}			
+		}
 	},
 	jsonError : function( res, code, err ){		
 		if ( !err ){

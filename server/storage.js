@@ -31,14 +31,18 @@ if (!cloudantService) {
 }
 
 console.log("Using cloudant service \"" + cloudantService.name +"\"");
-var couchDb = require('cloudant')({
+var cloudant = require('cloudant')({
 	"url" : cloudantService.credentials.url, 
 	"log" : function (id, args) {
 		//console.log(id, args);
 	}
 });
 
-//Define a storage class
+/**
+ * Define a storage class
+ * @param serviceDbName: dbName
+ * @param viewsManager
+ */
 function storage( serviceDbName, viewsManager ){
 	//Call constructor from super class
 	events.EventEmitter.call(this);	
@@ -48,18 +52,18 @@ function storage( serviceDbName, viewsManager ){
 	this.storageDb = null;
 	
 	var self = this;	
-	this.initCouchDb = function( resolve, reject ){
-		couchDb.db.get(self.serviceDbName, function(err, body) {
+	this.initCloudant = function( resolve, reject ){
+		cloudant.db.get(self.serviceDbName, function(err, body) {
 			if ( viewsManager && !_.isArray( viewsManager )){
 				viewsManager = [viewsManager];
 			}
 			if (err ) {
 				//Create it
-				couchDb.db.create(self.serviceDbName,function(err,body){
+				cloudant.db.create(self.serviceDbName,function(err,body){
 					if ( err ){
 						reject( "Unable to create db " + self.serviceDbName + ". Error is " + err );
 					}else{
-						self.storageDb = couchDb.use( serviceDbName );
+						self.storageDb = cloudant.use( serviceDbName );
 						if ( viewsManager ){
 							var bFound = false;
 							_.forEach( viewsManager, function( manager ){
@@ -82,7 +86,7 @@ function storage( serviceDbName, viewsManager ){
 					}
 				});
 			}else{
-				self.storageDb = couchDb.use( self.serviceDbName );
+				self.storageDb = cloudant.use( self.serviceDbName );
 				
 				//Make sure that the design docs exists, if not create them now
 				if ( viewsManager ){
@@ -138,7 +142,7 @@ function storage( serviceDbName, viewsManager ){
 		});
 	};
 		
-	when.promise( this.initCouchDb )
+	when.promise( this.initCloudant )
 		.then( function() {
 			console.log("Cloudant database %s successfully initialized", self.serviceDbName);
 			self.emit("cloudant_ready");
@@ -151,6 +155,32 @@ function storage( serviceDbName, viewsManager ){
 	this.isDbInitialized = function(){
 		return this.storageDb;
 	};
+	
+	/**
+	 * Destroy and recreate the database
+	 * @param callback(err)
+	 */
+	this.destroyAndRecreate = function(callback){
+		this.run( function( err, db ){
+			if ( err ){
+				return callback( err );
+			}
+			cloudant.db.destroy( serviceDbName, function( err ){
+				if ( err ){
+					return callback(err);
+				}
+				
+				//Reinit
+				when.promise( this.initCloudant )
+				.then( function() {
+					return callback( null );
+				})
+				.otherwise( function(err) {
+					return callback( err );			
+				})
+			}.bind(this));
+		}.bind(this));
+	}
 	
 	this.run = function( callback ){
 		if ( !self.storageDb ){
@@ -290,7 +320,7 @@ function storage( serviceDbName, viewsManager ){
                 	});
                 }],
                 function( err, results ){
-					return callback( err );
+					return callback( err, results );
 				}
 			);
 		});

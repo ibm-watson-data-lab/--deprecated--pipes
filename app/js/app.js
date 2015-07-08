@@ -8,7 +8,8 @@ var mainApp = angular.module('dataMovingApp', [
   'ngResource',
   'ngSanitize',
   'ui.router',
-  'ui.bootstrap'
+  'ui.bootstrap',
+  'fm.components'
 ],function($locationProvider) {
     //$locationProvider.html5Mode({'enabled': true, 'requireBase': false});
 })
@@ -62,6 +63,37 @@ var mainApp = angular.module('dataMovingApp', [
             },
 			controller: ['$scope', '$stateParams', function($scope, $stateParams){
 				$scope.tabName = $stateParams.tab;
+				
+				if ( $stateParams.tab === 'scheduling'){
+					//Configure time picker
+					// Our main parameters for the time picker.
+					// These will primarily be used to populate the scope of this demonstration.
+					$scope.style = "dropdown";
+					$scope.timeFormat = "HH:mm";
+					$scope.startTime = "9:00";
+					$scope.endTime = "18:00";
+					$scope.intervalMinutes = 10;
+					$scope.largeIntervalMinutes = 60;
+
+					// Parameters that will actually be passed into the timepicker.
+					$scope.time = moment( "15:01", $scope.timeFormat );
+					$scope.start = moment( $scope.startTime, $scope.timeFormat );
+					$scope.end = moment( $scope.endTime, $scope.timeFormat );
+
+					// Watch parameters in our local scope and update the parameters in the timepicker as needed.
+					$scope.$watchCollection( "[startTime, timeFormat]", function( newValues ) {
+						$scope.start = moment( newValues[ 0 ], newValues[ 1 ] );
+					} );
+					$scope.$watchCollection( "[endTime, timeFormat]", function( newValues ) {
+						$scope.end = moment( newValues[ 0 ], newValues[ 1 ] );
+					} );
+					$scope.$watch( "intervalMinutes", function( newInterval ) {
+						$scope.interval = moment.duration( parseInt( newInterval ), "minutes" );
+					} );
+					$scope.$watch( "largeIntervalMinutes", function( newInterval ) {
+						$scope.largeInterval = moment.duration( parseInt( newInterval ), "minutes" );
+					} );
+				}
 			}]
     	})
 })
@@ -179,3 +211,4 @@ var mainApp = angular.module('dataMovingApp', [
 	}
  }]
 )
+

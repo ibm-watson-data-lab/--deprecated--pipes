@@ -6,7 +6,7 @@
 */
 
 var pipeDb = require( './pipeStorage');
-var misc = require('./misc');
+var global = require('./global');
 
 module.exports = function( app ){
 	
@@ -16,7 +16,7 @@ module.exports = function( app ){
 	app.get('/pipes', function(req, res) {
 		pipeDb.listPipes( function( err, pipes ){
 			if ( err ){
-				return misc.jsonError( res, err );
+				return global.jsonError( res, err );
 			}
 			return res.json( pipes );
 		});
@@ -40,13 +40,13 @@ module.exports = function( app ){
 		try{
 			validatePipePayload( pipe );
 		}catch( e ){
-			return misc.jsonError( res, e );
+			return global.jsonError( res, e );
 		}
 		pipeDb.savePipe( pipe, function( err, pipe ){
 			if ( err ){
-				return misc.jsonError( res, err );
+				return global.jsonError( res, err );
 			}
-			console.log("Pipe successfully saved: " + JSON.stringify( pipe) );
+			console.log("Pipe successfully saved: " + pipe.name );
 			res.json( pipe );
 		});
 	});
@@ -57,7 +57,7 @@ module.exports = function( app ){
 	app.delete('/pipes/:id', function( req, res ){
 		pipeDb.removePipe( req.params.id, function( err, pipe ){
 			if ( err ){
-				return misc.jsonError( res, err );
+				return global.jsonError( res, err );
 			}
 			console.log( "Pipe successfully removed : " + JSON.stringify( pipe ) );
 			res.json( pipe );
