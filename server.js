@@ -21,9 +21,16 @@ var appEnv = cfEnv.getAppEnv();
 var VCAP_APPLICATION = JSON.parse(process.env.VCAP_APPLICATION || "{}");
 var VCAP_SERVICES = JSON.parse(process.env.VCAP_SERVICES || "{}");
 
-var app = express();
+var app = global.app = express();
 
 app.use(express.static(path.join(__dirname, 'app')));
+
+if ( process.env.START_PROXY ){
+	//Development only, creates a proxy server to enable local environment access to dw servers
+	var dataworks = require("./server/dw/dataworks");
+	var dwInstance = new dataworks();
+}
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(errorHandler({ dumpExceptions:true, showStack:true }));

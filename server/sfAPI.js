@@ -105,6 +105,9 @@ module.exports = function( app ){
 		});
 	});
 	
+	/**
+	 * Start a new pipe run
+	 */
 	app.post("/sf/:id", function( req, res ){
 		var sfConnection = new sf( req.params.id );
 		sfConnection.run( function( err, run ){

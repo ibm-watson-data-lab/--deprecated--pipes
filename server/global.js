@@ -13,15 +13,15 @@ var _ = require('lodash');
 module.exports = {
 	appHost: null,
 	appPort: 0,
-	getHostUrl: function(){
-		if ( this.appHost == null ){
-			return null;
-		}
-		
-		var url = this.appHost;
-		if ( this.appHost.indexOf("://") < 0 ){
+	getHostName: function(){
+		var url = this.appHost || "http://127.0.0.1";
+		if ( url.indexOf("://") < 0 ){
 			url = "https://" + this.appHost;
 		}
+		return url;
+	},
+	getHostUrl: function(){		
+		var url = this.getHostName();
 		if ( this.appPort > 0 ){
 			url += ":" + this.appPort;
 		}

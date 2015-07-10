@@ -12,3 +12,9 @@ app/bower_components
 node_modules
 
 npm-debug.log
+
+.strong-pm/env.json
+
+development/vcaps.properties
+
+npm-debug.log

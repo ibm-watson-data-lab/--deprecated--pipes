@@ -111,6 +111,21 @@ function pipeRunner( sf, pipe ){
 		
 		//Main listener of the run instance
 		var pipeRunListener = new function(){
+			this.done = function( err, callback ){
+				//Update the pipe and remove reference to the run
+				pipeDb.upsert( pipe._id, function( storedPipe ){
+					if ( storedPipe && storedPipe.hasOwnProperty("run") ){
+						delete storedPipe["run"];
+					}
+					return storedPipe;
+				}, function( err, doc ){
+					if ( err ){
+						console.log( "Error while saving pipe information: " + err );
+						return callback && callback(err);
+					}
+					return callback && callback();
+				});
+			};
 			this.onNewBatch = function( targetDb, batchDocs,stats, callback ){
 				targetDb.run( function( err, db ){
 					if ( err ){

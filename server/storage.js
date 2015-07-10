@@ -51,6 +51,10 @@ function storage( serviceDbName, viewsManager ){
 	this.serviceDbName = serviceDbName;	
 	this.storageDb = null;
 	
+	this.getDbName = function(){
+		return serviceDbName;
+	};	
+	
 	var self = this;	
 	this.initCloudant = function( resolve, reject ){
 		cloudant.db.get(self.serviceDbName, function(err, body) {
