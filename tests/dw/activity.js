@@ -75,18 +75,57 @@ var getActivity = function( dwInstance, activities, callback ){
 
 var createActivity = function( dwInstance, callback ){
 	console.log("Running createActivity");
+	var srcConnection = dwInstance.newConnection("cloudant");
+	srcConnection.setDbName( "sf_campaign__c" );
+	srcConnection.addTable( {
+		name: "sf_campaign__c".toUpperCase()
+	});
+	var targetConnection = dwInstance.newConnection("dashDB");
+	targetConnection.setSourceConnection( srcConnection );
 	dwInstance.createActivity({
-		name: "david"
+		name: "test",
+		desc: "Test instance",
+		srcConnection: srcConnection,
+		targetConnection: targetConnection
 	}, function( err, activity ){
 		if ( err ){
 			return callback( err );
 		}
 		console.log("SuccessFully created a new activity: " + util.inspect( activity, { showHidden: true, depth: null } ) );
-		return callback(null);
+		return callback(null, dwInstance, activity.id);
 	});
 }
 
-var tasks = [ listActivities, deleteSFActivities, getActivity, createActivity ];
+var runActivity = function( dwInstance, activityId, callback ){
+	console.log("Running activity %s", activityId);
+	
+	dwInstance.runActivity( activityId, function( err, activityRun ){
+		if ( err ){
+			return callback( err );
+		}
+		
+		var monitor = function(){
+			dwInstance.monitorActivityRun( activityId, activityRun.id, function( err, activityRun ){
+				if ( err ){
+					console.log("Error retrieving activity run details " + err );
+					return callback(err);
+				}
+				if ( dwInstance.isFinished( activityRun.status ) ){
+					console.log("ActivityRun complete");
+					return callback(null);
+				}
+				console.log( "Activity Running: " + util.inspect( activityRun, { showHidden: true, depth: null } ));
+				setTimeout( monitor, 5000 );
+			})
+		};
+		console.log("SuccessFully submitted a activity for running. Waiting for results...: " + util.inspect( activityRun, { showHidden: true, depth: null } ) );
+		setTimeout( monitor, 5000 );
+	});
+	
+}
+
+var tasks = [ listActivities, getActivity, createActivity, runActivity ];
+	//[ listActivities, deleteSFActivities, getActivity, createActivity ];
 
 var server = require('http').createServer(app);
 server.listen(global.appPort, function() {
