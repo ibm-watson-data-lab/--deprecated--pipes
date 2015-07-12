@@ -1,0 +1,92 @@
+<div class="container-fluid">
+	<div class="page-header">
+  		<div><b>Activity</b></div>
+  		<small>Activity History Log</small>
+	</div>	
+	<table class="table table-condensed table-hover">
+		<thead>
+			<tr>
+				<th align="center">Status</th>
+				<th align="center">Date/Time</th>
+				<th align="center">Records Processed</th>
+				<th align="center">Run Time</th>
+				<th align="center">Message</th>
+				<th align="center">Detail</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr ng-repeat="run in runs" ng-class="{success:true}">
+				<td>{{run.status}}</td>
+				<td>{{run.startTime}}</td>
+				<td>{{run.numRecords}}</td>
+				<td>{{run.elapsedTime}}</td>
+				<td>{{run.status}}</td>
+				<td>
+					<span>
+						<a href="" data-toggle="popover" class="basic-hovercard" data-placement="bottom" repeat-run-details-directive="runDetails">
+							<strong>Details</strong>
+							<div class="runDetails" style="display:none">
+								<div style="height:400px;width=800px;overflow: auto">
+									<table class="table table-condensed table-striped">
+										<thead>
+											<th align="center">Table Name</th>
+											<th align="center">Records</th>
+											<th align="center">Status</th>
+										</thead>
+										<tbody>
+											<tr ng-repeat="stat in run.stats">
+												<td>{{stat.tableName}}</td>
+												<td>{{stat.numRecords}}</td>
+												<td>{{stat.errors}}</td>
+											</tr>
+										</tbody>
+									</table>
+								</div>
+							</div>
+						</a>
+					</span>
+				</td>
+			</tr>
+		</tbody>
+	</table>
+</div>
+
+<div class="basic-content" style="display: none;">
+	<div class="hover-card-details left-align">
+		<div class="hover-card-header left-align">
+			<div class="hover-card-pic left-align">
+				<span class="image-wrapper medium">
+					<a href="" class="left-align" style="background:url(https://avatars1.githubusercontent.com/u/98681?v=3&s=460)"></a>
+				</ span>
+			</div>
+			<h4 class="left-align"><a href="#">Mark Otto</a></h4>
+Mark Otto is a designer living and working in San Francisco. Originally from Wisconsin. At Twitter, He also created the popular open source front-end toolkit Bootstrap with @fat.		
+		</div>
+		<ul class="hover-card-content left-align">
+			<li class="right-aligned">
+				<span class="desc">Favorites</span><span class="content">60,56</span>
+			</li>
+			<li class="right-aligned">
+				<span class="desc">Followers</span><span class="content">40.9k</span>
+			</li>
+			<li class="right-aligned">
+				<span class="desc">Following</span>
+				<span class="content">
+				<a href="" data-toggle="tooltip">101</a>
+				</span>
+			</li>
+			<li class="right-aligned">
+				<span class="desc">Tweets</span>
+				<span class="content"><a href="#">24k</a></span>
+			</li>
+		</ul>
+	</div> 
+	<span class="hover-card-options-wrapper">
+		<span class="hover-card-options">
+			<ul>
+				<li><a data-toggle="modal" data-backdrop="true" data-keyboard="true" href="https://twitter.com/mdo"><i class="glyphicon glyphicon-envelope"></i>@mdo</a></li>
+			</ul>
+		</span>
+	</span>   
+</div>
+
