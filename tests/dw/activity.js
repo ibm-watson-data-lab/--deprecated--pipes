@@ -41,17 +41,47 @@ var listActivities = function(callback){
 
 var deleteSFActivities = function( dwInstance, activities, callback ){
 	console.log( "Delete SF activity");
+	var leftOvers = [];
 	async.each( activities, function(activity, callback){
 		if ( _.startsWith( activity.name, "sf" ) ){
 			console.log("deleting activity %s", activity.name );
 			dwInstance.deleteActivity( activity.id, function( err ){
-				return callback( err );
+				if ( err ){
+					leftOvers.push( activity );
+					console.log("Unable to delete the activity %s ", err );
+					return deleteRunsForActivities( dwInstance, activity.id, function( err ){
+						return callback( err );
+					});
+				}
+				return callback();
 			});
 		}else{
+			leftOvers.push( activity );
 			return callback();
 		}
 	}, function( err ){
 		callback( err, dwInstance, activities );
+	});
+}
+
+var deleteRunsForActivities = function( dwInstance, activityId, callback ){
+	console.log("Deleting existing runs for activity %s", activityId);
+	dwInstance.listActivityRuns( activityId, function( err, activityRuns ){
+		if ( err ){
+			return callback(err);
+		}
+		
+		async.each( activityRuns, function( run, callback ){
+			console.log("Deleting activityRun %s", run.id);
+			dwInstance.deleteActivityRun( activityId, run.id, function(err){
+				if ( err ){
+					console.log("Unable to delete actvity run %s", err );
+				}
+				return callback(err);
+			})
+		}, function(err){
+			return callback(err);
+		});
 	});
 }
 
@@ -124,8 +154,8 @@ var runActivity = function( dwInstance, activityId, callback ){
 	
 }
 
-var tasks = [ listActivities, getActivity, createActivity, runActivity ];
-	//[ listActivities, deleteSFActivities, getActivity, createActivity ];
+var tasks = //[ listActivities, getActivity, createActivity, runActivity ];
+	[ listActivities, deleteSFActivities, getActivity, createActivity ];
 
 var server = require('http').createServer(app);
 server.listen(global.appPort, function() {

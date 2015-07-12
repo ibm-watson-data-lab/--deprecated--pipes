@@ -4,9 +4,6 @@
 var mainApp = angular.module('dataMovingApp', [
   'pipes',
   'salesforce',
-  'ngCookies',
-  'ngResource',
-  'ngSanitize',
   'ui.router',
   'ui.bootstrap',
   'fm.components'
@@ -34,6 +31,10 @@ var mainApp = angular.module('dataMovingApp', [
 	            },
 	            'pipeDetails':{
 	            	templateUrl: "/templates/home.html"
+	            },
+	            'pipeSidebar':{
+	            	templateUrl: "/templates/pipeSidebar.html",
+	                controller: 'pipesController'
 	            }
 	        }
         })
@@ -48,7 +49,7 @@ var mainApp = angular.module('dataMovingApp', [
             views: {
             	'pipeDetails@' : {
             		templateUrl: '/templates/pipeDetails.html',
-            	   	controller: 'pipeDetailController'
+            	   	controller: 'pipeDetailsController'
             	}
             }
         })
@@ -61,40 +62,43 @@ var mainApp = angular.module('dataMovingApp', [
 				}
 				return '/templates/pipeDetails.' + stateParams.tab + '.html';
             },
-			controller: ['$scope', '$stateParams', function($scope, $stateParams){
-				$scope.tabName = $stateParams.tab;
-				
-				if ( $stateParams.tab === 'scheduling'){
-					//Configure time picker
-					// Our main parameters for the time picker.
-					// These will primarily be used to populate the scope of this demonstration.
-					$scope.style = "dropdown";
-					$scope.timeFormat = "HH:mm";
-					$scope.startTime = "9:00";
-					$scope.endTime = "18:00";
-					$scope.intervalMinutes = 10;
-					$scope.largeIntervalMinutes = 60;
-
-					// Parameters that will actually be passed into the timepicker.
-					$scope.time = moment( "15:01", $scope.timeFormat );
-					$scope.start = moment( $scope.startTime, $scope.timeFormat );
-					$scope.end = moment( $scope.endTime, $scope.timeFormat );
-
-					// Watch parameters in our local scope and update the parameters in the timepicker as needed.
-					$scope.$watchCollection( "[startTime, timeFormat]", function( newValues ) {
-						$scope.start = moment( newValues[ 0 ], newValues[ 1 ] );
-					} );
-					$scope.$watchCollection( "[endTime, timeFormat]", function( newValues ) {
-						$scope.end = moment( newValues[ 0 ], newValues[ 1 ] );
-					} );
-					$scope.$watch( "intervalMinutes", function( newInterval ) {
-						$scope.interval = moment.duration( parseInt( newInterval ), "minutes" );
-					} );
-					$scope.$watch( "largeIntervalMinutes", function( newInterval ) {
-						$scope.largeInterval = moment.duration( parseInt( newInterval ), "minutes" );
-					} );
-				}
-			}]
+			controller: 'pipeDetails.tab.controller'
+								
+//            	return
+//					['$scope', '$stateParams', function($scope, $stateParams){
+//					$scope.tabName = $stateParams.tab;
+//					
+//					if ( $stateParams.tab === 'scheduling'){
+//						//Configure time picker
+//						// Our main parameters for the time picker.
+//						// These will primarily be used to populate the scope of this demonstration.
+//						$scope.style = "dropdown";
+//						$scope.timeFormat = "HH:mm";
+//						$scope.startTime = "9:00";
+//						$scope.endTime = "18:00";
+//						$scope.intervalMinutes = 10;
+//						$scope.largeIntervalMinutes = 60;
+//	
+//						// Parameters that will actually be passed into the timepicker.
+//						$scope.time = moment( "15:01", $scope.timeFormat );
+//						$scope.start = moment( $scope.startTime, $scope.timeFormat );
+//						$scope.end = moment( $scope.endTime, $scope.timeFormat );
+//	
+//						// Watch parameters in our local scope and update the parameters in the timepicker as needed.
+//						$scope.$watchCollection( "[startTime, timeFormat]", function( newValues ) {
+//							$scope.start = moment( newValues[ 0 ], newValues[ 1 ] );
+//						} );
+//						$scope.$watchCollection( "[endTime, timeFormat]", function( newValues ) {
+//							$scope.end = moment( newValues[ 0 ], newValues[ 1 ] );
+//						} );
+//						$scope.$watch( "intervalMinutes", function( newInterval ) {
+//							$scope.interval = moment.duration( parseInt( newInterval ), "minutes" );
+//						} );
+//						$scope.$watch( "largeIntervalMinutes", function( newInterval ) {
+//							$scope.largeInterval = moment.duration( parseInt( newInterval ), "minutes" );
+//						} );
+//					}
+//				}]
     	})
 })
 
@@ -153,7 +157,7 @@ var mainApp = angular.module('dataMovingApp', [
  }]
 )
 
-.controller('pipeDetailController', ['$scope', '$http', '$location', '$stateParams','pipesService', 'salesforceService',
+.controller('pipeDetailsController', ['$scope', '$http', '$location', '$stateParams','pipesService', 'salesforceService',
   function($scope, $http, $location, $stateParams, pipesService, salesforceService) {
 	$scope.selectedPipe = pipesService.findPipe( $stateParams.id);
 	
@@ -210,5 +214,60 @@ var mainApp = angular.module('dataMovingApp', [
 		);
 	}
  }]
+)
+
+.directive('repeatRunDetailsDirective', function() {
+  return function(scope, element, attrs) {
+	  $(element).popover({ 
+		  html : true,
+		  trigger: 'manual',
+		  placement: function (context, source) {
+			  var get_position = $(source).position();
+			  if (get_position.left > 515) {
+				  return "left";
+			  }
+			  if (get_position.left < 515) {
+				  return "right";
+			  }
+			  if (get_position.top < 110){
+				  return "bottom";
+			  }
+			  return "top";
+		  },
+		  content: function() {
+			  return $( element ).find("." + attrs.repeatRunDetailsDirective).html();   
+		  }
+	  }).on("click", function(e) {
+		  e.preventDefault();
+	  }).on("mouseenter", function() {
+		  var _this = this;
+		  $(this).popover("show");
+		  $(this).siblings(".popover").on("mouseleave", function() {
+			  $(_this).popover('hide');
+		  });
+	  }).on("mouseleave", function() {
+		  var _this = this;
+		  setTimeout(function() {
+			  if (!$(".popover:hover").length) {
+				  $(_this).popover("hide")
+			  }
+		  }, 100);
+	  });
+  };
+})
+
+.controller('pipeDetails.tab.controller', ['$scope', '$http', '$location', '$stateParams','pipesService',
+    function($scope, $http, $location, $stateParams, pipesService) {
+		pipesService.getLastRuns($scope.selectedPipe).then(
+			function( runs ){
+				$scope.runs = runs;
+				if(!$scope.$$phase){
+					$scope.$apply();
+				}
+			},function(err){
+				alert("Unable to query the activity history: " + err);
+			}
+		);
+	}]
 )
 

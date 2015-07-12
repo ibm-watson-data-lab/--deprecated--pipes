@@ -1,0 +1,11 @@
+<div class="sidebar-title">Pipes</div>
+<div>
+	<ul class="nav nav-sidebar" ng-repeat="pipe in pipes|limitTo:1">         	
+		<li><a ng-class="{'active':selectedPage === 'about'}" ng-click="selectedPage = 'about'" href="#">About</a></li>
+		<li><a ng-class="{'active':selectedPage === 'connection'}" ng-click="selectedPage = 'connection'" ui-sref="home.pipeDetails.tab({tab:'connection', id:pipe._id})">Connect</a></li>
+		<li><a ng-class="{'active':selectedPage === 'tables'}" ng-click="selectedPage = 'tables'" ui-sref="home.pipeDetails.tab({tab:'tables'})">Pick Tables</a></li>
+		<li><a ng-class="{'active':selectedPage === 'scheduling'}" ng-click="selectedPage = 'scheduling'" ui-sref="home.pipeDetails.tab({tab:'scheduling'})">Schedule</a></li>
+		<li><a ng-class="{'active':selectedPage === 'monitoring'}" ng-click="selectedPage = 'monitoring'" ui-sref="home.pipeDetails.tab({tab:'monitoring'})">Activity</a></li>
+		<li><a ng-class="{'active':selectedPage === 'faq'}" ng-click="selectedPage = 'faq'" ui-sref="home.pipeDetails.tab({tab:'faq'})">FAQ</a></li>
+	</ul>
+</div>

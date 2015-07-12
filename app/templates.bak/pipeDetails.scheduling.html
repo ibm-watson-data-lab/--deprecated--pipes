@@ -1,0 +1,42 @@
+<div class="panel panel-default">
+	<div class="panel-heading">
+		Schedule for Pipe: {{selectedPipe.name}}
+	</div>
+	<div class="panel-body">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-inline">
+						<label class="control-label">Active:</label> 
+						<label class="radio inlne control-label">
+							<input type="radio" name="schedule_active" value="1" ng-model="selectedPipe.schedule_active"/>
+							Yes
+						</label>
+						<label class="radio inline control-label">
+							<input type="radio" name="schedule_active" value="0" ng-model="selectedPipe.schedule_active"/>
+							No
+						</label>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-inline">
+						<label class="control-label">Daily Run @:</label> 
+						<!-- fm-timepicker id="time"
+						               name="time"
+						               ng-model="time"
+						               style="style"
+						               start-time="start"
+						               end-time="end"
+						               interval="interval"
+						               large-interval="largeInterval"
+						               format="timeFormat"
+						               is-open2="false"
+						               strict="strict"></fm-timepicker-->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

@@ -2,7 +2,7 @@
 <html lang="en" ng-app="dataMovingApp">
 <head>
   <meta charset="utf-8">
-  <title>Pipes</title>
+  <title>IBM Cloud Data Services | Pipes</title>
   <script src="bower_components/angular/angular.js"></script>
   <script src="bower_components/angular-resource/angular-resource.js"></script>
   <script src="bower_components/angular-cookies/angular-cookies.js"></script>
@@ -10,9 +10,15 @@
   <script src="bower_components/lodash/dist/lodash.compat.js"></script>
   <script src="bower_components/angular-ui-router/release/angular-ui-router.js"></script>
   <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/bootstrap.icon-large.min.css">
   <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.min.css" type="text/css"/>
+  
+  <link rel="stylesheet" href="css/common.css" type="text/css"/>
+  <link rel="stylesheet" href="css/styles_less.css" type="text/css"/>
+  <link rel="stylesheet" href="css/styles.css" type="text/css"/>
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/hovercard.css">
+  
   <script src="bower_components/jquery/dist/jquery.min.js"></script>
   <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
@@ -23,23 +29,62 @@
   <script src="js/app.js"></script>
   <script src="js/pipes.js"></script>
   <script src="js/salesforce.js"></script>
+  <script src="js/custom_hovercard.js"></script>
 </head>
 <body>	
-	<nav class="navbar navbar-default navbar-fixed-top">
-		<div class="container text-center">
-		    <h3><span class="label label-default">CDS Data Pipe tool</span></h3>
-		</div>
+<!-- start header -->
+	<nav class="navbar navbar-inverse navbar-fixed-top">    
+	    <div class="container-fluid">
+	        <div class="navbar-header">
+	            <span class="navbar-brand">
+	                <a rel="home" href="https://developer.ibm.com/clouddataservices">
+	                    <span>Cloud Data Services</span>
+	                </a>
+	            </span>
+	        </div>
+	    </div>
 	</nav>
-	
-	<div class="container-fluid" style="margin-top:60px">
+<!-- end header -->
+
+<!-- start content -->
+	<div class="page-content container-fluid">
 		<div class="row">
-			<div class="col-md-2" ui-view="pipeList">
-			</div>
-			<div class="col-md-8" ui-view="pipeDetails">
-			</div>
-			<div class="col-md-2">
+		
+<!-- start sidebar -->
+			<div class="col-sm-3 col-md-2 sidebar" ui-view="pipeSidebar"></div>
+<!-- end sidebar -->
+
+<!-- start main -->
+			<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" ui-view="pipeDetails"></div>
+<!-- end main -->
+
+		</div>
+	</div>
+<!-- end content -->
+	
+<!-- startfooter -->
+	<div id="pnext-footer" class="pn-footer links-footer" class="mtxl" role="navigation" aria-label="Page footer">
+		<div class="pn-pcon">	
+			<div class="pn-columns">
+				<div class="pn-col-6-1">
+					<a class="pn-footer-social-link" href="https://developer.ibm.com/clouddataservices/feed/">
+						<i class="sprite rss-footer"></i><span class="visuallyhidden">RSS Feed</span>
+					</a>				
+				</div>
+				<div class="pn-col-6-4">	
+					<div class="pn-footer-menu" role="contentinfo">
+						<ul id="menu-footer" class="pn-footer-menu pn-il pn-il--center"><li class='pn-footer-menu-item pn-il-item'><a href='https://www.ibm.com/developerworks/secure/reportabuse?referingURL=https%3A%2F%2Fdeveloper.ibm.com%2Fclouddataservices%2Fblog'>Report Abuse</a></li><li class='pn-footer-menu-item pn-il-item'><a href='/terms-of-use/'>Terms of Use</a></li><li class='pn-footer-menu-item pn-il-item'><a href='/third-party-notice/'>Third Party Notice</a></li><li class='pn-footer-menu-item pn-il-item'><a href='http://www.ibm.com/privacy/'>IBM Privacy</a></li></ul>
+					</div>
+				</div>
+				<div class="pn-col-6-1">
+					<span class="fr">
+						<a href="http://ibm.com"><i class="sprite ibm-smlogo"></i><span class="visuallyhidden">IBM</span></a>
+					</span>
+				</div>
 			</div>
 		</div>
 	</div>
+<!--  end footer -->
+
 </body>
 </html>

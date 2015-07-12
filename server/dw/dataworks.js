@@ -123,7 +123,6 @@ function dataworks( options ){
 	 * @param callback( err, activities)
 	 */
 	this.listActivities = function(callback){
-		console.log(makeUrl());
 		request.get( makeUrl(), getReqOptions(), function(err, response, body){
 			return callback( getError(err, body), body );
 		});
@@ -147,7 +146,7 @@ function dataworks( options ){
 	 */
 	this.deleteActivity = function( activityId, callback ){
 		request.del( makeUrl( "/" + activityId), getReqOptions(), function(err, response, body){
-			return callback( err );
+			return callback( getError(err, body) );
 		});
 	}
 	
@@ -218,6 +217,33 @@ function dataworks( options ){
 			run.activityId = activityId;
 			run.id = body.id;
 			return callback( null, run);
+		});
+	}
+	
+	/**
+	 * listActivityRuns: list all runs for a particular activity
+	 * @param activityId
+	 * @param callback(err, activityRuns)
+	 */
+	this.listActivityRuns = function( activityId, callback ){
+		request.get( makeUrl( "/" + activityId + "/activityRuns"), getReqOptions(), function(err, response, body){
+			return callback( getError(err, body), body );
+		});
+	}
+	
+	/**
+	 * deleteActivityRun : delete a run by id
+	 * @param activityId
+	 * @param activityRunId
+	 * @param callback(err)
+	 */
+	this.deleteActivityRun = function( activityId, activityRunId, callback ){
+		request.del( makeUrl( "/" + activityId + "/activityRuns/" + activityRunId), getReqOptions(), function(err, response, body){
+			var err = getError(err, body);
+			if ( err ){
+				return callback( err );
+			}
+			return callback();
 		});
 	}
 	

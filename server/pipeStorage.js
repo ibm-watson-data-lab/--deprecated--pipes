@@ -28,13 +28,10 @@ viewsManager
 	{
 		map: function(doc){
 			if ( doc.pipeId && doc.type === "run" ){
-				emit( [doc.pipeId, doc._id], 1 );
+				emit( [doc.startTime, doc.pipeId], doc._id );
 			}
-		},
-		reduce: function(key, values) {
-			return sum(values);
 		}
-	}, 1 //Version
+	}, 4 //Version
 )
 var pipeDb = new cloudant.db(dbName, viewsManager );
 

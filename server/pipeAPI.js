@@ -63,4 +63,23 @@ module.exports = function( app ){
 			res.json( pipe );
 		});
 	})
+	
+	/**
+	 * Returns the last 10 runs
+	 */
+	app.get("/runs/:pipeid", function( req, res ){
+		pipeDb.run( function( err, db ){
+			db.view( 'application', "all_runs", 
+					{startkey: [req.params.pipeid, 0], endKey:[req.params.pipeid, {}],'include_docs':true, 'limit': 10, descending:true},
+				function(err, data) {
+					if ( err ){
+						console.log(err);
+						//No runs yet, return empty array
+						return res.json( [] );
+					}
+					return res.json( data.rows );
+				}
+			);
+		});
+	});
 };

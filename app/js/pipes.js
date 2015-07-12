@@ -90,6 +90,22 @@ angular.module('pipes', [],function() {
         		});
         	
         	return deferred.promise;
+        },
+        getLastRuns: function(pipe){
+        	var deferred = $q.defer();
+        	$http.get("/runs/" + pipe._id)
+        		.success(function( data ){
+        			var runs = _.map( data, function( row ){
+        				var doc = row.doc;
+        				doc.startTime = moment( doc.startTime ).format("dddd, MMMM Do YYYY, h:mm:ss a");
+        				return doc;
+        			});
+        			deferred.resolve(runs);
+        		})
+        		.error( function( data, status, headers, config){
+        			deferred.reject( data.error || data );
+        		});
+        	return deferred.promise;
         }
     }
  });

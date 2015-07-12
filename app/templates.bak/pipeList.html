@@ -9,7 +9,7 @@
 		
 		<ul class="nav nav-pills nav-stacked">
 			<li ng-repeat="pipe in pipes|filter:query as results" ui-sref-active="active">
-				<a ui-sref="home.pipeDetails.tab({tab:'connection', id:pipe._id})">{{ (pipe.new ? "*" : "") + pipe.name}} </a>
+				<a ui-sref="home.pipeDetails.tab({tab:'basic', id:pipe._id})">{{ (pipe.new ? "*" : "") + pipe.name}} </a>
 			</li>
 			<li class="animate-repeat" ng-if="results.length == 0"><strong>No results</strong></li>
 		</ul>
