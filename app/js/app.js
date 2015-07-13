@@ -62,43 +62,13 @@ var mainApp = angular.module('dataMovingApp', [
 				}
 				return '/templates/pipeDetails.' + stateParams.tab + '.html';
             },
-			controller: 'pipeDetails.tab.controller'
-								
-//            	return
-//					['$scope', '$stateParams', function($scope, $stateParams){
-//					$scope.tabName = $stateParams.tab;
-//					
-//					if ( $stateParams.tab === 'scheduling'){
-//						//Configure time picker
-//						// Our main parameters for the time picker.
-//						// These will primarily be used to populate the scope of this demonstration.
-//						$scope.style = "dropdown";
-//						$scope.timeFormat = "HH:mm";
-//						$scope.startTime = "9:00";
-//						$scope.endTime = "18:00";
-//						$scope.intervalMinutes = 10;
-//						$scope.largeIntervalMinutes = 60;
-//	
-//						// Parameters that will actually be passed into the timepicker.
-//						$scope.time = moment( "15:01", $scope.timeFormat );
-//						$scope.start = moment( $scope.startTime, $scope.timeFormat );
-//						$scope.end = moment( $scope.endTime, $scope.timeFormat );
-//	
-//						// Watch parameters in our local scope and update the parameters in the timepicker as needed.
-//						$scope.$watchCollection( "[startTime, timeFormat]", function( newValues ) {
-//							$scope.start = moment( newValues[ 0 ], newValues[ 1 ] );
-//						} );
-//						$scope.$watchCollection( "[endTime, timeFormat]", function( newValues ) {
-//							$scope.end = moment( newValues[ 0 ], newValues[ 1 ] );
-//						} );
-//						$scope.$watch( "intervalMinutes", function( newInterval ) {
-//							$scope.interval = moment.duration( parseInt( newInterval ), "minutes" );
-//						} );
-//						$scope.$watch( "largeIntervalMinutes", function( newInterval ) {
-//							$scope.largeInterval = moment.duration( parseInt( newInterval ), "minutes" );
-//						} );
-//					}
-//				}]
+            controllerProvider: function($stateParams) {
+            	if ( $stateParams.tab && $stateParams.tab === 'monitoring' ){
+            		return 'pipeDetails.tab.' + $stateParams.tab + '.controller';
+            	}
+            	//Default
+            	return 'pipeDetails.tab.controller';
+            }
     	})
 })
 
@@ -157,8 +127,8 @@ var mainApp = angular.module('dataMovingApp', [
  }]
 )
 
-.controller('pipeDetailsController', ['$scope', '$http', '$location', '$stateParams','pipesService', 'salesforceService',
-  function($scope, $http, $location, $stateParams, pipesService, salesforceService) {
+.controller('pipeDetailsController', ['$scope', '$http', '$location', '$state', '$stateParams','pipesService', 'salesforceService',
+  function($scope, $http, $location, $state, $stateParams, pipesService, salesforceService) {
 	$scope.selectedPipe = pipesService.findPipe( $stateParams.id);
 	
 	$scope.isPipeRunning = function(){
@@ -207,17 +177,6 @@ var mainApp = angular.module('dataMovingApp', [
 		$scope.selectedPipe.selectedTableName = table.labelPlural;
 		$scope.selectedPipe.selectedTableId = table.name;
 	}
-	
-	$scope.runNow = function(){
-		salesforceService.runPipe( $scope.selectedPipe ).then(
-			function(){
-				console.log("Pipe " + $scope.selectedPipe._id + " successfully started");
-			},
-			function( err ){
-				alert("Error while running pipe: " + err );
-			}
-		);
-	}
  }]
 )
 
@@ -263,16 +222,64 @@ var mainApp = angular.module('dataMovingApp', [
 
 .controller('pipeDetails.tab.controller', ['$scope', '$http', '$location', '$stateParams','pipesService',
     function($scope, $http, $location, $stateParams, pipesService) {
-		pipesService.getLastRuns($scope.selectedPipe).then(
-			function( runs ){
-				$scope.runs = runs;
-				if(!$scope.$$phase){
-					$scope.$apply();
-				}
-			},function(err){
-				alert("Unable to query the activity history: " + err);
-			}
-		);
+		$scope.tabName = $stateParams.tab;
+	}]
+)
+
+.controller('pipeDetails.tab.monitoring.controller', ['$scope', '$http', '$location', '$state', '$stateParams','pipesService', 'salesforceService',
+    function($scope, $http, $location, $state, $stateParams, pipesService, salesforceService) {
+		$scope.tabName = $stateParams.tab;
+
+		$scope.runNow = function(){
+			salesforceService.runPipe( $scope.selectedPipe ).then(
+					function(){
+						console.log("Pipe " + $scope.selectedPipe._id + " successfully started");
+						//Reload the view
+						setTimeout( function( callback ){
+							$state.go($state.current.name, {}, {reload: true});
+							location.reload();
+						}, 5000);
+					},
+					function( err ){
+						alert("Error while running pipe: " + err );
+					}
+			);
+		}
+		
+		//Get the list of runs
+		var fetchRuns = function(){
+			pipesService.getLastRuns($scope.selectedPipe).then(
+					function( runs ){
+						$scope.runs = runs;
+
+						if ( $scope.selectedPipe.run ){
+							var currentRun = _.find( $scope.runs, function(r){
+								return r._id === $scope.selectedPipe.run;
+							});
+
+							if ( currentRun ){
+								$scope.steps = [];
+								_.forOwn( currentRun, function( value, key ){
+									if ( key.indexOf('step') == 0 ){
+										$scope.steps.push( value );
+									}
+								});
+
+								//Monitor progress
+								setTimeout( fetchRuns, 1000 );
+							}
+						}
+
+						if(!$scope.$$phase){
+							$scope.$apply();
+						}
+					},function(err){
+						alert("Unable to query the activity history: " + err);
+					}
+			);
+		}
+		
+		fetchRuns();
 	}]
 )
 

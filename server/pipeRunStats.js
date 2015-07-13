@@ -81,10 +81,23 @@ function pipeRunStats(pipe, steps, callback){
 		save();
 	}	
 	
-	this.start = function(){
+	this.start = function( callback ){
 		console.log("Starting a new run");
 		runDoc.startTime = moment();
 		runDoc.status = "RUNNING";
+		
+		//Add the run id to the pipe to signify that it is running
+		if ( pipe.run !== runDoc._id ){
+			pipeDb.upsert( pipe._id, function( storedPipe ){
+				storedPipe.run = runDoc._id;
+				pipe = storedPipe;
+				return storedPipe;
+			}, function( err ){
+				return callback( err );
+			});
+		}else{
+			return callback();
+		}
 	}
 	
 	this.done = function(err ){
@@ -111,6 +124,18 @@ function pipeRunStats(pipe, steps, callback){
 		
 		//Save the document
 		save();
+		
+		//Remove the run from the pipe
+		pipeDb.upsert( pipe._id, function( storedPipe ){
+			if ( storedPipe && storedPipe.hasOwnProperty("run") ){
+				delete storedPipe["run"];
+			}
+			return storedPipe;
+		}, function( err ){
+			if ( err ){
+				console.log("Unable to remove reference to run in pipe %s. Error is %s ", pipe._id, err );
+			}
+		});
 	}
 }
 

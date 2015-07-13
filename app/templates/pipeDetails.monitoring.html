@@ -71,7 +71,11 @@
 <div ng-if="isPipeRunning()">
 	<div class="container-fluid">
 		<div class="page-header">
-	  		<div><b>Your pipe is running,,,</b></div>
-		</div>	
+	  		<div><b>Your pipe is running...</b></div>
+		</div>
+		
+		<div ng-repeat="step in steps">
+			{{step.label}}: <span style="color:green" ng-if="step.status==='FINISHED'">Done</span>
+		</div>
 	</div>
 </div>

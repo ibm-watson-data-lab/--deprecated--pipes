@@ -52,6 +52,9 @@ function pipeRunner( sf, pipe ){
 		return pipe.tables;
 	}.bind( this );
 	
+	/**
+	 * Create a new run
+	 */
 	this.newRun = function( callback ){
 		var err = validate();
 		if ( err ){
@@ -63,27 +66,28 @@ function pipeRunner( sf, pipe ){
 			if ( err ){
 				return callback(err);
 			}
-			pipeRunStats.start();
-			async.eachSeries( steps, function( step, callback ){
-				console.log( "Starting step : " + step.getLabel() );
-				try{
-					step.beginStep( this, pipeRunStats );
-					step.run( function( err ){
-						if ( err ){
-							return callback( err );
-						}
-						step.endStep( callback );
-					});
-				}catch(e){
-					//Error caught
-					console.log("Exception caught: " + e);
-					console.log("Stack: " + e.stack);
-					return callback(e);
-				}
-			}.bind(this), function( err ){
-				//All done
-				pipeRunStats.done( err );
-			});
+			pipeRunStats.start( function(err){
+				async.eachSeries( steps, function( step, callback ){
+					console.log( "Starting step : " + step.getLabel() );
+					try{
+						step.beginStep( this, pipeRunStats );
+						step.run( function( err ){
+							if ( err ){
+								return callback( err );
+							}
+							step.endStep( callback );
+						});
+					}catch(e){
+						//Error caught
+						console.log("Exception caught: " + e);
+						console.log("Stack: " + e.stack);
+						return callback(e);
+					}
+				}.bind(this), function( err ){
+					//All done
+					pipeRunStats.done( err );
+				});
+			}.bind(this));
 			
 			//Request accepted, send response back to the client immediately
 			return callback( null, pipeRunStats);
