@@ -3,8 +3,8 @@ applications:
 - name: pipes
   memory: 512M
   instances: 1
-  host: pipes
   domain: mybluemix.net
+  random-route: true
   disk_quota: 1024M
   command: node --expose-gc server.js
   path: .
