@@ -70,3 +70,5 @@ if (process.env.VCAP_APP_HOST){
 	global.appPort = port;
 	require('https').createServer(options, app).listen(port,connected);
 }
+
+require("cf-deployment-tracker-client").track();
