@@ -1,64 +1,77 @@
-<div class="container-fluid">
-	<div class="page-header">
-  		<div><b>Activity</b></div>
-  		<small>Activity History Log</small>
-	</div>	
-	<table class="table table-condensed table-hover">
-		<thead>
-			<tr>
-				<th align="center">Status</th>
-				<th align="center">Date/Time</th>
-				<th align="center">Records Processed</th>
-				<th align="center">Run Time</th>
-				<th align="center">Message</th>
-				<th align="center">Detail</th>
-			</tr>
-		</thead>
-		<tbody>
-			<tr ng-repeat="run in runs" ng-class="{success:true}">
-				<td>{{run.status}}</td>
-				<td>{{run.startTime}}</td>
-				<td>{{run.numRecords}}</td>
-				<td>{{run.elapsedTime}}</td>
-				<td>{{run.status}}</td>
-				<td>
-					<span>
-						<a href="" data-toggle="popover" class="basic-hovercard" data-placement="bottom" repeat-run-details-directive="runDetails">
-							<strong>Details</strong>
-							<div class="runDetails" style="display:none">
-								<div style="height:400px;width=800px;overflow: auto">
-									<table class="table table-condensed table-striped">
-										<thead>
-											<th align="center">Table Name</th>
-											<th align="center">Records</th>
-											<th align="center">Status</th>
-										</thead>
-										<tbody>
-											<tr ng-repeat="stat in run.stats">
-												<td>{{stat.tableName}}</td>
-												<td>{{stat.numRecords}}</td>
-												<td>{{stat.errors}}</td>
-											</tr>
-										</tbody>
-									</table>
-								</div>
-							</div>
-						</a>
-					</span>
-				</td>
-			</tr>
-		</tbody>
-	</table>
+<div ng-if="!selectedPipe">
+	<div>Invalid Selection. No pipe is currently selected</div>
 </div>
 
-<div class="container-fluid">
-	<div class="row">
-		<div class="col-md-12">
-			<div class="btn-group btn-group pull-left" role="group">
-				<button type="button" ng-class="['btn', 'btn-default']"
-					ng-click="runNow()">Run now</button>
+<div ng-if="!isPipeRunning()">
+	<div class="container-fluid">
+		<div class="page-header">
+	  		<div><b>Activity</b></div>
+	  		<small>Activity History Log</small>
+		</div>	
+		<table class="table table-condensed table-hover">
+			<thead>
+				<tr>
+					<th align="center">Status</th>
+					<th align="center">Date/Time</th>
+					<th align="center">Records Processed</th>
+					<th align="center">Run Time</th>
+					<th align="center">Message</th>
+					<th align="center">Detail</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="run in runs" ng-class="{success:true}">
+					<td>{{run.status}}</td>
+					<td>{{run.startTime}}</td>
+					<td>{{run.numRecords}}</td>
+					<td>{{run.elapsedTime}}</td>
+					<td>{{run.message}}</td>
+					<td>
+						<span>
+							<a href="" data-toggle="popover" class="basic-hovercard" data-placement="bottom" repeat-run-details-directive="runDetails">
+								<strong>Details</strong>
+								<div class="runDetails" style="display:none">
+									<div style="height:400px;width=800px;overflow: auto">
+										<table class="table table-condensed table-striped">
+											<thead>
+												<th align="center">Table Name</th>
+												<th align="center">Records</th>
+												<th align="center">Status</th>
+											</thead>
+											<tbody>
+												<tr ng-repeat="stat in run.tableStats">
+													<td>{{stat.tableName}}</td>
+													<td>{{stat.numRecords}}</td>
+													<td>{{stat.errors}}</td>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+								</div>
+							</a>
+						</span>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-md-12">
+				<div class="btn-group btn-group pull-left" role="group">
+					<button type="button" ng-class="['btn', 'btn-default']"
+						ng-click="runNow()">Run now</button>
+				</div>
 			</div>
 		</div>
 	</div>
 </div>
 
+<div ng-if="isPipeRunning()">
+	<div class="container-fluid">
+		<div class="page-header">
+	  		<div><b>Your pipe is running,,,</b></div>
+		</div>	
+	</div>
+</div>

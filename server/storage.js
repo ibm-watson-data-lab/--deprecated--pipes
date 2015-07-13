@@ -8,8 +8,6 @@
  * @author David Taieb
  */
 
-var cfEnv = require("cfenv");
-var appEnv = cfEnv.getAppEnv();
 var when = require('when');
 var events = require('events');
 var util = require('util');
@@ -18,13 +16,12 @@ var async = require('async');
 
 //Discover cloudant service info and initialize connection
 var cloudantUrl = process.env.CLOUDANT_URL;
-var storageServiceName = process.env.CLOUDANT_SERVICE_NAME || new RegExp(".*cloudant.*", "i");
 var cloudantService = cloudantUrl ? 
 		{ 
 			name : "Cloudant Url", 
 			credentials: { url: cloudantUrl} 
 		} 
-		: appEnv.getService(storageServiceName);
+		: require("./vcapServices").getService( process.env.CLOUDANT_SERVICE_NAME || "cloudant" );
 if (!cloudantService) {
     console.log("Failed to find Cloudant service");
     throw new Error( "Failed to find Cloudant service" );
@@ -257,15 +254,16 @@ function storage( serviceDbName, viewsManager ){
 			}
 			
 			if ( this.savesInProgress.hasOwnProperty( docId ) ){
-				console.log("Deferring save of document: " + docId );
+				this.savesInProgress[docId]++;
+				//console.log("Deferring save of document: " + docId + " :::: " + this.savesInProgress[docId]);
 				//Wait for the other save to finish
 				return setTimeout( function(){
 					return this.upsert( docId, callback, done );
-				}.bind(this), 500 );
+				}.bind(this), this.savesInProgress[docId] * 500 );
 			}
 
 			//Mark this document as being saved
-			this.savesInProgress[docId] = true;
+			this.savesInProgress[docId] = 1;
 			
 			//We have a docId, load it
 			db.get( docId, { include_docs: true }, function( err, body ){				

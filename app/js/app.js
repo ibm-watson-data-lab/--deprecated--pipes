@@ -161,6 +161,11 @@ var mainApp = angular.module('dataMovingApp', [
   function($scope, $http, $location, $stateParams, pipesService, salesforceService) {
 	$scope.selectedPipe = pipesService.findPipe( $stateParams.id);
 	
+	$scope.isPipeRunning = function(){
+		var selectedPipe = $scope.selectedPipe || null;
+		return selectedPipe && selectedPipe.run;
+	}
+	
 	$scope.savePipe = function(){
 		pipesService.savePipe( $scope.selectedPipe ).then(
 			function(){

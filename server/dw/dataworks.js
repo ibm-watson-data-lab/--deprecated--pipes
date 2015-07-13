@@ -272,7 +272,7 @@ function dataworks( options ){
 	 * Convenience method to determine if a run is finished
 	 */
 	this.isFinished = function( status ){
-		return status.toUpperCase() === "FINISHED";
+		return status.toLowerCase().indexOf("finished") >= 0;
 	}
 }
 
