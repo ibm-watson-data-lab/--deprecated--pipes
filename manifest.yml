@@ -1,4 +1,8 @@
 ---
+declared-services:
+  pipes-cloudant-service:
+    label: cloudantNoSQLDB
+    plan: Shared
 applications:
 - name: pipes
   memory: 512M
