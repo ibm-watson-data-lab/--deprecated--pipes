@@ -8,3 +8,5 @@ applications:
   disk_quota: 1024M
   command: node --expose-gc server.js
   path: .
+  services:
+  - pipes-cloudant-service
