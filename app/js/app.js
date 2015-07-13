@@ -5,8 +5,7 @@ var mainApp = angular.module('dataMovingApp', [
   'pipes',
   'salesforce',
   'ui.router',
-  'ui.bootstrap',
-  'fm.components'
+  'ui.bootstrap'
 ],function($locationProvider) {
     //$locationProvider.html5Mode({'enabled': true, 'requireBase': false});
 })
