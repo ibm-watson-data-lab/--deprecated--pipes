@@ -1,0 +1,9 @@
+.project
+.jshintrc
+.settings
+app/bower_components
+.tern-project
+node_modules
+npm-debug.log
+.strong-pm/env.json
+development/vcaps.properties
