@@ -26,6 +26,18 @@ Create a Cloudant service within Bluemix if one has not already been created:
 
     $ cf create-service cloudantNoSQLDB Shared pipes-cloudant-service
 
+Create a dashDB service within Bluemix if one has not already been created:
+
+    $ cf create-service dashDB Entry pipes-dashdb-service
+
+Create a DataWorks service within Bluemix if one has not already been created:
+
+    $ cf create-service DataWorks free pipes-dataworks-service
+
+Create a Single Sign On (SSO) service within Bluemix if one has not already been created:
+
+    $ cf create-service SingleSignOn standard pipes-sso-service
+
 ### Deploying
 
 To deploy to Bluemix, simply:

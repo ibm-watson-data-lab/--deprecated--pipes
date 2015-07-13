@@ -3,6 +3,15 @@ declared-services:
   pipes-cloudant-service:
     label: cloudantNoSQLDB
     plan: Shared
+  pipes-dashdb-service:
+    label: dashDB
+    plan: Entry
+  pipes-dataworks-service:
+    label: DataWorks
+    plan: free
+  pipes-sso-service:
+    label: SingleSignOn
+    plan: standard
 applications:
 - name: pipes
   memory: 512M
@@ -14,3 +23,6 @@ applications:
   path: .
   services:
   - pipes-cloudant-service
+  - pipes-dashdb-service
+  - pipes-dataworks-service
+  - pipes-sso-service
