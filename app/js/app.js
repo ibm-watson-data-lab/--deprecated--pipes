@@ -188,10 +188,10 @@ var mainApp = angular.module('dataMovingApp', [
 		$state.go("home.pipeDetails.tab", {tab:tab, id: $scope.selectedPipe._id });
 	}
 	
-	var ws = new WebSocket("wss://127.0.0.1:8082/runs");
-    
+	var wsProtocol = $location.protocol() === "https" ? "wss" : "ws";
+	var ws = new WebSocket(wsProtocol + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/runs");    
     ws.onopen = function(){  
-        console.log("Socket has been opened!");  
+        console.log("WebSocket connection established");  
     };
     
     ws.onmessage = function(message) {
@@ -294,11 +294,6 @@ var mainApp = angular.module('dataMovingApp', [
 			salesforceService.runPipe( $scope.selectedPipe ).then(
 					function(){
 						console.log("Pipe " + $scope.selectedPipe._id + " successfully started");
-//						//Reload the view
-//						setTimeout( function( callback ){
-//							$state.go($state.current.name, {}, {reload: true});
-//							location.reload();
-//						}, 5000);
 					},
 					function( err ){
 						alert("Error while running pipe: " + err );

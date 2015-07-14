@@ -30,7 +30,8 @@
     "morgan": "^1.6.0",
     "request": "~2.58.0",
     "when": "~3.7.3",
-    "ws": "~0.7.2"
+    "ws": "~0.7.2",
+    "http-proxy": "~1.11.1"
   },
   "devDependencies": {
     "mocha": "*",
