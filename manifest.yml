@@ -25,4 +25,3 @@ applications:
   - pipes-cloudant-service
   - pipes-dashdb-service
   - pipes-dataworks-service
-  - pipes-sso-service
