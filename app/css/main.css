@@ -13,7 +13,7 @@ body {
 }
 
 .sprite {
-	background-image: url("../img/sprite.png") !important;
+	background-image: url("/img/sprite.png") !important;
 }
 
 .sidebar {

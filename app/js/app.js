@@ -176,6 +176,10 @@ var mainApp = angular.module('dataMovingApp', [
 		$scope.selectedPipe.selectedTableName = table.labelPlural;
 		$scope.selectedPipe.selectedTableId = table.name;
 	}
+	
+	$scope.goToNextPage = function( tab ){
+		$state.go("home.pipeDetails.tab", {tab:tab, id: $scope.selectedPipe._id });
+	}
  }]
 )
 

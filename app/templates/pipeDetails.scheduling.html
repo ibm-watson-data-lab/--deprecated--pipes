@@ -1,41 +1,23 @@
-<div class="panel panel-default">
-	<div class="panel-heading">
-		Schedule for Pipe: {{selectedPipe.name}}
+<div class="container-fluid">
+	<div class="page-header">
+  		<div><b>Schedule</b></div>
+  		<small>Pick a time and we'll run the job then. You can also run a job now on the next screen</small>
+	</div>	
+	<div>Daily Run</div>
+	<div class="input-group input-group-lg">
+		<span class="input-group-addon" id="atsign">@</span> 
+		<input type="time" class="form-control" placeholder="HH:MM am/pm" ng-model="selectedPipe.scheduleTime">
 	</div>
-	<div class="panel-body">
-		<div class="container-fluid">
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-inline">
-						<label class="control-label">Active:</label> 
-						<label class="radio inlne control-label">
-							<input type="radio" name="schedule_active" value="1" ng-model="selectedPipe.schedule_active"/>
-							Yes
-						</label>
-						<label class="radio inline control-label">
-							<input type="radio" name="schedule_active" value="0" ng-model="selectedPipe.schedule_active"/>
-							No
-						</label>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-inline">
-						<label class="control-label">Daily Run @:</label> 
-						<!-- fm-timepicker id="time"
-						               name="time"
-						               ng-model="time"
-						               style="style"
-						               start-time="start"
-						               end-time="end"
-						               interval="interval"
-						               large-interval="largeInterval"
-						               format="timeFormat"
-						               is-open2="false"
-						               strict="strict"></fm-timepicker-->
-					</div>
-				</div>
+
+</div>
+
+<p>
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-12">
+			<div class="btn-group btn-group pull-left" role="group">
+				<button type="button" ng-class="['btn', 'btn-default' ]" ng-click="savePipe()">Save</button>
+				<button type="button" ng-class="['btn', 'btn-default' ]" ng-click="goToNextPage('monitoring')">Next</button>
 			</div>
 		</div>
 	</div>

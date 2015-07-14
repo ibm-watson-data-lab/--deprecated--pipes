@@ -22,7 +22,7 @@
 	display: inline-block; 
 	*display: inline;
 	*zoom: 1;
-	background-image: url( 'css/sprite.png?v=0.1' );
+	background-image: url( '/css/sprite.png?v=0.1' );
 }
 .adminsnippets-icon{ background-position: 0 0; width: 36px; height: 36px; } 
 .adminsnippets-white-icon{ background-position: 0 -86px; width: 36px; height: 36px; } 
@@ -217,7 +217,7 @@ a:focus,
 		position: absolute;
 		top: 1em;
 		left: 10px;
-		background-image: url( 'css/sprite.png' );
+		background-image: url( '/css/sprite.png' );
 	}
 	
 	.pn-btn-sprite-all { background-position: -94px -405px; width: 36px; height: 36px; }
