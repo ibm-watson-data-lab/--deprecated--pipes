@@ -33,6 +33,11 @@ function pipeRunStep(){
 		return this.pipeRunner || null;
 	}
 	
+	this.setStepMessage = function(message){
+		this.stats.message = message;
+		this.pipeRunStats.broadcastRunEvent();
+	}
+	
 	this.beginStep = function( pipeRunner, pipeRunStats ){
 		//Reference to the main stats object
 		this.pipeRunStats = pipeRunStats;

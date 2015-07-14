@@ -8,6 +8,7 @@
 var moment = require("moment");
 var pipeDb = require("./pipeStorage");
 var _ = require("lodash");
+var global = require("./global");
 
 /**
  * PipeRunStats class
@@ -15,7 +16,7 @@ var _ = require("lodash");
  */
 function pipeRunStats(pipe, steps, callback){
 	this.pipe = pipe;
-	var runDoc = {
+	var runDoc = this.runDoc = {
 		type : "run",
 		startTime : moment(),
 		pipeId: pipe._id,
@@ -45,8 +46,13 @@ function pipeRunStats(pipe, steps, callback){
 			}
 			//Replace with the latest doc from db
 			runDoc = runDocument;
+			broadcastRunEvent();
 			return callback && callback();
 		});
+	}
+	
+	var broadcastRunEvent = this.broadcastRunEvent = function(event){
+		global.emit("runEvent", global.currentRun && global.currentRun.runDoc );
 	}
 	
 	//Initial save
@@ -63,6 +69,7 @@ function pipeRunStats(pipe, steps, callback){
 	
 	this.setMessage = function( message ){
 		runDoc.message = message || "";
+		broadcastRunEvent();		
 	}
 	
 	this.getTableStats = function(){
@@ -81,8 +88,19 @@ function pipeRunStats(pipe, steps, callback){
 		save();
 	}	
 	
+	/**
+	 * start: Called when a run is about to start
+	 */
 	this.start = function( callback ){
 		console.log("Starting a new run");
+		
+		//Set the current run to this
+		if ( global.currentRun ){
+			return callback( "A run is already in progress %s", currentRun._id );
+		}
+		global.currentRun = this;
+		broadcastRunEvent();
+		
 		runDoc.startTime = moment();
 		runDoc.status = "RUNNING";
 		
@@ -100,7 +118,11 @@ function pipeRunStats(pipe, steps, callback){
 		}
 	}
 	
+	/**
+	 * done: called when a run is completed
+	 */
 	this.done = function(err ){
+		global.currentRun = null;
 		if ( err ){
 			runDoc.status = "ERROR";
 			runDoc.message = "" + err;
@@ -136,6 +158,8 @@ function pipeRunStats(pipe, steps, callback){
 				console.log("Unable to remove reference to run in pipe %s. Error is %s ", pipe._id, err );
 			}
 		});
+		
+		broadcastRunEvent();
 	}
 }
 

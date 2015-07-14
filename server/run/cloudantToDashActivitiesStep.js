@@ -28,6 +28,17 @@ function cloudantToDashActivitiesStep(){
 		pipeRunStats.dwInstance = dwInstance;
 		var stepStats = this.stats;
 		stepStats.numRunningActivities = 0;
+		var numCreated = 0;
+		
+		//convenience method
+		var expectedLength = this.getPipeRunner().getSourceTables().length;
+		var formatStepMessage = function(){
+			var percent = ((stepStats.numRunningActivities/expectedLength)*100).toFixed(1);
+			var message = numCreated + " DataWorks activities created, " + stepStats.numRunningActivities + " are successfully started (" + percent + "%)";
+			this.setStepMessage( message );
+		}.bind(this);
+		
+		formatStepMessage();
 		
 		//Create the activities if needed
 		dwInstance.listActivities( function( err, activities ){
@@ -44,6 +55,7 @@ function cloudantToDashActivitiesStep(){
 						}
 						tableStats.activityRunId = activityRun.id;
 						stepStats.numRunningActivities++;
+						formatStepMessage();
 						//console.log("SuccessFully submitted a activity for running.");
 						return callback( null );
 					});
@@ -52,12 +64,14 @@ function cloudantToDashActivitiesStep(){
 					return act.name.toLowerCase() === tableStats.dbName.toLowerCase();
 				});
 				if ( activity ){
-					console.log("Activity %s already exists", tableStats.dbName);
+					//console.log("Activity %s already exists", tableStats.dbName);
 					tableStats.activityId = activity.id;
+					
+					numCreated++;
 					//Run it now
 					runActivityFn(activity);
 				}else{
-					console.log("Creating activity for table " + tableStats.dbName );
+					//console.log("Creating activity for table " + tableStats.dbName );
 
 					var srcConnection = dwInstance.newConnection("cloudant");
 					srcConnection.setDbName( tableStats.dbName.toLowerCase() );
@@ -80,6 +94,8 @@ function cloudantToDashActivitiesStep(){
 						//Record the activity id and start execution
 						tableStats.activityId = activity.id;							
 						console.log("SuccessFully created a new activity: " + util.inspect( activity, { showHidden: true, depth: null } ) );
+						numCreated++;
+						formatStepMessage();
 						//Run it now
 						runActivityFn(activity);
 					});
@@ -88,6 +104,8 @@ function cloudantToDashActivitiesStep(){
 				if ( err ){
 					return callback(err);
 				}
+				
+				formatStepMessage();
 				return callback();
 			});	
 		});

@@ -2,10 +2,10 @@
 	<div>Invalid Selection. No pipe is currently selected</div>
 </div>
 
-<div ng-if="!isPipeRunning()">
+<div ng-show="!isPipeRunning() && !runningAnchor">
 	<div class="container-fluid">
 		<div class="page-header">
-	  		<div><b>Activity</b></div>
+	  		<div class="sidebar-title">Activity</div>
 	  		<small>Activity History Log</small>
 		</div>	
 		<table class="table table-condensed table-hover">
@@ -68,14 +68,18 @@
 	</div>
 </div>
 
-<div ng-if="isPipeRunning()">
+<div ng-show="isPipeRunning() || runningAnchor" ng-model="currentRun">
 	<div class="container-fluid">
 		<div class="page-header">
-	  		<div><b>Your pipe is running...</b></div>
+	  		<div class="sidebar-title">Your pipe is running...</div>
 		</div>
 		
-		<div ng-repeat="step in steps">
-			{{step.label}}: <span style="color:green" ng-if="step.status==='FINISHED'">Done</span>
-		</div>
+		<ol style="list-style:decimal;margin-left:30px">
+			<li ng-repeat="step in steps">
+				<span class="glyphicon glyphicon-ok-circle" ng-if="step.status==='FINISHED'"></span> {{step.label}}: <span style="color:green">{{step.message}}</span>
+			</li>
+		</ol>
+		
+		<a href="javascript:void(0)" ng-show="!isPipeRunning()" ng-click="runningAnchor=false">See Results</a>
 	</div>
 </div>

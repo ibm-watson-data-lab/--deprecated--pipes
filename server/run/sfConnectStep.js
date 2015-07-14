@@ -8,6 +8,7 @@
 var pipeRunStep = require('./pipeRunStep');
 var jsforce = require("jsforce");
 var pipeDb = require("../pipeStorage");
+var async = require("async");
 
 /**
  * sfConnectStep class
@@ -20,6 +21,7 @@ function sfConnectStep(){
 	
 	//public APIs
 	this.run = function( callback ){
+		this.setStepMessage("Connecting to Salesforce...");
 		var sf = this.getPipeRunner().sf;
 		var pipe = this.getPipe();
 		//Create jsForce connection
@@ -44,17 +46,33 @@ function sfConnectStep(){
 			})
 		});
 		
-		//Verify the connection is ok
-		conn.identity( function( err, userInfo){
+		//Compute the total number of records so we can compute progression
+		var tables = this.getPipeRunner().getSourceTables();
+		this.pipeRunStats.expectedTotalRecords = 0;
+		//Main dispatcher code
+		async.each( tables, function( table, callback ){
+			conn.query("SELECT COUNT() FROM "+ table.name)
+			.on("end", function(query) {
+				this.pipeRunStats.expectedTotalRecords += query.totalSize;
+				this.setStepMessage("Connection to Salesforce Successful. " + this.pipeRunStats.expectedTotalRecords +" records have been found");
+				return callback();
+			}.bind(this))
+			.on("error", function(err) {
+				//skip
+				console.log("Error getting count for table %s", table.name);
+				return callback(null);
+			})
+			.run();			
+		}.bind(this), function( err ){
 			if ( err ){
-				return callback(err);
+				this.setStepMessage("Connection to Salesforce unsuccessful: %s", err);
+				return callback( err );
 			}
-			console.log("Connection to SalesForce established for user: %s", userInfo.email );
-			return callback( null, userInfo);
-		});
-		
-		//Keep a reference of the connection for the next steps
-		this.pipeRunStats.sfConnection = conn;
+			//Keep a reference of the connection for the next steps
+			this.pipeRunStats.sfConnection = conn;
+			this.setStepMessage("Connection to Salesforce SuccessFull. " + this.pipeRunStats.expectedTotalRecords +" records have been found");
+			return callback();
+		}.bind(this));
 	}
 }
 

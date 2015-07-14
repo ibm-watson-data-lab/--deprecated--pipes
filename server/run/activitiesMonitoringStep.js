@@ -32,7 +32,16 @@ function activitiesMonitoringStep(){
 		
 		stepStats.numFinishedActivities = 0;
 		
+		//convenience method
+		var expectedLength = this.getPipeRunner().getSourceTables().length;
+		var formatStepMessage = function(){
+			var percent = ((stepStats.numFinishedActivities/expectedLength)*100).toFixed(1);
+			var message = stepStats.numFinishedActivities + " DataWorks activities completed (" + percent + "%)";
+			this.setStepMessage( message );
+		}.bind(this);
+		
 		//Start monitoring the activities
+		formatStepMessage();
 		var monitor = function(){
 			async.forEachOf( pipeRunStats.getTableStats(), function(tableStats, tableName, callback ){
 				if ( !tableStats.activityDone ){
@@ -45,10 +54,8 @@ function activitiesMonitoringStep(){
 							stepStats.numFinishedActivities++;
 							stepStats.numRunningActivities--;
 							tableStats.activityDone = true;
+							formatStepMessage();
 						}
-//						else{
-//							console.log("Waiting for Activity %s to complete", tableName);
-//						}
 						return callback();
 					})
 				}else{
@@ -58,15 +65,16 @@ function activitiesMonitoringStep(){
 				if ( err ){
 					return callback(err);
 				}
-				console.log("%d activities running and %d activities completed", stepStats.numRunningActivities, stepStats.numFinishedActivities);
 				if ( stepStats.numRunningActivities > 0 ){
 					//Schedule another round
 					return setTimeout( monitor, 10000 );
 				}
-				stepStats.status = "All DataWorks activities have been completed";
+				var message = "All DataWorks activities have been completed";
+				stepStats.status = message;
+				this.setStepMessage(message);
 				return callback();
-			});
-		};
+			}.bind(this));
+		}.bind(this);
 		setTimeout( monitor, 10000 );		
 	}
 }

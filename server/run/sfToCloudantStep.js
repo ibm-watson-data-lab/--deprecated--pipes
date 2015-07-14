@@ -106,7 +106,17 @@ function sfToCloudantStep(){
 		return processTableFunctions;
 	}
 	
-		/**
+	//convenience method
+	var totalCopied = 0;
+	var formatCopyStepMessage = function( added ){
+		totalCopied += added;
+		var percent = totalCopied == 0 ? 0 : ((totalCopied/this.pipeRunStats.expectedTotalRecords)*100).toFixed(1);
+		var message = totalCopied + " documents copied to Cloudant out of " + this.pipeRunStats.expectedTotalRecords 
+			+ " (" + percent + "%)";
+		this.setStepMessage( message );
+	}.bind(this);
+	
+	/**
 	 * @param: table: json object representing the source table
 	 * @param targetDb: the target db to write data to
 	 * @callback: function( err, stats )
@@ -147,10 +157,12 @@ function sfToCloudantStep(){
 						return callback && callback(err);
 					}
 					//Update docs in bulks
+					var added = thisBatch.batchDocs.length;
 					db.bulk( {"docs": thisBatch.batchDocs}, function( err, data ){
 						if ( err ){
 							stats.errors.push( err );
 						}
+						formatCopyStepMessage( added );
 						delete thisBatch.batchDocs;
 						return callback && callback();
 					});
@@ -237,6 +249,7 @@ function sfToCloudantStep(){
 				stepStats.status = "Successfully completed";
 			}
 			
+			this.setStepMessage("Successfully copied "+ totalCopied + " documents from Salesforce to Cloudant");		
 			return callback( err );
 		}.bind(this));
 	}

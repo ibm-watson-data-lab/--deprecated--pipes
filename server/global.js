@@ -9,25 +9,29 @@
  */
 
 var _ = require('lodash');
+var events = require('events');
 
-module.exports = {
-	appHost: null,
-	appPort: 0,
-	getHostName: function(){
+var globalFn = function(){
+	//Call constructor from super class
+	events.EventEmitter.call(this);
+	
+	this.appHost = null;
+	this.appPort = 0;
+	this.getHostName = function(){
 		var url = this.appHost || "http://127.0.0.1";
 		if ( url.indexOf("://") < 0 ){
 			url = "https://" + this.appHost;
 		}
 		return url;
-	},
-	getHostUrl: function(){		
+	};
+	this.getHostUrl = function(){		
 		var url = this.getHostName();
 		if ( this.appPort > 0 ){
 			url += ":" + this.appPort;
 		}
 		return url;
-	},
-	gc: function(){
+	};
+	this.gc = function(){
 		if ( global.gc ){
 			//Check the memory usage to decide whether to invoke the gc or not
 			var mem = process.memoryUsage();
@@ -35,8 +39,8 @@ module.exports = {
 				global.gc();
 			}			
 		}
-	},
-	jsonError : function( res, code, err ){		
+	};
+	this.jsonError = function( res, code, err ){		
 		if ( !err ){
 			err = code;
 		}
@@ -54,3 +58,9 @@ module.exports = {
 		return message;
 	}
 };
+
+//Extend event Emitter
+require("util").inherits(globalFn, events.EventEmitter);
+
+//Export the singleton
+module.exports = new globalFn();

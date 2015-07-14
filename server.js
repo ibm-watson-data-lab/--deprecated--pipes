@@ -47,7 +47,7 @@ if ('development' === env || 'test' === env) {
 
 //Configure the endpoints
 require("./server/sfAPI")(app);	//Saleforce
-require("./server/pipeAPI")(app);	//Pipe configuration
+var wssConfigurator = require("./server/pipeAPI")(app);	//Pipe configuration
 
 var port = process.env.VCAP_APP_PORT || process.env.DEV_PORT;
 var connected = function() {
@@ -59,16 +59,23 @@ var options = {
   cert: fs.readFileSync('development/certs/server/my-server.crt.pem')
 };
 
+var server = null;
 if (process.env.VCAP_APP_HOST){
 	global.appHost = appEnv.urls[0];
-	require('http').createServer(app).listen(port,
-                         process.env.VCAP_APP_HOST,
-                         connected);
+	server = require('http').createServer(app);
+	server.listen(port,
+                 process.env.VCAP_APP_HOST,
+                 connected);
 }else{
 	//Running locally. Salesforce requires authCallbacks to use SSL by default
 	global.appHost = "https://127.0.0.1";
 	global.appPort = port;
-	require('https').createServer(options, app).listen(port,connected);
+	server = require('https').createServer(options, app);
+	server.listen(port,connected);
+}
+
+if ( wssConfigurator && server ){
+	wssConfigurator( server );
 }
 
 require("cf-deployment-tracker-client").track();

@@ -136,17 +136,19 @@ var mainApp = angular.module('dataMovingApp', [
 	$scope.oauthCallback=$location.protocol() + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/authCallback";
 	
 	$scope.isPipeRunning = function(){
-		var selectedPipe = $scope.selectedPipe || null;
-		return selectedPipe && selectedPipe.run;
+		return $scope.selectedPipe && $scope.currentRun;
 	}
 	
 	$scope.savePipe = function(){		
 		pipesService.savePipe( $scope.selectedPipe ).then(
 			function(){
 				console.log("Pipe " + $scope.selectedPipe._id + " successfully saved");
+				setTimeout( function(){
+					$('#savePipe').modal('hide');
+				},500);
 			},
-			function( err ){
-				alert("Unable to save pipe: " + err );
+			function( err ){		
+				$('#savePipeBody').html("Unable to save pipe: " + err);
 			}
 		);
 	}
@@ -185,6 +187,43 @@ var mainApp = angular.module('dataMovingApp', [
 	$scope.goToNextPage = function( tab ){
 		$state.go("home.pipeDetails.tab", {tab:tab, id: $scope.selectedPipe._id });
 	}
+	
+	var ws = new WebSocket("wss://127.0.0.1:8082/runs");
+    
+    ws.onopen = function(){  
+        console.log("Socket has been opened!");  
+    };
+    
+    ws.onmessage = function(message) {
+    	var run = null;
+    	if ( message.data && message.data != "" ){
+    		try{
+    			run = JSON.parse(message.data);
+    		}catch(e){
+    			console.log("Unable to parse ws message: " + e);
+    			run = null;
+    		}
+    	}
+    	
+    	if ( !$scope.currentRun && run ){
+    		$scope.runningAnchor = true;	//So we can stay on the running page after it's done
+    	}
+    	$scope.currentRun = run;
+    	//Recompute the steps
+		if ( $scope.currentRun ){
+		   	$scope.steps = [];
+			_.forOwn( $scope.currentRun, function( value, key ){
+				if ( key.indexOf('step') == 0 ){
+					$scope.steps.push( value );
+				}
+			});
+		}
+		
+    	if(!$scope.$$phase){
+			$scope.$apply();
+		}
+    	
+    };
  }]
 )
 
@@ -255,11 +294,11 @@ var mainApp = angular.module('dataMovingApp', [
 			salesforceService.runPipe( $scope.selectedPipe ).then(
 					function(){
 						console.log("Pipe " + $scope.selectedPipe._id + " successfully started");
-						//Reload the view
-						setTimeout( function( callback ){
-							$state.go($state.current.name, {}, {reload: true});
-							location.reload();
-						}, 5000);
+//						//Reload the view
+//						setTimeout( function( callback ){
+//							$state.go($state.current.name, {}, {reload: true});
+//							location.reload();
+//						}, 5000);
 					},
 					function( err ){
 						alert("Error while running pipe: " + err );
@@ -272,25 +311,6 @@ var mainApp = angular.module('dataMovingApp', [
 			pipesService.getLastRuns($scope.selectedPipe).then(
 					function( runs ){
 						$scope.runs = runs;
-
-						if ( $scope.selectedPipe.run ){
-							var currentRun = _.find( $scope.runs, function(r){
-								return r._id === $scope.selectedPipe.run;
-							});
-
-							if ( currentRun ){
-								$scope.steps = [];
-								_.forOwn( currentRun, function( value, key ){
-									if ( key.indexOf('step') == 0 ){
-										$scope.steps.push( value );
-									}
-								});
-
-								//Monitor progress
-								setTimeout( fetchRuns, 1000 );
-							}
-						}
-
 						if(!$scope.$$phase){
 							$scope.$apply();
 						}

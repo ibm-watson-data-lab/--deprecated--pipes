@@ -7,6 +7,7 @@
 
 var pipeDb = require( './pipeStorage');
 var global = require('./global');
+var webSocketServer = require('ws').Server;
 
 module.exports = function( app ){
 	
@@ -82,4 +83,28 @@ module.exports = function( app ){
 			);
 		});
 	});
+	
+	//Returns a function that configure the webSocket server to push notification about runs
+	return function(server){
+		var wss = new webSocketServer({
+			server: server,
+			path:"/runs"
+		});
+		
+		wss.on('connection', function(ws) {
+			//Send response with current run
+			ws.send( global.currentRun && JSON.stringify(global.currentRun.runDoc ));
+			var runEventListener = function( runDoc ){
+				ws.send( JSON.stringify( runDoc) );
+			}
+			
+			//Listen to run event
+			global.on("runEvent", runEventListener);
+
+			ws.on('close', function() {
+				console.log("Closing websocker");
+				global.removeListener('runEvent', runEventListener);
+			});
+		});
+	}
 };
