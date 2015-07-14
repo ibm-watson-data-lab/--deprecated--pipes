@@ -90,3 +90,8 @@ body {
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
   white-space: normal;
 }
+
+fieldset{
+	margin-left:20px;
+	margin-bottom:15px;
+}

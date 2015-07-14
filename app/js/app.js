@@ -129,13 +129,18 @@ var mainApp = angular.module('dataMovingApp', [
 .controller('pipeDetailsController', ['$scope', '$http', '$location', '$state', '$stateParams','pipesService', 'salesforceService',
   function($scope, $http, $location, $state, $stateParams, pipesService, salesforceService) {
 	$scope.selectedPipe = pipesService.findPipe( $stateParams.id);
+	if ( $scope.selectedPipe.scheduleTime ){
+		$scope.selectedPipe.scheduleTime = moment( $scope.selectedPipe.scheduleTime ).toDate();
+	}
+	
+	$scope.oauthCallback=$location.protocol() + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/authCallback";
 	
 	$scope.isPipeRunning = function(){
 		var selectedPipe = $scope.selectedPipe || null;
 		return selectedPipe && selectedPipe.run;
 	}
 	
-	$scope.savePipe = function(){
+	$scope.savePipe = function(){		
 		pipesService.savePipe( $scope.selectedPipe ).then(
 			function(){
 				console.log("Pipe " + $scope.selectedPipe._id + " successfully saved");
@@ -182,6 +187,19 @@ var mainApp = angular.module('dataMovingApp', [
 	}
  }]
 )
+
+.directive('pageButtonBar', function(){
+	return {
+		restrict: 'E',
+		scope: true,
+		templateUrl: function( element, attr) {
+			return "/templates/pageButtonBar.html";
+		},
+		link: function(scope, elem, attrs){
+			scope.nextPageTab = attrs.nextpagetab;
+		}
+	};
+})
 
 .directive('repeatRunDetailsDirective', function() {
   return function(scope, element, attrs) {
