@@ -15,31 +15,31 @@
   </p>
   <ol>
     <li>Sign in to Salesforce</li>
-    <li>Go to the <strong>OAuth?</strong> setup page, and locate the connected app page for this application</li>
-    <li>Copy and paste the OAuth callback for this application into the callback field: <strong>{{oauthCallback}}</strong></li>
+    <li>Copy and paste this OAuth callback into the callback field in your Salesforce app: <strong>{{oauthCallback}}</strong></li>
+    <li>Make sure that the callback is HTTPS</li>
   </ol>
 </section>
 
 <section>
   <h2>
-    Copy your client id and secret from Salesforce
+    Copy your consumer key and secret from Salesforce
   </h2>
   <p>
-    On the same Salesforce screen, copy your client id and secret and paste them here. Then click the connect button.
+    On the same Salesforce screen, copy your consumer key and secret and paste them here. Then click the connect button.
   </p>
 
   <form class="form-horizontal">
     <div class="form-group">
-      <label for="clientId" class="control-label col-sm-2">Client id</label>
+      <label for="clientId" class="control-label col-sm-2">Consumer key</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" id="clientId" required ng-model="selectedPipe.clientId" placeholder="Enter OAuth client Id">
+        <input type="text" class="form-control" id="clientId" required ng-model="selectedPipe.clientId" placeholder="Salesforce consumer key">
       </div>
     </div>
 
     <div class="form-group">
-      <label for="clientSecret" class="control-label col-sm-2">Client secret</label>
+      <label for="clientSecret" class="control-label col-sm-2">Consumer secret</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" id="clientSecret" required ng-model="selectedPipe.clientSecret" placeholder="Enter OAuth client Secret">
+        <input type="text" class="form-control" id="clientSecret" required ng-model="selectedPipe.clientSecret" placeholder="Salesforce consumer secret">
       </div>
     </div>
 
@@ -48,7 +48,7 @@
         <div class="checkbox">
           <label>
             <input type="checkbox" value="" ng-model="selectedPipe.useSandbox">
-              Use the Salesforce sandbox
+              Use the Salesforce sandbox (only use this option if your administrator set up a sandbox for your org)
           </label>
         </div>
       </div>
@@ -56,6 +56,9 @@
 
     <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">
+        <p>
+          Make sure you have pop-up blockers disabled, and then connect.
+        </p>
         <button class="btn btn-primary" data-toggle="modal" data-target="#OAuthWaitLogin" ng-click="connect()">Connect to Salesforce</button>
       </div>
     </div>
