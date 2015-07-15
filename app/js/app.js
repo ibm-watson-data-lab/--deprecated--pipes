@@ -13,11 +13,8 @@ var mainApp = angular.module('dataMovingApp', [
 .run( ['$rootScope', '$state', '$stateParams', '$http',
     function ($rootScope,   $state,   $stateParams, $http) {
 		$rootScope.$state = $state;
-<<<<<<< HEAD
 		$rootScope.$stateParams = $stateParams;
-=======
-		$rootScope.$stateParams = $stateParams; 
-		
+
 		//Get the user id if security is enabled
 		$http.get('/userid').success(function(data) {
 			$rootScope.userid = data;
@@ -25,7 +22,6 @@ var mainApp = angular.module('dataMovingApp', [
 		.error( function( data, status, headers, config){
 			console.log("Running tool with security disabled");
 		})
->>>>>>> origin/master
 	}
 ])
 

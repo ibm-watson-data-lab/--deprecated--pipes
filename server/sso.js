@@ -11,6 +11,7 @@ var passport = require('passport');
 var session = require('express-session');
 var openIDConnectStrategy = require('./idaas/strategy');
 var global = require('./global');
+var _ = require('lodash');
 
 /**
  * Configure the app to add security based on the ssoService
@@ -52,6 +53,11 @@ module.exports = function( app, ssoService ){
 	
 	app.get('/logout', function( req, res, next ){
 		req.session.destroy(function (err) {
+			//Clear the cookies too
+			_.forEach( req.cookies, function( value, key ){
+				console.log("cookie name :" + key + " Cookie value: " + value); 
+				res.clearCookie( key );
+			});
 			res.redirect('https://idaas.ng.bluemix.net/idaas/protected/logout.jsp');
 		});
 	});

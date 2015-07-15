@@ -59,6 +59,10 @@ var ssoService = require("./server/vcapServices").getService( "pipes-sso" );
 if ( ssoService ){
 	console.log("INFO: Security is enabled");
 	require('./server/sso.js')(app, ssoService);
+}else{
+	app.get("/userid", function( req, res, next ){
+		res.status(200).end();
+	})
 }
 
 app.use(express.static(path.join(__dirname, 'app')));
