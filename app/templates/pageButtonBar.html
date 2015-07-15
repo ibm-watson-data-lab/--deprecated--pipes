@@ -1,24 +1,19 @@
-<p>
-<div class="container-fluid">
-	<div class="row">
-		<div class="col-md-12">
-			<div class="btn-group btn-group pull-left" role="group">
-				<button type="button" ng-class="['btn', 'btn-default' ]" data-toggle="modal" data-target="#savePipe" ng-click="savePipe()">Save</button>
-				<button type="button" ng-class="['btn', 'btn-default' ]" ng-click="goToNextPage(nextPageTab)">Next</button>
-			</div>
-		</div>
-	</div>
-	
+<section class="process">
+	<button type="button" class="save" ng-class="['btn', 'btn-default' ]" data-toggle="modal" data-target="#savePipe" ng-click="savePipe()">Save</button>
+
+	<button type="button" class="next" ng-class="['btn', 'btn-default' ]" ng-click="goToNextPage(nextPageTab)">Next</button>
+
+
 	<div class="modal fade" id="savePipe" tabindex="-1" role="dialog">
 		<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header">
-    				<h4 class="modal-title">Saving your pipe</h4>   							
-			        <div class="modal-body" id="savePipeBody">
-			      		Saving your pipe. Please wait...
-			      	</div>
+					<h4 class="modal-title">Saving your pipe</h4>
+	        <div class="modal-body" id="savePipeBody">
+	      		Saving your pipe. Please wait...
+	      	</div>
 				</div>
 			</div>
 		</div>
 	</div>
-</div>
+</section>

@@ -2,7 +2,7 @@
 <html lang="en" ng-app="dataMovingApp">
 <head>
   <meta charset="utf-8">
-  <title>IBM Cloud Data Services | Pipes</title>
+  <title>IBM Cloud Data Services | Simple Data Pipe</title>
   <script src="bower_components/angular/angular.js"></script>
   <script src="bower_components/angular-resource/angular-resource.js"></script>
   <script src="bower_components/angular-cookies/angular-cookies.js"></script>
@@ -12,13 +12,11 @@
   <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/bootstrap.icon-large.min.css">
   <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.min.css" type="text/css"/>
-  
-  <link rel="stylesheet" href="css/common.css" type="text/css"/>
-  <link rel="stylesheet" href="css/styles_less.css" type="text/css"/>
-  <link rel="stylesheet" href="css/styles.css" type="text/css"/>
-  <link rel="stylesheet" href="css/main.css">
-  <link rel="stylesheet" href="css/hovercard.css">
-  
+
+  <link rel="stylesheet" href="css/styles_less.css" type="text/css" />
+  <link rel="stylesheet" href="css/main.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="css/hovercard.css" type="text/css" /> -->
+
   <script src="bower_components/jquery/dist/jquery.min.js"></script>
   <script src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
   <script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
@@ -28,9 +26,9 @@
   <script src="js/pipes.js"></script>
   <script src="js/salesforce.js"></script>
 </head>
-<body>	
+<body>
 <!-- start header -->
-	<nav class="navbar navbar-inverse navbar-fixed-top">    
+	<nav class="navbar navbar-inverse navbar-fixed-top">
 	    <div class="container-fluid">
 	        <div class="navbar-header">
 	            <span class="navbar-brand">
@@ -46,7 +44,7 @@
 <!-- start content -->
 	<div class="page-content container-fluid">
 		<div class="row">
-		
+
 <!-- start sidebar -->
 			<div class="col-sm-3 col-md-2 sidebar" ui-view="pipeSidebar"></div>
 <!-- end sidebar -->
@@ -58,17 +56,21 @@
 		</div>
 	</div>
 <!-- end content -->
-	
-<!-- startfooter -->
+
+<!-- startfooter
+
+  WE DON'T NEED THE IBM FOOTER ON OUR SAMPLE APPS
+
+
 	<div id="pnext-footer" class="pn-footer links-footer" class="mtxl" role="navigation" aria-label="Page footer">
-		<div class="pn-pcon">	
+		<div class="pn-pcon">
 			<div class="pn-columns">
 				<div class="pn-col-6-1">
 					<a class="pn-footer-social-link" href="https://developer.ibm.com/clouddataservices/feed/">
 						<i class="sprite rss-footer"></i><span class="visuallyhidden">RSS Feed</span>
-					</a>				
+					</a>
 				</div>
-				<div class="pn-col-6-4">	
+				<div class="pn-col-6-4">
 					<div class="pn-footer-menu" role="contentinfo">
 						<ul id="menu-footer" class="pn-footer-menu pn-il pn-il--center"><li class='pn-footer-menu-item pn-il-item'><a href='https://www.ibm.com/developerworks/secure/reportabuse?referingURL=https%3A%2F%2Fdeveloper.ibm.com%2Fclouddataservices%2Fblog'>Report Abuse</a></li><li class='pn-footer-menu-item pn-il-item'><a href='/terms-of-use/'>Terms of Use</a></li><li class='pn-footer-menu-item pn-il-item'><a href='/third-party-notice/'>Third Party Notice</a></li><li class='pn-footer-menu-item pn-il-item'><a href='http://www.ibm.com/privacy/'>IBM Privacy</a></li></ul>
 					</div>
@@ -81,7 +83,7 @@
 			</div>
 		</div>
 	</div>
-<!--  end footer -->
+end footer -->
 
 </body>
 </html>

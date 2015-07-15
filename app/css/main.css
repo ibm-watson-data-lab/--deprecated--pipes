@@ -1,15 +1,32 @@
-html,body
-{
+/* global styles */
+
+html, body {
     height:100%;
+}
+body {
+  background-image: none !important;
+  padding-top: 70px;
+}
+h1 {
+  border-bottom: 1px solid #ccc;
+  color: #000 !important;
+  font-size: 1.4em !important;
+  margin: 0 0 30px 0 !important;
+  padding: 0 0 20px 0 !important;
+}
+section {
+  margin: 20px 0;
+}
+
+.page-content {
+    min-height: -webkit-calc(100% - 64px);
+    min-height: -moz-calc(100% - 64px);
+    min-height: calc(100% - 64px);
+    padding: 30px 40px;
 }
 
 .no-float2 {
     float: none; /* thanks baxabbit */
-}
-
-body {
-	background-image: none !important;
-	padding-top: 70px;
 }
 
 .sprite {
@@ -30,9 +47,9 @@ body {
 }
 
 .sidebar-title {
-    color: #999999;
-    padding: 10px 0 10px 10px;
-    font-size: 2em;
+    color: #eee;
+    padding: 20px 0 20px 10px;
+    font-size: 1.4em;
 }
 
 .nav-sidebar {
@@ -59,17 +76,6 @@ body {
     color: #FFFFFF !important;
 }
 
-.page-content {
-    min-height: -webkit-calc(100% - 64px);
-    min-height: -moz-calc(100% - 64px);
-    min-height: calc(100% - 64px);
-    padding: 40px;
-}
-
-.pn-footer {
-	position: relative;
-    z-index: 1;
-}
 
 .popover {
   position: absolute;
@@ -89,9 +95,4 @@ body {
   -webkit-box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
   white-space: normal;
-}
-
-fieldset{
-	margin-left:20px;
-	margin-bottom:15px;
 }

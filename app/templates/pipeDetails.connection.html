@@ -1,76 +1,74 @@
-<div class="sidebar-title">Connect to Salesforce via OAuth</div>
+<h1>
+  Connect to Salesforce via OAuth
+</h1>
 
-<legend><b>Step 1</b></legend>
-<fieldset>
-    <div class='row'>
-    	<div class="col-md-6">
-			<div class="form-group">
-				<label class="subtitle">Copy the OAuth Callback URL for this application:</label> 
-				<input type="text" class="form-control" readonly value="{{oauthCallback}}">
-			</div>
-		</div>		
-	</div>
-</fieldset>
+<p>
+  Before copying data from Salesforce to IBM dashDB, you need to connect to Salesforce via OAuth. If you don't have admin access to Salesforce, ask your Salesforce administrator to grant it to you.
+</p>
 
-<legend><b>Step 2</b></legend>
-<fieldset>
-    <div class='row'>
-    	<div class="col-md-12">
-			<label class="subtitle">Add your OAuth Callback URL to Salesforce:</label> 
-			<ol style="list-style:decimal;margin-left:30px">
-				<li>Sign in to Salesforce</li>
-				<li>Go to the setup page and locate the connected app page for this application (you will need admin access to Salesforce)</li>
-				<li>Paste the OAuth Callback shown above</li>
-				<li>Fill out the rest of the form and copy the client id and secret</li>
-			</ol> 
-		</div>	
-	</div>
-</fieldset>
+<section>
+  <h2>
+    Step 1: Add your OAuth callback to Salesforce
+  </h2>
+  <p>
+    If this is your first time setting up OAuth in Salesforce, check out our tutorial for <a href="#" target="_blank">more detailed instructions</a>.
+  </p>
+  <ol>
+    <li>Sign in to Salesforce</li>
+    <li>Go to the <strong>OAuth?</strong> setup page, and locate the connected app page for this application</li>
+    <li>Copy and paste the OAuth callback for this application into the callback field: <strong>{{oauthCallback}}</strong></li>
+  </ol>
+</section>
 
-<legend><b>Step 3</b></legend>
-<fieldset>
-    <div class='row'>
-    	<div class="col-md-12">
-			<label class="subtitle">Connect to Salesforce:</label>
-		</div>
-	</div>
-	<div class='row'>
-		<div class="col-md-6">
-			<div class="form-group">
-				<label for="clientId">Client Id:</label> 
-				<input type="text" class="form-control" id="clientId" required ng-model="selectedPipe.clientId" placeholder="Enter OAuth client Id">
-			</div>
-		</div>
-		<div class="col-md-6">
-			<div class="form-group">
-				<label for="clientSecret">Client Secret:</label>
-				<input type="text" class="form-control" id="clientSecret" required ng-model="selectedPipe.clientSecret" placeholder="Enter OAuth client Secret">
-			</div>
-		</div>	
-	</div>
-</fieldset>
+<section>
+  <h2>
+    Step 2: Copy your client id and secret from Salesforce
+  </h2>
+  <p>
+    On the same Salesforce screen, copy your client id and secret and paste them here. Then click the connect button.
+  </p>
 
-<div class="row">
-	<div class="col-md-12 center-block">
-		<button class="btn btn-primary center-block" data-toggle="modal" data-target="#OAuthWaitLogin" ng-click="connect()">Connect to Salesforce</button>
-	    
-	    <div class="modal fade" id="OAuthWaitLogin" tabindex="-1" role="dialog">
-			<div class="modal-dialog">
-				<div class="modal-content">
-  							<div class="modal-header">
-     							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-     							<h4 class="modal-title" id="myModalLabel">Modal title</h4>
-   							</div>
-			        <div class="modal-body">
-			      		Waiting for Salesforce login to completed...
-			      	</div>
-   							<div class="modal-footer">
-     							<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-   							</div>
- 						</div>
-					</div>
-		</div>
-	</div>
+  <form class="form-horizontal">
+    <div class="form-group">
+      <label for="clientId" class="control-label col-sm-2">Client id</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="clientId" required ng-model="selectedPipe.clientId" placeholder="Enter OAuth client Id">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="clientSecret" class="control-label col-sm-2">Client secret</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" id="clientSecret" required ng-model="selectedPipe.clientSecret" placeholder="Enter OAuth client Secret">
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <button class="btn btn-primary" data-toggle="modal" data-target="#OAuthWaitLogin" ng-click="connect()">Connect to Salesforce</button>
+      </div>
+    </div>
+
+  </form>
+
+
+
+</section>
+
+<div class="modal fade" id="OAuthWaitLogin" tabindex="-1" role="dialog">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">Modal title</h4>
+      </div>
+      <div class="modal-body">
+        Connecting to Salesforce.com...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <page-button-bar nextPageTab="tables"/>
