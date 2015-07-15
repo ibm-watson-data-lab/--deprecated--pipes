@@ -102,7 +102,6 @@ module.exports = function( app ){
 			global.on("runEvent", runEventListener);
 
 			ws.on('close', function() {
-				console.log("Closing websocker");
 				global.removeListener('runEvent', runEventListener);
 			});
 		});

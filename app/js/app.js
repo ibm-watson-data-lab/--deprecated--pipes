@@ -302,7 +302,7 @@ var mainApp = angular.module('dataMovingApp', [
 		}
 		
 		//Get the list of runs
-		var fetchRuns = function(){
+		$scope.fetchRuns = function(){
 			pipesService.getLastRuns($scope.selectedPipe).then(
 					function( runs ){
 						$scope.runs = runs;
@@ -315,7 +315,7 @@ var mainApp = angular.module('dataMovingApp', [
 			);
 		}
 		
-		fetchRuns();
+		$scope.fetchRuns();
 	}]
 )
 
