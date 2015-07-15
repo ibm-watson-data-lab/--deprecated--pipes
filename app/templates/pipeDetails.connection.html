@@ -8,7 +8,7 @@
 
 <section>
   <h2>
-    Step 1: Add your OAuth callback to Salesforce
+    Add your OAuth callback to Salesforce
   </h2>
   <p>
     If this is your first time setting up OAuth in Salesforce, check out our tutorial for <a href="#" target="_blank">more detailed instructions</a>.
@@ -22,7 +22,7 @@
 
 <section>
   <h2>
-    Step 2: Copy your client id and secret from Salesforce
+    Copy your client id and secret from Salesforce
   </h2>
   <p>
     On the same Salesforce screen, copy your client id and secret and paste them here. Then click the connect button.
@@ -42,6 +42,18 @@
         <input type="text" class="form-control" id="clientSecret" required ng-model="selectedPipe.clientSecret" placeholder="Enter OAuth client Secret">
       </div>
     </div>
+
+    <div class="form-group">
+      <div class="col-sm-offset-2 col-sm-10">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" value="" ng-model="selectedPipe.useSandbox">
+              Use the Salesforce sandbox
+          </label>
+        </div>
+      </div>
+    </div>
+
     <div class="form-group">
       <div class="col-sm-offset-2 col-sm-10">
         <button class="btn btn-primary" data-toggle="modal" data-target="#OAuthWaitLogin" ng-click="connect()">Connect to Salesforce</button>
