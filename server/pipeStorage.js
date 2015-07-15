@@ -7,9 +7,66 @@
 
 var cloudant = require('./storage');
 var _ = require('lodash');
+var moment = require('moment');
+var schedule = require('node-schedule');
+var global = require('./global');
 
 var dbName =  process.env.CLOUDANT_DB_NAME || "pipe_db";
 var allPipesView = "all_pipes";
+
+//Map of scheduled jobs
+var jobs = {};
+
+var addScheduledJob = function(pipe){
+	
+	//Validate pipe
+	if ( !pipe.scheduleTime ){
+		return null;
+	}
+
+	//Check if it doesn't already exist
+	if ( jobs.hasOwnProperty(pipe._id) ){
+		var jobInfo = jobs[pipe._id];
+		if ( jobInfo.scheduleTime === pipe.scheduleTime ){
+			return jobInfo.job;
+		}else{
+			//Cancel this job and create a new one
+			removeScheduledJob( pipe );
+		}
+	}
+	
+	var m = moment( pipe.scheduleTime)
+	var rule = new schedule.RecurrenceRule();
+	rule.hour = m.hour()
+	rule.minute = m.minute();
+
+	console.log("Add new scheduled job: %d:%d", rule.hour, rule.minute);
+	var job = schedule.scheduleJob(rule, function(){
+		if ( global.currentRun ){
+			console.log("Unable to execute a schedule run for pipe %s because a run is already in progress", pipe._id);
+			return;
+		}
+		
+		//Emit an event
+		global.emit("runScheduledEvent", pipe._id );
+	});
+	
+	//Save in the cache
+	jobs[pipe._id] = {
+		scheduleTime: pipe.scheduleTime,
+		job : job,
+		pipeId : pipe._id
+	}
+}
+
+var removeScheduledJob = function( pipe ){
+	if ( jobs.hasOwnProperty( pipe._id )){
+		console.log("Removing scheduled job for pipe id " + pipe._id);
+		//cancel existing job
+		jobs[pipe._id].job.cancel();
+		delete jobs[pipe._id];
+	}
+}
 
 var viewsManager = new cloudant.views('_design/application');
 viewsManager
@@ -22,6 +79,26 @@ viewsManager
 			}
 		}
 	}, 2 //Version
+)
+.addView( 
+	"all_scheduled_pipes",
+	{
+		map: function(doc){
+			if ( doc.type === "pipe" && doc.scheduleTime ){
+				emit( doc._id, {'_id': doc._id} );
+			}
+		}
+	}, 1 //Version
+)
+.addView( 
+	"all_running_pipes",
+	{
+		map: function(doc){
+			if ( doc.type === "pipe" && doc.run ){
+				emit( doc._id, {'_id': doc._id} );
+			}
+		}
+	}, 1 //Version
 )
 .addView( 
 	"all_runs",
@@ -56,6 +133,12 @@ pipeDb.on( "cloudant_ready", function(){
 						console.log("Unable to break reference to stale run " + err );
 					}
 				});
+			}
+			
+			//If scheduled, then create a new job now.
+			//TODO: Read from the all_scheduled_view instead
+			if ( pipe.scheduleTime ){
+				addScheduledJob( pipe );
 			}
 		});
 	});
@@ -119,6 +202,12 @@ pipeDb.savePipe = function( pipe, callback ){
 	if ( pipe.hasOwnProperty("new") ){
 		pipe._id = null;
 		delete pipe["new"];
+	}
+	
+	if (!pipe.scheduleTime){
+		removeScheduledJob(pipe);
+	}else{
+		addScheduledJob(pipe);
 	}
 	
 	this.upsert( pipe._id, function( storedPipe ){

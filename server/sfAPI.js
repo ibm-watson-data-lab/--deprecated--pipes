@@ -118,4 +118,14 @@ module.exports = function( app ){
 			return res.status( 202 ).json( run.getId() );
 		});
 	});
+	
+	global.on("runScheduledEvent", function( pipeId){
+		var sfConnection = new sf( pipeId );
+		sfConnection.run( function( err, run ){
+			if ( err ){
+				return console.log("Unable to execute a scheduled run for pipe %s", pipeId);
+			}
+			console.log('New Scheduled run started for pipe %s', pipeId);
+		});
+	})
 }
