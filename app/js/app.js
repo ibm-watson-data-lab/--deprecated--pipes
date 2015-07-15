@@ -1,16 +1,3 @@
-Skip to content
-This repository
-Pull requests
-Issues
-Gist
- @bradnoble
- Unwatch 7
-  Star 0
- Fork 0ibm-cds-labs/pipes
- tree: f45006099d  pipes/app/js/app.js
-@DTAIEBDTAIEB 3 hours ago Sandbox support
-1 contributor
-RawBlameHistory    338 lines (304 sloc)  9.277 kB
 'use strict';
 
 /* Main App Module */
@@ -347,6 +334,3 @@ var mainApp = angular.module('dataMovingApp', [
     $scope.fetchRuns();
   }]
 )
-
-Status API Training Shop Blog About Help
-© 2015 GitHub, Inc. Terms Privacy Security Contact
