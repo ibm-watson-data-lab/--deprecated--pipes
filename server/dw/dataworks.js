@@ -256,8 +256,8 @@ function dataworks( options ){
 	this.monitorActivityRun = function( activityId, activityRunId, callback ){
 		request.get( makeUrl( "/" + activityId + "/activityRuns/" + activityRunId), getReqOptions(), function(err, response, body){
 			var err = getError(err, body);
-			if ( err ){
-				return callback( err );
+			if ( err || !body || !body.outputDocument || !body.outputDocument.common ){
+				return callback( err || "Unexpected response from DataWorks server" );
 			}
 			
 			//Return the outputDocument for the body
