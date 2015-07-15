@@ -1,4 +1,6 @@
-/* global styles */
+/*
+  global styles
+*/
 
 html, body {
     height:100%;
@@ -17,24 +19,20 @@ h1 {
 section {
   margin: 20px 0;
 }
-
 .page-content {
     min-height: -webkit-calc(100% - 64px);
     min-height: -moz-calc(100% - 64px);
     min-height: calc(100% - 64px);
     padding: 30px 40px;
 }
-
 .no-float2 {
     float: none; /* thanks baxabbit */
 }
-
 .sprite {
 	background-image: url("/img/sprite.png") !important;
 }
-
 .sidebar {
-    background: none repeat scroll 0 0 #262324;
+    background: none repeat scroll 0 0 #343031;
     border-right: 1px solid #eee;
     bottom: 0;
     display: block;
@@ -45,38 +43,31 @@ section {
     position: fixed;
     top: 0;
 }
-
 .sidebar-title {
     color: #eee;
     padding: 20px 0 20px 10px;
     font-size: 1.4em;
 }
-
 .nav-sidebar {
     margin-bottom: 20px;
     margin-left: -20px;
     margin-right: -21px;
 }
-
 .nav-sidebar > li > a {
     padding: 20px 20px 20px 30px;
     color: #999999 !important;
 }
-
 .nav-sidebar > .active > a,
 .nav-sidebar > .active > a:hover,
 .nav-sidebar > .active > a:focus {
     background-color: #111111 !important;
-    color: #999999 !important;
+    color: #fff !important;
 }
-
 .nav-sidebar > li > a:hover,
 .nav-sidebar > li > a:focus {
     background-color: #666666;
     color: #FFFFFF !important;
 }
-
-
 .popover {
   position: absolute;
   top: 0;
