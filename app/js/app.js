@@ -29,7 +29,7 @@ var mainApp = angular.module('dataMovingApp', [
     $urlRouterProvider.otherwise('/');
 
     $stateProvider
-        .state('about', {
+        .state('home', {
             url:'',
             views: {
 	            'pipeList': {
@@ -147,16 +147,24 @@ var mainApp = angular.module('dataMovingApp', [
 		return $scope.selectedPipe && $scope.currentRun;
 	}
 
-	$scope.savePipe = function(){
+	$scope.savePipe = function( thenConnect ){
 		pipesService.savePipe( $scope.selectedPipe ).then(
 			function(){
 				console.log("Pipe " + $scope.selectedPipe._id + " successfully saved");
-				setTimeout( function(){
-					$('#savePipe').modal('hide');
-				},500);
+				if ( !thenConnect ){
+					setTimeout( function(){
+						$('#savePipe').modal('hide');
+					},500);
+				}else{
+					$scope.connect();
+				}
 			},
 			function( err ){
-				$('#savePipeBody').html("Unable to save pipe: " + err);
+				var message = "Unable to save pipe: " + err;
+				console.log(message);
+				if ( !thenConnect ){
+					$('#savePipeBody').html( message );
+				}
 			}
 		);
 	}

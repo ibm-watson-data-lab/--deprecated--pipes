@@ -72,13 +72,7 @@
 			<li ng-repeat="step in steps">
 				<span class="glyphicon glyphicon-ok-circle" ng-if="step.status==='FINISHED'"></span> {{step.label}}: <span style="color:green">{{step.message}}</span>
 			</li>
-		</ol>
-<<<<<<< Updated upstream
-		
+		</ol>		
 		<a href="javascript:void(0)" ng-show="!isPipeRunning()" ng-click="runningAnchor=false;fetchRuns()">See Results</a>
-=======
-
-		<a href="javascript:void(0)" ng-show="!isPipeRunning()" ng-click="runningAnchor=false">See Results</a>
->>>>>>> Stashed changes
 	</div>
 </div>
