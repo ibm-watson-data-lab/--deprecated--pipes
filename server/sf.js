@@ -53,7 +53,7 @@ function sf( pipeId ){
 	//Public APIs
 	this.getOAuthConfig = function( pipe ){
 		return new jsforce.OAuth2({
-			 loginUrl: pipe.loginUrl || "https://login.salesforce.com",
+			 loginUrl: (pipe.useSandbox ? "https://test.salesforce.com" : "https://login.salesforce.com"),
 			 clientId: pipe.clientId,
 		     clientSecret: pipe.clientSecret,
 		     redirectUri: global.getHostUrl() + "/authCallback"

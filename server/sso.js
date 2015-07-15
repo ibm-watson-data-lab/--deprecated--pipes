@@ -52,7 +52,7 @@ module.exports = function( app, ssoService ){
 	
 	app.get('/logout', function( req, res, next ){
 		req.session.destroy(function (err) {
-			res.redirect('/');
+			res.redirect('https://idaas.ng.bluemix.net/idaas/protected/logout.jsp');
 		});
 	});
 	
