@@ -4,7 +4,7 @@
 <div>
 	<ul class="nav nav-sidebar" ng-repeat="pipe in pipes|limitTo:1" ng-init="connected = pipe.hasOwnProperty('tables')">
 		<li ui-sref-active="active">
-			<a ng-class="{'active':selectedPage === 'about'}" ng-click="selectedPage = 'about'" href="#">About</a>
+			<a ng-class="{'active':!selectedPage || selectedPage === 'about'}" ng-click="selectedPage = 'about'" ui-sref="home.pipeDetails.tab({tab:'about', id:pipe._id})">About</a>
 		</li>
 		<li ui-sref-active="active">
 			<a ng-class="{'active':selectedPage === 'connection'}" ng-click="selectedPage = 'connection'" ui-sref="home.pipeDetails.tab({tab:'connection', id:pipe._id})">Connect</a>
