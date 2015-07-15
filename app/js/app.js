@@ -13,15 +13,15 @@ var mainApp = angular.module('dataMovingApp', [
 .run( ['$rootScope', '$state', '$stateParams',
     function ($rootScope,   $state,   $stateParams) {
 		$rootScope.$state = $state;
-		$rootScope.$stateParams = $stateParams; 
+		$rootScope.$stateParams = $stateParams;
 	}
 ])
 
 .config(function ($stateProvider, $urlRouterProvider) {
     $urlRouterProvider.otherwise('/');
-    
+
     $stateProvider
-        .state('home', {
+        .state('about', {
             url:'',
             views: {
 	            'pipeList': {
@@ -29,7 +29,7 @@ var mainApp = angular.module('dataMovingApp', [
 	                controller: 'pipesController'
 	            },
 	            'pipeDetails':{
-	            	templateUrl: "/templates/home.html"
+	            	templateUrl: "/templates/pipeDetails.about.html"
 	            },
 	            'pipeSidebar':{
 	            	templateUrl: "/templates/pipeSidebar.html",
@@ -57,7 +57,7 @@ var mainApp = angular.module('dataMovingApp', [
     		url:'/tab/:tab',
 			templateUrl: function (stateParams){
 				if ( !stateParams.tab ){
-					return '/templates/home.html';
+					return '/templates/pipeDetails.about.html';
 				}
 				return '/templates/pipeDetails.' + stateParams.tab + '.html';
             },
@@ -80,15 +80,15 @@ var mainApp = angular.module('dataMovingApp', [
 		.error( function( data, status, headers, config){
 			console.log( "error: " + data + " Status: " + status);
 		})
-	};	
+	};
  }]
 )
 
 .controller('pipesController', ['$scope', '$rootScope', '$http', '$location', 'pipesService',
   function($scope, $rootScope, $http, $location, pipesService) {
-	
+
 	function listPipes(){
-		pipesService.listPipes().then( 
+		pipesService.listPipes().then(
 			function(pipes){
 				$scope.pipes = pipes;
 			},function( reason ){
@@ -96,9 +96,9 @@ var mainApp = angular.module('dataMovingApp', [
 			}
 		);
 	}
-	
+
 	listPipes();
-	
+
 	$scope.createNewPipe = function(){
 		pipesService.createPipe()
 		.then( function( pipe ){
@@ -108,7 +108,7 @@ var mainApp = angular.module('dataMovingApp', [
 			alert("Unable to create new pipe: " + reason );
 		});
 	}
-	
+
 	$scope.removePipe = function(){
 		if ( !$rootScope.$stateParams.id ){
 			alert("No Pipe selected");
@@ -132,14 +132,14 @@ var mainApp = angular.module('dataMovingApp', [
 	if ( $scope.selectedPipe.scheduleTime ){
 		$scope.selectedPipe.scheduleTime = moment( $scope.selectedPipe.scheduleTime ).toDate();
 	}
-	
+
 	$scope.oauthCallback=$location.protocol() + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/authCallback";
-	
+
 	$scope.isPipeRunning = function(){
 		return $scope.selectedPipe && $scope.currentRun;
 	}
-	
-	$scope.savePipe = function(){		
+
+	$scope.savePipe = function(){
 		pipesService.savePipe( $scope.selectedPipe ).then(
 			function(){
 				console.log("Pipe " + $scope.selectedPipe._id + " successfully saved");
@@ -147,16 +147,16 @@ var mainApp = angular.module('dataMovingApp', [
 					$('#savePipe').modal('hide');
 				},500);
 			},
-			function( err ){		
+			function( err ){
 				$('#savePipeBody').html("Unable to save pipe: " + err);
 			}
 		);
 	}
-	
+
 	$scope.openTableList = function(){
     	$scope.tableMenuOpenClass = (!$scope.tableMenuOpenClass || $scope.tableMenuOpenClass === "") ? "open" : "";
 	}
-	
+
 	$scope.connect = function(){
 		var loginWindow = window.open("/sf/" + $scope.selectedPipe._id);
 		if ( loginWindow ){
@@ -170,7 +170,7 @@ var mainApp = angular.module('dataMovingApp', [
 			alert("Unable to start login process");
 		}
 	}
-	
+
 	$scope.getTablesList = function(){
 		var tables = [ pipesService.allTables ];
 		_.forEach( $scope.selectedPipe.tables, function( table ){
@@ -178,22 +178,22 @@ var mainApp = angular.module('dataMovingApp', [
 		});
 		return tables;
 	}
-	
+
 	$scope.selectTable = function(table){
 		$scope.selectedPipe.selectedTableName = table.labelPlural;
 		$scope.selectedPipe.selectedTableId = table.name;
 	}
-	
+
 	$scope.goToNextPage = function( tab ){
 		$state.go("home.pipeDetails.tab", {tab:tab, id: $scope.selectedPipe._id });
 	}
-	
+
 	var wsProtocol = $location.protocol() === "https" ? "wss" : "ws";
-	var ws = new WebSocket(wsProtocol + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/runs");    
-    ws.onopen = function(){  
-        console.log("WebSocket connection established");  
+	var ws = new WebSocket(wsProtocol + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/runs");
+    ws.onopen = function(){
+        console.log("WebSocket connection established");
     };
-    
+
     ws.onmessage = function(message) {
     	var run = null;
     	if ( message.data && message.data != "" ){
@@ -204,7 +204,7 @@ var mainApp = angular.module('dataMovingApp', [
     			run = null;
     		}
     	}
-    	
+
     	if ( !$scope.currentRun && run ){
     		$scope.runningAnchor = true;	//So we can stay on the running page after it's done
     	}
@@ -218,11 +218,11 @@ var mainApp = angular.module('dataMovingApp', [
 				}
 			});
 		}
-		
+
     	if(!$scope.$$phase){
 			$scope.$apply();
 		}
-    	
+
     };
  }]
 )
@@ -242,7 +242,7 @@ var mainApp = angular.module('dataMovingApp', [
 
 .directive('repeatRunDetailsDirective', function() {
   return function(scope, element, attrs) {
-	  $(element).popover({ 
+	  $(element).popover({
 		  html : true,
 		  trigger: 'manual',
 		  placement: function (context, source) {
@@ -259,7 +259,7 @@ var mainApp = angular.module('dataMovingApp', [
 			  return "top";
 		  },
 		  content: function() {
-			  return $( element ).find("." + attrs.repeatRunDetailsDirective).html();   
+			  return $( element ).find("." + attrs.repeatRunDetailsDirective).html();
 		  }
 	  }).on("click", function(e) {
 		  e.preventDefault();
@@ -300,7 +300,7 @@ var mainApp = angular.module('dataMovingApp', [
 					}
 			);
 		}
-		
+
 		//Get the list of runs
 		$scope.fetchRuns = function(){
 			pipesService.getLastRuns($scope.selectedPipe).then(
@@ -314,7 +314,7 @@ var mainApp = angular.module('dataMovingApp', [
 					}
 			);
 		}
-		
+
 		$scope.fetchRuns();
 	}]
 )
