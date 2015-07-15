@@ -10,10 +10,22 @@ var mainApp = angular.module('dataMovingApp', [
     //$locationProvider.html5Mode({'enabled': true, 'requireBase': false});
 })
 
-.run( ['$rootScope', '$state', '$stateParams',
-    function ($rootScope,   $state,   $stateParams) {
+.run( ['$rootScope', '$state', '$stateParams', '$http',
+    function ($rootScope,   $state,   $stateParams, $http) {
 		$rootScope.$state = $state;
+<<<<<<< HEAD
 		$rootScope.$stateParams = $stateParams;
+=======
+		$rootScope.$stateParams = $stateParams; 
+		
+		//Get the user id if security is enabled
+		$http.get('/userid').success(function(data) {
+			$rootScope.userid = data;
+		})
+		.error( function( data, status, headers, config){
+			console.log("Running tool with security disabled");
+		})
+>>>>>>> origin/master
 	}
 ])
 

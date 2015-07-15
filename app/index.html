@@ -29,12 +29,19 @@
 <!-- start header -->
 	<nav class="navbar navbar-inverse navbar-fixed-top">
 	    <div class="container-fluid">
-	        <div class="navbar-header">
-	            <span class="navbar-brand">
-	                <a rel="home" href="https://developer.ibm.com/clouddataservices">
-	                    <span>Cloud Data Services</span>
-	                </a>
-	            </span>
+	    	<div class="row">
+		        <div class="navbar-header col-sm-6">
+		            <span class="navbar-brand">
+		                <a rel="home" href="https://developer.ibm.com/clouddataservices">
+		                    <span>Cloud Data Services</span>
+		                </a>
+		            </span>
+		        </div>
+		        <div class="navbar-header col-sm-6" ng-if="userid">
+		        	<a href="/logout" class="pull-right" style="margin-top:17px"">
+		            	Logout {{userid}}
+			         </a>
+		        </div>
 	        </div>
 	    </div>
 	</nav>

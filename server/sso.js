@@ -49,8 +49,29 @@ module.exports = function( app, ssoService ){
 
 	passport.use(strategy); 
 	app.get('/login', passport.authenticate('openidconnect', {})); 
+	
+	app.get('/logout', function( req, res, next ){
+		req.session.destroy(function (err) {
+			res.redirect('https://idaas.ng.bluemix.net/idaas/protected/logout.jsp');
+		});
+	});
+	
+	app.get("/userid", function( req, res,next){
+		res.send( (req.user && req.user.id) || "");
+	});
+	
+	app.get('/auth/sso/callback',function(req,res,next) {
+		passport.authenticate('openidconnect',{
+			successRedirect: '/',                            
+			failureRedirect: '/loginfailure',                        
+		})(req,res,next);
+	});
 
 	function ensureAuthenticated(req, res, next) {
+		if ( req.url.indexOf("/auth") == 0 || req.url.indexOf("/login") == 0 ){
+			//auth and login should always go through
+			return next();
+		}
 		if(!req.isAuthenticated()) {
 			req.session.originalUrl = req.originalUrl;
 			res.redirect('/login');
