@@ -147,22 +147,35 @@ var mainApp = angular.module('dataMovingApp', [
     return $scope.selectedPipe && $scope.currentRun;
   }
 
-  $scope.savePipe = function( thenConnect ){
+  $scope.savePipe = function( Obj ){
+
+    Obj = Obj || {};
+
+    var connect = (Obj.connect === "true") ? true : false;
+    var nextPageTab = Obj.nextPageTab;
+
+      console.log(Obj);
+      console.log(connect, nextPageTab);
+
     pipesService.savePipe( $scope.selectedPipe ).then(
       function(){
         console.log("Pipe " + $scope.selectedPipe._id + " successfully saved");
-        if ( !thenConnect ){
+        if ( !connect ){
           setTimeout( function(){
             $('#savePipe').modal('hide');
+            if(nextPageTab){
+              $scope.goToNextPage(nextPageTab);
+            }
           },500);
         }else{
           $scope.connect();
         }
+
       },
       function( err ){
         var message = "Unable to save pipe: " + err;
         console.log(message);
-        if ( !thenConnect ){
+        if ( !connect ){
           $('#savePipeBody').html( message );
         }
       }
@@ -251,6 +264,7 @@ var mainApp = angular.module('dataMovingApp', [
       return "/templates/pageButtonBar.html";
     },
     link: function(scope, elem, attrs){
+      scope.connect = attrs.connect;
       scope.nextPageTab = attrs.nextpagetab;
     }
   };
