@@ -8,6 +8,8 @@
 var pipeRunStep = require('./pipeRunStep');
 var _ = require('lodash');
 var async = require('async');
+var moment = require('moment');
+var request = require('request');
 
 /**
  * activitiesMonitoringStep class
@@ -40,7 +42,36 @@ function activitiesMonitoringStep(){
 			this.setStepMessage( message );
 		}.bind(this);
 		
+		var sendAlert = function(){
+			console.log("Sending alert about possible DataWorks activities hung to metrics-collector");
+			async.forEachOf( pipeRunStats.getTableStats(), function(tableStats, tableName, callback ){
+				if ( !tableStats.activityDone ){
+					var props = {
+						idsite: "data.pipes",
+						type : "pipe_alert",
+						activityId: tableStats.activityId,
+						activityRunId: tableStats.activityRunId,
+						tableName: tableStats.tableName,
+						numRecords: tableStats.numRecords
+					};
+					request.get( {url: "http://metrics-collector.mybluemix.net/tracker", qs: props}, function(err, response, body){
+						if ( !err ){
+							console.log("Successfully logged an alert to metrics-collector");
+						}
+						return callback( err );
+					});
+				}
+			},function(err){
+				if ( err ){
+					console.log("Unable to create DataWorks activity hung alert: " + err );
+				}
+			});
+		}
+		
 		//Start monitoring the activities
+		var timeout = moment.duration(5, 'minutes').asMilliseconds();	//timeout to raise possible dataworks hung alerts when no activities has completed.
+		var alertSent = false;
+		var start = moment();
 		formatStepMessage();
 		var monitor = function(){
 			async.forEachOf( pipeRunStats.getTableStats(), function(tableStats, tableName, callback ){
@@ -55,6 +86,9 @@ function activitiesMonitoringStep(){
 							stepStats.numRunningActivities--;
 							tableStats.activityDone = true;
 							formatStepMessage();
+							
+							//Reset the timeout start
+							start = moment();
 						}
 						return callback();
 					})
@@ -67,6 +101,12 @@ function activitiesMonitoringStep(){
 				}
 				if ( stepStats.numRunningActivities > 0 ){
 					//Schedule another round
+					if ( moment.duration( moment().diff(start) ).asMilliseconds() > timeout ){
+						if ( !alertSent ){
+							alertSent = true;
+							sendAlert();
+						}
+					}
 					return setTimeout( monitor, 10000 );
 				}
 				var message = "All DataWorks activities have been completed";
