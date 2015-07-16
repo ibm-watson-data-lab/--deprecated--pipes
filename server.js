@@ -24,6 +24,15 @@ var VCAP_SERVICES = JSON.parse(process.env.VCAP_SERVICES || "{}");
 
 var app = global.app = express();
 
+//Enforce https on Bluemix
+app.use( function( req, res, next ){
+	if ( req.headers && req.headers.$wssc === 'http'){
+		console.log("Automatically redirecting to https...");
+		return res.redirect('https://' + req.get('host') + req.url);
+	}
+	return next();
+});
+
 if ( process.env.START_PROXY ){
 	//Development only, creates a proxy server to enable local environment access to dw servers
 	var dataworks = require("./server/dw/dataworks");
