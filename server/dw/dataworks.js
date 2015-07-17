@@ -274,6 +274,10 @@ function dataworks( options ){
 	this.isFinished = function( status ){
 		return status.toLowerCase().indexOf("finished") >= 0;
 	}
+	
+	this.isRunning = function( status ){
+		return status.toLowerCase().indexOf("running") >= 0;
+	}
 }
 
 module.exports = dataworks;

@@ -91,6 +91,8 @@ module.exports = function( app ){
 			path:"/runs"
 		});
 		
+		var runEventListenerAdded = false;
+		
 		wss.on('connection', function(ws) {
 			//Send response with current run
 			ws.send( global.currentRun && JSON.stringify(global.currentRun.runDoc ));
@@ -99,10 +101,14 @@ module.exports = function( app ){
 			}
 			
 			//Listen to run event
-			global.on("runEvent", runEventListener);
+			if ( !runEventListenerAdded ){
+				global.on("runEvent", runEventListener);
+				runEventListenerAdded = true;
+			}
 
 			ws.on('close', function() {
 				global.removeListener('runEvent', runEventListener);
+				runEventListenerAdded = false;
 			});
 		});
 	}

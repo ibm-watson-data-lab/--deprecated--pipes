@@ -47,7 +47,24 @@ function cloudantToDashActivitiesStep(){
 				return callback( err );
 			}
 			
-			async.forEachOf( pipeRunStats.getTableStats(), function(tableStats, tableName, callback ){
+			async.forEachOfSeries( pipeRunStats.getTableStats(), function(tableStats, tableName, callback ){
+				var checkForRunningStateFn = function( activityId, activityRunId, callback ){
+					dwInstance.monitorActivityRun( activityId, activityRunId, function( err, activityRun ){
+						if ( err ){
+							return callback(err);
+						}
+						if ( dwInstance.isFinished( activityRun.status ) || dwInstance.isRunning( activityRun.status ) ){
+							//console.log("Activity is running. Wait for another 5 second before moving on...");
+							return setTimeout( function(){
+								return callback();
+							}, 100);
+						}
+						//console.log("Activity is not yet running, keep waiting...");
+						setTimeout( function(){
+							return checkForRunningStateFn(activityId, activityRunId, callback )
+						}, (tableStats.numRecords && tableStats.numRecords < 1000) ? 1000 : 10000);
+					})
+				}
 				var runActivityFn = function(activity){
 					dwInstance.runActivity( activity.id, function( err, activityRun ){
 						if ( err ){
@@ -57,7 +74,7 @@ function cloudantToDashActivitiesStep(){
 						stepStats.numRunningActivities++;
 						formatStepMessage();
 						//console.log("SuccessFully submitted a activity for running.");
-						return callback( null );
+						return checkForRunningStateFn( activity.id, activityRun.id, callback );
 					});
 				}
 				var activity = _.find( activities, function( act ){
@@ -92,8 +109,8 @@ function cloudantToDashActivitiesStep(){
 						}
 
 						//Record the activity id and start execution
-						tableStats.activityId = activity.id;							
-						console.log("SuccessFully created a new activity: " + util.inspect( activity, { showHidden: true, depth: null } ) );
+						tableStats.activityId = activity.id;						
+						console.log("SuccessFully created a new activity: " + require('util').inspect( activity, { showHidden: true, depth: null } ) );
 						numCreated++;
 						formatStepMessage();
 						//Run it now
