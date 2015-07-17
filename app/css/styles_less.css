@@ -104,7 +104,7 @@ nav.navbar {
   min-height: 70px;
 }
 nav.navbar .navbar-brand {
-  background: url('http://developer.ibm.com/clouddataservices/wp-content/uploads/sites/47/2015/06/IBM_CDS_Logo.png') no-repeat;
+  background: url('/img/IBM_CDS_Logo.png') no-repeat;
   display: inline-block;
   width: 264px;
   height: 17px;

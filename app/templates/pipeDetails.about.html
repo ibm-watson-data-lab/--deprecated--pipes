@@ -1,10 +1,16 @@
 <h1>
   Welcome to the Simple Data Pipe
 </h1>
+<div ng-show="selectedPipe.tables && selectedPipe.tables.length > 0" class="alert alert-success">
+  <p>
+    <strong>Welcome back!</strong> Check out <a ng-click="goToNextPage('monitoring')">your pipe activity</a>.
+  </p>
+</div>
+
+
 <p>
   This is a supporting paragraph. This is a supporting paragraph. This is a supporting paragraph. This is a supporting paragraph.
 </p>
-
 <section>
   <h2>
     This is an h2 inside a section
