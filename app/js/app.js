@@ -151,7 +151,7 @@ var mainApp = angular.module('dataMovingApp', [
 
     Obj = Obj || {};
 
-    var connect = (Obj.connect === "true") ? true : false;
+    var connect = (Obj.connect === "true" || Obj.connect === true) ? true : false;
     var nextPageTab = Obj.nextPageTab;
 
       console.log(Obj);
@@ -187,17 +187,8 @@ var mainApp = angular.module('dataMovingApp', [
   }
 
   $scope.connect = function(){
-    var loginWindow = window.open("/sf/" + $scope.selectedPipe._id);
-    if ( loginWindow ){
-      var timer = setInterval( function(){
-        if ( loginWindow.closed ){
-          $('#OAuthWaitLogin').modal('hide');
-          clearInterval( timer );
-        }
-      }, 500);
-    }else{
-      alert("Unable to start login process");
-    }
+	  window.location.href = "/sf/" + $scope.selectedPipe._id + "?url=" + encodeURIComponent($location.absUrl());
+	  return;
   }
 
   $scope.getTablesList = function(){
@@ -217,42 +208,50 @@ var mainApp = angular.module('dataMovingApp', [
     $state.go("home.pipeDetails.tab", {tab:tab, id: $scope.selectedPipe._id });
   }
 
-  var wsProtocol = $location.protocol() === "https" ? "wss" : "ws";
-  var ws = new WebSocket(wsProtocol + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/runs");
-    ws.onopen = function(){
-        console.log("WebSocket connection established");
+  var setupWebSocket = function(){
+	  var wsProtocol = $location.protocol() === "https" ? "wss" : "ws";
+	  var ws = new WebSocket(wsProtocol + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/runs");
+	  ws.onopen = function(){
+		  console.log("WebSocket connection established");
+	  };
+	  ws.onerror = ws.onclose = function(){
+		  //Reestablish connection
+		  setupWebSocket();
+	  };
+
+	  ws.onmessage = function(message) {
+		  var run = null;
+		  if ( message.data && message.data != "" ){
+			  try{
+				  run = JSON.parse(message.data);
+			  }catch(e){
+				  console.log("Unable to parse ws message: " + e);
+				  run = null;
+			  }
+		  }
+
+		  if ( !$scope.currentRun && run ){
+			  $scope.runningAnchor = true;  //So we can stay on the running page after it's done
+		  }
+		  $scope.currentRun = run;
+		  //Recompute the steps
+		  if ( $scope.currentRun ){
+			  $scope.steps = [];
+			  _.forOwn( $scope.currentRun, function( value, key ){
+				  if ( key.indexOf('step') == 0 ){
+					  $scope.steps.push( value );
+				  }
+			  });
+		  }
+
+		  if(!$scope.$$phase){
+			  $scope.$apply();
+		  }
+	  }
+
     };
-
-    ws.onmessage = function(message) {
-      var run = null;
-      if ( message.data && message.data != "" ){
-        try{
-          run = JSON.parse(message.data);
-        }catch(e){
-          console.log("Unable to parse ws message: " + e);
-          run = null;
-        }
-      }
-
-      if ( !$scope.currentRun && run ){
-        $scope.runningAnchor = true;  //So we can stay on the running page after it's done
-      }
-      $scope.currentRun = run;
-      //Recompute the steps
-    if ( $scope.currentRun ){
-        $scope.steps = [];
-      _.forOwn( $scope.currentRun, function( value, key ){
-        if ( key.indexOf('step') == 0 ){
-          $scope.steps.push( value );
-        }
-      });
-    }
-
-      if(!$scope.$$phase){
-      $scope.$apply();
-    }
-
-    };
+    
+    setupWebSocket();
  }]
 )
 

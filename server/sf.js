@@ -60,14 +60,14 @@ function sf( pipeId ){
 		});
 	};
 	
-	this.connect = function( req, res, callback ){
+	this.connect = function( req, res, url, callback ){
 		getPipe( function( err, pipe ){
 			if ( err ){
 				return callback( err );
 			}
-			console.log( "Trying to connect using : " + JSON.stringify( pipe ) );
+			console.log( "Trying to connect using : " + JSON.stringify( pipe.name ) );
 			//Redirect authorization
-			res.redirect( this.getOAuthConfig( pipe ).getAuthorizationUrl({ scope : 'api id web refresh_token', state: pipe._id }));
+			res.redirect( this.getOAuthConfig( pipe ).getAuthorizationUrl({ scope : 'api id web refresh_token', state: JSON.stringify( {pipe: pipe._id, url: url } ) }));
 			
 		}.bind( this ));
 	};

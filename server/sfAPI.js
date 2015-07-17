@@ -13,8 +13,11 @@ var global = require("./global");
 
 module.exports = function( app ){
 	app.get("/authCallback", function( req, res ){
-		var code = req.param('code');
-		var pipeId = req.param('state');
+		var code = req.query.code;
+		var state = JSON.parse( req.query.state);
+		var pipeId = state.pipe;
+		
+		console.log("AuthCallback called with return url : " + state.url );
 		
 		if ( !code || !pipeId ){
 			return global.jsonError( res, "No code or state specified in OAuth callback request");
@@ -25,7 +28,9 @@ module.exports = function( app ){
 		
 		sfObject.authorize(code, function(err, userInfo, jsForceConnection, pipe ){
 			if (err) { 
-				return global.jsonError( res, err );
+				return res.type("html").status(401).send("<html><body>" +
+						"Authentication error: " + err +
+						"</body></html>");
 			}
 			
 			var tables = [];
@@ -88,7 +93,7 @@ module.exports = function( app ){
 						return global.jsonError( res, err );
 					}
 
-					res.send("<html><head><script>window.close()</script></head><body></body></html>");
+					res.redirect(state.url);
 				})
 				
 			});
@@ -97,7 +102,7 @@ module.exports = function( app ){
 	
 	app.get("/sf/:id", function( req, res){
 		var sfConnection = new sf( req.params.id );
-		sfConnection.connect( req, res, function (err, results ){
+		sfConnection.connect( req, res, req.query.url, function (err, results ){
 			if ( err ){
 				return global.jsonError( res, err );
 			}
