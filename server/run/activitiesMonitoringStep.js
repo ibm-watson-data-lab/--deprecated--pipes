@@ -47,13 +47,16 @@ function activitiesMonitoringStep(){
 			console.log("Sending alert about possible DataWorks activities hung to metrics-collector");
 			async.forEachOf( pipeRunStats.getTableStats(), function(tableStats, tableName, callback ){
 				if ( !tableStats.activityDone ){
+					var d = moment();
 					var props = {
 						idsite: "data.pipes",
 						type : "pipe_alert",
 						activityId: tableStats.activityId,
 						activityRunId: tableStats.activityRunId,
 						tableName: tableStats.tableName,
-						numRecords: tableStats.numRecords
+						numRecords: tableStats.numRecords,						
+						date: d.year() + "-" + (d.month() + 1) + "-" + d.date(),
+						d: d.format()
 					};
 					request.get( {url: "http://metrics-collector.mybluemix.net/tracker", qs: props}, function(err, response, body){
 						if ( !err ){
