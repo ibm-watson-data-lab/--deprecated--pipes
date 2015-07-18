@@ -34,6 +34,7 @@ function cloudantToDashActivitiesStep(){
 		var expectedLength = this.getPipeRunner().getSourceTables().length;
 		var formatStepMessage = function(){
 			var percent = ((stepStats.numRunningActivities/expectedLength)*100).toFixed(1);
+			this.setPercentCompletion( percent );
 			var message = numCreated + " DataWorks activities created, " + stepStats.numRunningActivities + " are successfully started (" + percent + "%)";
 			this.setStepMessage( message );
 		}.bind(this);

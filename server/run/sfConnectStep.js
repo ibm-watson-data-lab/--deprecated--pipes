@@ -49,19 +49,23 @@ function sfConnectStep(){
 		//Compute the total number of records so we can compute progression
 		var tables = this.getPipeRunner().getSourceTables();
 		this.pipeRunStats.expectedTotalRecords = 0;
+
+		var processed = 0;
 		//Main dispatcher code
 		async.each( tables, function( table, callback ){
 			conn.query("SELECT COUNT() FROM "+ table.name)
 			.on("end", function(query) {
 				this.pipeRunStats.expectedTotalRecords += query.totalSize;
 				this.setStepMessage("Connection to Salesforce Successful. " + this.pipeRunStats.expectedTotalRecords +" records have been found");
+				this.setPercentCompletion( (++processed/table.length).toFixed(1) );
 				return callback();
 			}.bind(this))
 			.on("error", function(err) {
 				//skip
 				console.log("Error getting count for table %s", table.name);
+				this.setPercentCompletion( (++processed/table.length).toFixed(1) );
 				return callback(null);
-			})
+			}.bind(this))
 			.run();			
 		}.bind(this), function( err ){
 			if ( err ){
@@ -70,7 +74,7 @@ function sfConnectStep(){
 			}
 			//Keep a reference of the connection for the next steps
 			this.pipeRunStats.sfConnection = conn;
-			this.setStepMessage("Connection to Salesforce SuccessFull. " + this.pipeRunStats.expectedTotalRecords +" records have been found");
+			this.setStepMessage("Connection to Salesforce Successful. " + this.pipeRunStats.expectedTotalRecords +" records have been found");
 			return callback();
 		}.bind(this));
 	}

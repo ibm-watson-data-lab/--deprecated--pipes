@@ -38,6 +38,7 @@ function activitiesMonitoringStep(){
 		var expectedLength = this.getPipeRunner().getSourceTables().length;
 		var formatStepMessage = function(){
 			var percent = ((stepStats.numFinishedActivities/expectedLength)*100).toFixed(1);
+			this.setPercentCompletion( percent );
 			var message = stepStats.numFinishedActivities + " DataWorks activities completed (" + percent + "%)";
 			this.setStepMessage( message );
 		}.bind(this);

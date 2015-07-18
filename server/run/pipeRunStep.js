@@ -38,6 +38,10 @@ function pipeRunStep(){
 		this.pipeRunStats.broadcastRunEvent();
 	}
 	
+	this.setPercentCompletion = function( percent ){
+		this.stats.percent = percent;
+	}
+	
 	this.beginStep = function( pipeRunner, pipeRunStats ){
 		//Reference to the main stats object
 		this.pipeRunStats = pipeRunStats;
@@ -48,6 +52,7 @@ function pipeRunStep(){
 		//Record the start time
 		this.stats.startTime = moment();
 		this.stats.status = "RUNNING";
+		this.setPercentCompletion(0);
 		
 		this.pipeRunStats.save();
 	}
@@ -58,6 +63,7 @@ function pipeRunStep(){
 		this.stats.elapsedTime = moment.duration( this.stats.endTime.diff( this.stats.startTime ) ).humanize();
 		
 		this.stats.status = "FINISHED";
+		this.setPercentCompletion(100);
 		this.pipeRunStats.save( callback );
 	}
 }

@@ -71,7 +71,7 @@ module.exports = function( app ){
 	app.get("/runs/:pipeid", function( req, res ){
 		pipeDb.run( function( err, db ){
 			db.view( 'application', "all_runs", 
-					{startkey: [req.params.pipeid, 0], endKey:[req.params.pipeid, {}],'include_docs':true, 'limit': 10, descending:true},
+					{startkey: [{}, req.params.pipeid], endKey:[0, req.params.pipeid],'include_docs':true, 'limit': 10, descending:true},
 				function(err, data) {
 					if ( err ){
 						console.log(err);
@@ -91,8 +91,6 @@ module.exports = function( app ){
 			path:"/runs"
 		});
 		
-		var runEventListenerAdded = false;
-		
 		wss.on('connection', function(ws) {
 			//Send response with current run
 			ws.send( global.currentRun && JSON.stringify(global.currentRun.runDoc ));
@@ -100,15 +98,17 @@ module.exports = function( app ){
 				ws.send( JSON.stringify( runDoc) );
 			}
 			
+			ws.runEventListenerAdded = false;
+			
 			//Listen to run event
-			if ( !runEventListenerAdded ){
+			if ( !ws.runEventListenerAdded ){
 				global.on("runEvent", runEventListener);
-				runEventListenerAdded = true;
+				ws.runEventListenerAdded = true;
 			}
 
 			ws.on('close', function() {
 				global.removeListener('runEvent', runEventListener);
-				runEventListenerAdded = false;
+				ws.runEventListenerAdded = false;
 			});
 		});
 	}

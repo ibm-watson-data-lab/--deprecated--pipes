@@ -111,6 +111,7 @@ function sfToCloudantStep(){
 	var formatCopyStepMessage = function( added ){
 		totalCopied += added;
 		var percent = totalCopied == 0 ? 0 : ((totalCopied/this.pipeRunStats.expectedTotalRecords)*100).toFixed(1);
+		this.setPercentCompletion( percent );
 		var message = totalCopied + " documents copied to Cloudant out of " + this.pipeRunStats.expectedTotalRecords 
 			+ " (" + percent + "%)";
 		this.setStepMessage( message );
