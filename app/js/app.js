@@ -87,7 +87,7 @@ var mainApp = angular.module('dataMovingApp', [
         		}
         		if ( pipesService.scope ){
         			delete pipesService.scope;
-        		}        		
+        		}
         	}
       })
 })
@@ -156,15 +156,20 @@ var mainApp = angular.module('dataMovingApp', [
 
   $scope.oauthCallback=$location.protocol() + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/authCallback";
 
+  $scope.activateRun = function(run){ // simple toggle to show/hide run details on monitoring
+    if($scope.activeRun && $scope.activeRun == run){
+      delete $scope.activeRun;
+    } else {
+      $scope.activeRun = run;
+    }
+  };
+
   $scope.savePipe = function( Obj ){
 
     Obj = Obj || {};
 
     var connect = (Obj.connect === "true" || Obj.connect === true) ? true : false;
     var nextPageTab = Obj.nextPageTab;
-
-      console.log(Obj);
-      console.log(connect, nextPageTab);
 
     pipesService.savePipe( $scope.selectedPipe ).then(
       function(){
@@ -216,6 +221,7 @@ var mainApp = angular.module('dataMovingApp', [
   $scope.goToNextPage = function( tab ){
     $state.go("home.pipeDetails.tab", {tab:tab, id: $scope.selectedPipe._id });
   }
+
  }]
 )
 
@@ -283,7 +289,7 @@ var mainApp = angular.module('dataMovingApp', [
     function($scope, $http, $location, $state, $stateParams, pipesService, salesforceService) {
 	pipesService.scope = $scope;
     $scope.tabName = $stateParams.tab;
-    
+
     $scope.isPipeRunning = function(){
     	return $scope.selectedPipe && $scope.currentRun;
     }
