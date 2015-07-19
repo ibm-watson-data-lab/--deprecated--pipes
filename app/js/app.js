@@ -156,10 +156,6 @@ var mainApp = angular.module('dataMovingApp', [
 
   $scope.oauthCallback=$location.protocol() + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/authCallback";
 
-  $scope.isPipeRunning = function(){
-    return $scope.selectedPipe && $scope.currentRun;
-  }
-
   $scope.savePipe = function( Obj ){
 
     Obj = Obj || {};
@@ -287,6 +283,10 @@ var mainApp = angular.module('dataMovingApp', [
     function($scope, $http, $location, $state, $stateParams, pipesService, salesforceService) {
 	pipesService.scope = $scope;
     $scope.tabName = $stateParams.tab;
+    
+    $scope.isPipeRunning = function(){
+    	return $scope.selectedPipe && $scope.currentRun;
+    }
 
     $scope.runNow = function(){
       salesforceService.runPipe( $scope.selectedPipe ).then(
