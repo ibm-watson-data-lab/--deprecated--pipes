@@ -61,21 +61,34 @@ var mainApp = angular.module('dataMovingApp', [
             }
         })
         .state('home.pipeDetails.tab',{
-          parent: 'home.pipeDetails',
-        url:'/tab/:tab',
-      templateUrl: function (stateParams){
-        if ( !stateParams.tab ){
-          return '/templates/pipeDetails.about.html';
-        }
-        return '/templates/pipeDetails.' + stateParams.tab + '.html';
-            },
-            controllerProvider: function($stateParams) {
-              if ( $stateParams.tab && $stateParams.tab === 'monitoring' ){
-                return 'pipeDetails.tab.' + $stateParams.tab + '.controller';
-              }
-              //Default
-              return 'pipeDetails.tab.controller';
-            }
+        	parent: 'home.pipeDetails',
+        	url:'/tab/:tab',
+        	templateUrl: function (stateParams){
+        		if ( !stateParams.tab ){
+        			return '/templates/pipeDetails.about.html';
+        		}
+        		return '/templates/pipeDetails.' + stateParams.tab + '.html';
+        	},
+        	controllerProvider: function($stateParams) {
+        		if ( $stateParams.tab && $stateParams.tab === 'monitoring' ){
+        			return 'pipeDetails.tab.' + $stateParams.tab + '.controller';
+        		}
+        		//Default
+        		return 'pipeDetails.tab.controller';
+        	},
+        	onEnter: function($stateParams, pipesService){
+        		if ( $stateParams.tab === 'monitoring' ){
+        			pipesService.startMonitorCurrentRun();
+        		}
+        	},
+        	onExit: function($stateParams, pipesService){
+        		if ( $stateParams.tab === 'monitoring' ){
+        			pipesService.stopMonitorCurrentRun( );
+        		}
+        		if ( pipesService.scope ){
+        			delete pipesService.scope;
+        		}        		
+        	}
       })
 })
 
@@ -207,51 +220,6 @@ var mainApp = angular.module('dataMovingApp', [
   $scope.goToNextPage = function( tab ){
     $state.go("home.pipeDetails.tab", {tab:tab, id: $scope.selectedPipe._id });
   }
-
-  var setupWebSocket = function(){
-	  var wsProtocol = $location.protocol() === "https" ? "wss" : "ws";
-	  var ws = new WebSocket(wsProtocol + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/runs");
-	  ws.onopen = function(){
-		  console.log("WebSocket connection established");
-	  };
-	  ws.onerror = ws.onclose = function(){
-		  //Reestablish connection
-		  setupWebSocket();
-	  };
-
-	  ws.onmessage = function(message) {
-		  var run = null;
-		  if ( message.data && message.data != "" ){
-			  try{
-				  run = JSON.parse(message.data);
-			  }catch(e){
-				  console.log("Unable to parse ws message: " + e);
-				  run = null;
-			  }
-		  }
-
-		  if ( !$scope.currentRun && run ){
-			  $scope.runningAnchor = true;  //So we can stay on the running page after it's done
-		  }
-		  $scope.currentRun = run;
-		  //Recompute the steps
-		  if ( $scope.currentRun ){
-			  $scope.steps = [];
-			  _.forOwn( $scope.currentRun, function( value, key ){
-				  if ( key.indexOf('step') == 0 ){
-					  $scope.steps.push( value );
-				  }
-			  });
-		  }
-
-		  if(!$scope.$$phase){
-			  $scope.$apply();
-		  }
-	  }
-
-    };
-    
-    setupWebSocket();
  }]
 )
 
@@ -317,6 +285,7 @@ var mainApp = angular.module('dataMovingApp', [
 
 .controller('pipeDetails.tab.monitoring.controller', ['$scope', '$http', '$location', '$state', '$stateParams','pipesService', 'salesforceService',
     function($scope, $http, $location, $state, $stateParams, pipesService, salesforceService) {
+	pipesService.scope = $scope;
     $scope.tabName = $stateParams.tab;
 
     $scope.runNow = function(){

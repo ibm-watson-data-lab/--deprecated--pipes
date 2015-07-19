@@ -8,6 +8,7 @@
 var pipeDb = require( './pipeStorage');
 var global = require('./global');
 var webSocketServer = require('ws').Server;
+var _  = require('lodash');
 
 module.exports = function( app ){
 	
@@ -91,24 +92,18 @@ module.exports = function( app ){
 			path:"/runs"
 		});
 		
+		global.on("runEvent", function( runDoc ){
+			_.forEach( wss.clients, function( client ){
+				client.send( JSON.stringify( runDoc ) );
+			});
+		});
+		
 		wss.on('connection', function(ws) {
 			//Send response with current run
 			ws.send( global.currentRun && JSON.stringify(global.currentRun.runDoc ));
-			var runEventListener = function( runDoc ){
-				ws.send( JSON.stringify( runDoc) );
-			}
-			
-			ws.runEventListenerAdded = false;
-			
-			//Listen to run event
-			if ( !ws.runEventListenerAdded ){
-				global.on("runEvent", runEventListener);
-				ws.runEventListenerAdded = true;
-			}
 
 			ws.on('close', function() {
-				global.removeListener('runEvent', runEventListener);
-				ws.runEventListenerAdded = false;
+				console.log("Web Socket closed");
 			});
 		});
 	}

@@ -7,7 +7,7 @@ angular.module('pipes', [],function() {
 
 })
 
-.factory('pipesService',function($q, $http){ 
+.factory('pipesService',function($q, $http, $location){ 
 	function cache(){
 		return _.union( cachedPipes, newPipes )
 	}
@@ -106,6 +106,66 @@ angular.module('pipes', [],function() {
         			deferred.reject( data.error || data );
         		});
         	return deferred.promise;
+        },
+        startMonitorCurrentRun: function(){
+        	if ( this.ws ){
+        		return;	//WebSocket already created
+        	}
+        	var wsProtocol = $location.protocol() === "https" ? "wss" : "ws";
+        	var ws = this.ws = new WebSocket(wsProtocol + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/runs");
+        	var that = this;
+        	ws.onopen = function(){
+        		console.log("WebSocket pipes run monitoring opened");
+        	};
+        	ws.onerror = function(evt){
+        		console.log("Error establishing web socket: " + evt.reason);
+        	};
+
+        	ws.onclose = function(){
+        		console.log("WebSocket pipes run monitoring closed");
+        	}
+
+        	ws.onmessage = function(message) {
+        		if ( !that.scope ){
+        			console.log("Invalid state, reference to scope doesn't exist");
+        			return;
+        		}
+        		
+        		var run = null;
+        		if ( message.data && message.data != "" ){
+        			try{
+        				run = JSON.parse(message.data);
+        			}catch(e){
+        				console.log("Unable to parse ws message: " + e);
+        				run = null;
+        			}
+        		}
+
+        		if ( !that.scope.currentRun && run ){
+        			that.scope.runningAnchor = true;  //So we can stay on the running page after it's done
+        		}
+        		that.scope.currentRun = run;
+        		//Recompute the steps
+        		if ( that.scope.currentRun ){
+        			that.scope.steps = [];
+        			_.forOwn( that.scope.currentRun, function( value, key ){
+        				if ( key.indexOf('step') == 0 ){
+        					that.scope.steps.push( value );
+        				}
+        			});
+        		}
+
+        		if(!that.scope.$$phase){
+        			that.scope.$apply();
+        		}
+        	}
+        },
+        stopMonitorCurrentRun: function( scope ){
+        	if ( this.ws ){
+        		console.log("Closing WebSocket pipes run monitoring");
+        		this.ws.close();
+        		delete this.ws;
+        	}        	
         }
     }
  });
