@@ -96,7 +96,7 @@ function pipeRunStats(pipe, steps, callback){
 		
 		//Set the current run to this
 		if ( global.currentRun ){
-			return callback( "A run is already in progress %s", currentRun._id );
+			return callback( "A run is already in progress %s", global.currentRun._id );
 		}
 		global.currentRun = this;
 		broadcastRunEvent();

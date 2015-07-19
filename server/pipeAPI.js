@@ -7,7 +7,8 @@
 
 var pipeDb = require( './pipeStorage');
 var global = require('./global');
-var webSocketServer = require('ws').Server;
+var webSocket = require('ws');
+var webSocketServer = webSocket.Server;
 var _  = require('lodash');
 
 module.exports = function( app ){
@@ -94,7 +95,9 @@ module.exports = function( app ){
 		
 		global.on("runEvent", function( runDoc ){
 			_.forEach( wss.clients, function( client ){
-				client.send( JSON.stringify( runDoc ) );
+				if ( client.readyState === webSocket.OPEN){
+					client.send( JSON.stringify( runDoc ) );
+				}
 			});
 		});
 		
