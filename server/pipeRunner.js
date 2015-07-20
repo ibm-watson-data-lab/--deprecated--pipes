@@ -81,7 +81,7 @@ function pipeRunner( sf, pipe ){
 						//Error caught
 						console.log("Exception caught: " + e);
 						console.log("Stack: " + e.stack);
-						return callback(e);
+						step.endStep( callback, e );
 					}
 				}.bind(this), function( err ){
 					//All done

@@ -125,8 +125,18 @@ pipeDb.on( "cloudant_ready", function(){
 			if ( pipe.run ){
 				pipeDb.upsert( pipe._id, function( storedPipe ){
 					if ( storedPipe && storedPipe.hasOwnProperty("run") ){
-						delete storedPipe["run"];
+						//Mark the run as STOPPED
+						pipeDb.upsert( storedPipe.run, function( doc ){
+							doc.status = "STOPPED";
+							doc.message = "Run didn't complete normally. See details";
+							return doc;
+						}, function( err, runDoc ){
+							if ( err ){
+								console.log( "Unable to save run: " + err );
+							}
+						});						
 					}
+					delete storedPipe["run"];
 					return storedPipe;
 				}, function( err, doc ){
 					if ( err ){

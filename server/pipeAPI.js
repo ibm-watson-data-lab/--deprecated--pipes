@@ -86,6 +86,15 @@ module.exports = function( app ){
 		});
 	});
 	
+	//Catch all for uncaught exceptions
+	process.on("uncaughtException", function( err ){
+		console.log("Unexcepted exception: " + err );
+		//Something terribly wrong happen within the code, catch it here so we don't crash the app
+		if ( global.currentRun ){
+			global.currentRun.done(err);
+		}		
+	});
+	
 	//Returns a function that configure the webSocket server to push notification about runs
 	return function(server){
 		var wss = new webSocketServer({

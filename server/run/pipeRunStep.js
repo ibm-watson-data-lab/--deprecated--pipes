@@ -57,12 +57,15 @@ function pipeRunStep(){
 		this.pipeRunStats.save();
 	}
 
-	this.endStep = function(callback){
+	this.endStep = function(callback, err){
 		//Set the end time and elapsed time
 		this.stats.endTime = moment();
 		this.stats.elapsedTime = moment.duration( this.stats.endTime.diff( this.stats.startTime ) ).humanize();
 		
-		this.stats.status = "FINISHED";
+		this.stats.status = err ? "ERROR" : "FINISHED";
+		if ( err ){
+			this.setStepMessage( err );
+		}
 		this.setPercentCompletion(100);
 		this.pipeRunStats.save( callback );
 	}

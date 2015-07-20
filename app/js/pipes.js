@@ -111,6 +111,8 @@ angular.module('pipes', [],function() {
         	if ( this.ws ){
         		return;	//WebSocket already created
         	}
+        	
+        	this.isMonitoring = true;
         	var wsProtocol = $location.protocol() === "https" ? "wss" : "ws";
         	var ws = this.ws = new WebSocket(wsProtocol + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/runs");
         	var that = this;
@@ -121,8 +123,15 @@ angular.module('pipes', [],function() {
         		console.log("Error establishing web socket: " + evt.reason);
         	};
 
-        	ws.onclose = function(){
+        	ws.onclose = function(evt){
         		console.log("WebSocket pipes run monitoring closed");
+        		if ( that.isMonitoring ){
+        			//May be timeout
+        			//console.log( JSON.stringify(evt) );
+        			console.log("Restarting WebSocket pipes run monitoring...");
+        			delete that.ws;
+        			return that.startMonitorCurrentRun();
+        		}
         	}
 
         	ws.onmessage = function(message) {
@@ -162,6 +171,7 @@ angular.module('pipes', [],function() {
         },
         stopMonitorCurrentRun: function( scope ){
         	if ( this.ws ){
+        		this.isMonitoring = false;
         		console.log("Closing WebSocket pipes run monitoring");
         		this.ws.close();
         		delete this.ws;
