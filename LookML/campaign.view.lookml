@@ -39,12 +39,12 @@
 
   - dimension: created
     type: time
-    timeframes: [date, month, week]
+    timeframes: [date, month, week, year]
     sql: TO_DATE(substring(${TABLE}."CreatedDate",1,10) || ' ' || substring(${TABLE}."CreatedDate",12,8),'YYYY-MM-DD HH24:MI:SS') 
   
   - dimension: end
     type: time
-    timeframes: [date, month, week]
+    timeframes: [date, month, week, year]
     sql: TO_DATE(substring(${TABLE}."EndDate",1,10) || ' ' || substring(${TABLE}."EndDate",12,8),'YYYY-MM-DD HH24:MI:SS') 
   
   - dimension: expected_response
@@ -106,7 +106,7 @@
 
   - dimension: start_date
     type: time
-    timeframes: [date, month, week]
+    timeframes: [date, month, week, year]
     sql: TO_DATE(substring(${TABLE}."StartDate",1,10) || ' ' || substring(${TABLE}."StartDate",12,8),'YYYY-MM-DD HH24:MI:SS') 
 
   - dimension: status

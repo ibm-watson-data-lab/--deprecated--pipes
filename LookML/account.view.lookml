@@ -29,9 +29,9 @@
 
   - dimension_group: created
     type: time
-    timeframes: [date, month, week]
+    timeframes: [date, month, week, year]
     sql: TO_DATE(substring(${TABLE}."CreatedDate",1,10) || ' ' || substring(${TABLE}."CreatedDate",12,8),'YYYY-MM-DD HH24:MI:SS') 
-  
+
   - dimension: is_deleted
     type: int
     sql: ${TABLE}."IsDeleted"
@@ -56,7 +56,7 @@
   - dimension: system_modstamp
     sql: ${TABLE}."SystemModstamp"
 
-  - dimension: total_number_of_nodes__c
+  - dimension: total_number_of_nodes
     type: number
     sql: ${TABLE}."Total_number_of_nodes__c"
 

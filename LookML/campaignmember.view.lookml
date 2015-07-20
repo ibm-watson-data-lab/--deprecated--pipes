@@ -1,4 +1,4 @@
-- view: campaignmember
+- view: campaign_member
   sql_table_name: '"sf_campaignmember"'
   fields:
 
@@ -26,12 +26,12 @@
 
   - dimension: created
     type: time
-    timeframes: [date, month, week]
+    timeframes: [date, month, week, year]
     sql: TO_DATE(substring(${TABLE}."CreatedDate",1,10) || ' ' || substring(${TABLE}."CreatedDate",12,8),'YYYY-MM-DD HH24:MI:SS') 
 
   - dimension: first_responded
     type: time
-    timeframes: [date, month, week]
+    timeframes: [date, month, week, year]
     sql: TO_DATE(substring(${TABLE}."FirstRespondedDate",1,10) || ' ' || substring(${TABLE}."FirstRespondedDate",12,8),'YYYY-MM-DD HH24:MI:SS') 
 
   - dimension: geo

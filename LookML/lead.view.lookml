@@ -33,7 +33,7 @@
   - dimension: converted
     sql: ${TABLE}."ConvertedDate"
     type: time
-    timeframes: [date, month, week]
+    timeframes: [date, month, week, year]
     sql: TO_DATE(substring(${TABLE}."ConvertedDate",1,10) || ' ' || substring(${TABLE}."ConvertedDate",12,8),'YYYY-MM-DD HH24:MI:SS') 
 
   - dimension: converted_opportunity_id
@@ -47,7 +47,7 @@
 
   - dimension: created
     type: time
-    timeframes: [date, month, week]
+    timeframes: [date, month, week, year]
     sql: TO_DATE(substring(${TABLE}."CreatedDate",1,10) || ' ' || substring(${TABLE}."CreatedDate",12,8),'YYYY-MM-DD HH24:MI:SS') 
 
   - dimension: created_vs_handoff

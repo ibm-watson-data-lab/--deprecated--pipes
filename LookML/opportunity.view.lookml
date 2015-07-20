@@ -16,18 +16,21 @@
   - dimension: campaign_id
     sql: ${TABLE}."CampaignId"
 
-  - dimension: closedate
+  - dimension_group: close
     sql: ${TABLE}."CloseDate"
-
+    type: time
+    timeframes: [date,week,month,year]
+    convert_tz: false
+    
   - dimension: contract_term
     sql: ${TABLE}."Contract_Term__c"
 
-  - dimension: createdbyid
+  - dimension: created_by_id
     sql: ${TABLE}."CreatedById"
 
   - dimension_group: created
     type: time
-    timeframes: [date, month, week]
+    timeframes: [date, month, week, year]
     sql: TO_DATE(substring(${TABLE}."CreatedDate",1,10) || ' ' || substring(${TABLE}."CreatedDate",12,8),'YYYY-MM-DD HH24:MI:SS') 
 
   - dimension: executive_sponsor
@@ -36,21 +39,21 @@
   - dimension: fiscal
     sql: ${TABLE}."Fiscal"
 
-  - dimension: fiscalquarter
+  - dimension: fiscal_quarter
     type: number
     sql: ${TABLE}."FiscalQuarter"
 
-  - dimension: fiscalyear
+  - dimension: fiscal_year
     type: number
     sql: ${TABLE}."FiscalYear"
 
-  - dimension: forecastcategory
+  - dimension: forecast_category
     sql: ${TABLE}."ForecastCategory"
 
-  - dimension: forecastcategoryname
+  - dimension: forecast_category_name
     sql: ${TABLE}."ForecastCategoryName"
 
-  - dimension: hasopportunitylineitem
+  - dimension: has_opportunity_line_item
     type: number
     sql: ${TABLE}."HasOpportunityLineItem"
 
@@ -71,6 +74,7 @@
 
   - dimension: id
     sql: ${TABLE}."Id"
+    primary_key: true
 
   - dimension: is_closed
     type: number
@@ -84,10 +88,10 @@
     type: number
     sql: ${TABLE}."IsWon"
 
-  - dimension: is_this_follow_on_to_poc__c
+  - dimension: is_this_follow_on_to_poc
     sql: ${TABLE}."Is_this_follow_on_to_POC__c"
 
-  - dimension: lastmodifiedbyid
+  - dimension: last_modified_by_id
     sql: ${TABLE}."LastModifiedById"
 
   - dimension: last_modified
@@ -95,7 +99,7 @@
     timeframes: [date, month, week]
     sql: TO_DATE(substring(${TABLE}."LastModifiedDate",1,10) || ' ' || substring(${TABLE}."LastModifiedDate",12,8),'YYYY-MM-DD HH24:MI:SS')
 
-  - dimension: leadsource
+  - dimension: lead_source
     sql: ${TABLE}."LeadSource"
 
   - dimension: lead_source_group
@@ -105,8 +109,8 @@
     type: number
     sql: ${TABLE}."Lifetime_Expected_Value__c"
 
-  - dimension: mrr
-    sql: ${TABLE}."MRR__c"
+#   - dimension: mrr
+#     sql: ${TABLE}."MRR__c"
 
   - dimension: name
     sql: ${TABLE}."Name"
@@ -121,7 +125,7 @@
     type: number
     sql: ${TABLE}."Number_of_Deals__c"
 
-  - dimension: ownerid
+  - dimension: owner_id
     sql: ${TABLE}."OwnerId"
 
   - dimension: probability
@@ -141,13 +145,13 @@
     type: number
     sql: ${TABLE}."Signings2x__c"
 
-  - dimension: stagename
+  - dimension: stage_name
     sql: ${TABLE}."StageName"
 
   - dimension: steps_to_closure__c
     sql: ${TABLE}."Steps_to_Closure__c"
 
-  - dimension: supportplan
+  - dimension: support_plan
     sql: ${TABLE}."SupportPlan__c"
 
   - dimension: support_contact1
@@ -175,8 +179,8 @@
   - dimension: _rev
     sql: ${TABLE}."_rev"
 
-  - dimension: attributes_type
-    sql: ${TABLE}."Attributes_Type"
+#   - dimension: attributes_type
+#     sql: ${TABLE}."Attributes_Type"
 
   - dimension: attributes_url
     sql: ${TABLE}."attributes_url"
@@ -187,61 +191,37 @@
   - measure: count
     type: count
     drill_fields: detail*
+  
+  - measure: count_won
+    type: count
+    filter: 
+      is_won: 1
+    drill_fields: detail*
+      
+  - measure: cumulative_total
+    type: running_total
+    sql: ${count}
+    drill_fields: detail*
+  
+  - measure: total_acv
+    type: sum
+    sql: ${acv}
+    value_format: '$#,##0.00'
+    drill_fields: detail*
+  
+#   - measure: total_mrr
+#     type: sum
+#     sql: ${mrr}
+#     value_format: '$#,##0.00'
+#     drill_fields: detail*
 
   sets:
     detail:
-      - acv__c
-      - accountid
-      - cra_compelling_reason_to_act__c
-      - campaignid
-      - closedate
-      - contract_term__c
-      - createdbyid
-      - createddate
-      - executive_sponsor__c
-      - fiscal
-      - fiscalquarter
-      - fiscalyear
-      - forecastcategory
-      - forecastcategoryname
-      - hasopportunitylineitem
-      - ibm_forecast_stage__c
-      - ibm_opp_id__c
-      - ibm_sales_stage__c
-      - imt__c
-      - iot__c
+      - close_date
+      - created_date
       - id
-      - isclosed
-      - isdeleted
-      - iswon
-      - is_this_follow_on_to_poc__c
-      - lastmodifiedbyid
-      - lastmodifieddate
-      - leadsource
-      - lead_source_group__c
-      - lifetime_expected_value__c
-      - mrr__c
+      - mrr
       - name
-      - new_appt_date__c
-      - number_of_deals__c
-      - ownerid
       - probability
-      - probability_of_closure_cq__c
-      - projected_turnover_date__c
-      - revenue_type2__c
-      - signings2x__c
       - stagename
-      - steps_to_closure__c
-      - supportplan__c
-      - support_contact1__c
-      - systemmodstamp
-      - total_revenue1__c
       - type
-      - type_finance__c
-      - uvp_unique_value_proposition__c
-      - _id
-      - _rev
-      - attributes_type
-      - attributes_url
-      - pt_type
-
