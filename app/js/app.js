@@ -154,7 +154,8 @@ var mainApp = angular.module('dataMovingApp', [
     $scope.selectedPipe.scheduleTime = moment( $scope.selectedPipe.scheduleTime ).toDate();
   }
 
-  $scope.oauthCallback=$location.protocol() + "://" + $location.host() + ($location.port()? ":" + $location.port() : "") +"/authCallback";
+  var port = $location.port();
+  $scope.oauthCallback=$location.protocol() + "://" + $location.host() + ( (port === 80 || port === 443) ? "" : (":" + port)) +"/authCallback";
 
   $scope.activateRun = function(run){ // simple toggle to show/hide run details on monitoring
     if($scope.activeRun && $scope.activeRun == run){
