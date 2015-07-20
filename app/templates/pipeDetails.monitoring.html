@@ -63,11 +63,14 @@
 
 <div ng-show="isPipeRunning() || runningAnchor" ng-model="currentRun">
 	<div class="container-fluid">
-		<div class="page-header">
-	  		<div class="sidebar-title">Pipe Progress</div>
-		</div>
+		<h1>
+			Pipe Progress
+		</h1>
 
-		<div class="progress" ng-show="steps[0].percent > 0">
+		<p ng-show="steps[0].status === 'NOT_STARTED'">
+			Initializing pipe...
+		</p>
+		<div class="progress" ng-show="steps[0].percent">
 		  <div class="progress-bar progress-bar-success" ng-repeat="step in steps" style="width: {{ step.percent / steps.length }}%">
 		    <span class="sr-only">{{ step.percent / steps.length }}% Complete</span>
 		  </div>
@@ -83,10 +86,8 @@
 			<a href="javascript:void(0)" ng-click="runningAnchor=false;fetchRuns()">View details</a>
 		</p>
 
-		<!--
 		<pre>
 			{{ isPipeRunning() | json }}
 		</pre>
-		-->
 	</div>
 </div>
