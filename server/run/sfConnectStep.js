@@ -12,13 +12,13 @@ var async = require("async");
 
 /**
  * sfConnectStep class
- * Abstract Base class for all run steps 
+ * Abstract Base class for all run steps
  */
 function sfConnectStep(){
 	pipeRunStep.call(this);
-	
+
 	this.label = "Connecting to SalesForce";
-	
+
 	//public APIs
 	this.run = function( callback ){
 		this.setStepMessage("Connecting to Salesforce...");
@@ -45,7 +45,7 @@ function sfConnectStep(){
 				pipe = storedPipe;
 			})
 		});
-		
+
 		//Compute the total number of records so we can compute progression
 		var tables = this.getPipeRunner().getSourceTables();
 		this.pipeRunStats.expectedTotalRecords = 0;
@@ -66,7 +66,7 @@ function sfConnectStep(){
 				this.setPercentCompletion( (++processed/table.length).toFixed(1) );
 				return callback(null);
 			}.bind(this))
-			.run();			
+			.run();
 		}.bind(this), function( err ){
 			if ( err ){
 				this.setStepMessage("Connection to Salesforce unsuccessful: %s", err);

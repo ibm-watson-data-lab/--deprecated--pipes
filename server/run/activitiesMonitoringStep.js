@@ -16,24 +16,24 @@ var request = require('request');
  */
 function activitiesMonitoringStep(){
 	pipeRunStep.call(this);
-	
-	this.label = "Monitoring DataWorks Activities for completion";
-	
+
+	this.label = "Monitoring DataWorks activities for completion";
+
 	//public APIs
 	this.run = function( callback ){
 		var pipeRunStats = this.pipeRunStats;
-		
+
 		//Get the DataWorks instance
 		var dwInstance = pipeRunStats.dwInstance;
-		
+
 		var stepStats = this.stats;
 		stepStats.numRunningActivities = 0;
 		_.forOwn( pipeRunStats.getTableStats(), function(value, key ){
 			stepStats.numRunningActivities++;
 		})
-		
+
 		stepStats.numFinishedActivities = 0;
-		
+
 		//convenience method
 		var expectedLength = this.getPipeRunner().getSourceTables().length;
 		var formatStepMessage = function(){
@@ -42,7 +42,7 @@ function activitiesMonitoringStep(){
 			var message = stepStats.numFinishedActivities + " DataWorks activities completed (" + percent + "%)";
 			this.setStepMessage( message );
 		}.bind(this);
-		
+
 		var sendAlert = function(){
 			console.log("Sending alert about possible DataWorks activities hung to metrics-collector");
 			async.forEachOf( pipeRunStats.getTableStats(), function(tableStats, tableName, callback ){
@@ -54,7 +54,7 @@ function activitiesMonitoringStep(){
 						activityId: tableStats.activityId,
 						activityRunId: tableStats.activityRunId,
 						tableName: tableStats.tableName,
-						numRecords: tableStats.numRecords,						
+						numRecords: tableStats.numRecords,
 						date: d.year() + "-" + (d.month() + 1) + "-" + d.date(),
 						d: d.format()
 					};
@@ -71,7 +71,7 @@ function activitiesMonitoringStep(){
 				}
 			});
 		}
-		
+
 		//Start monitoring the activities
 		var timeout = moment.duration(5, 'minutes').asMilliseconds();	//timeout to raise possible dataworks hung alerts when no activities has completed.
 		var alertSent = false;
@@ -90,7 +90,7 @@ function activitiesMonitoringStep(){
 							stepStats.numRunningActivities--;
 							tableStats.activityDone = true;
 							formatStepMessage();
-							
+
 							//Reset the timeout start
 							start = moment();
 						}
@@ -113,13 +113,13 @@ function activitiesMonitoringStep(){
 					}
 					return setTimeout( monitor, 10000 );
 				}
-				var message = "All DataWorks activities have been completed";
+				var message = "DataWorks activities are complete";
 				stepStats.status = message;
 				this.setStepMessage(message);
 				return callback();
 			}.bind(this));
 		}.bind(this);
-		setTimeout( monitor, 10000 );		
+		setTimeout( monitor, 10000 );
 	}
 }
 

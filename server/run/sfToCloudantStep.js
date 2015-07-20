@@ -17,9 +17,9 @@ var global = require("../global");
  */
 function sfToCloudantStep(){
 	pipeRunStep.call(this);
-	
-	this.label = "Moving Data from SalesForce to Cloudant";
-	
+
+	this.label = "Moving data from Salesforce to Cloudant";
+
 	//Private APIs
 	/**
 	 * Return the design doc associated with table
@@ -27,14 +27,14 @@ function sfToCloudantStep(){
 	var getDesignDocForTable = function( table ){
 		return '_design/' + table.name;
 	};
-	
+
 	/**
 	 * Return the view name associated with a table
 	 */
 	var getViewNameForTable = function( table ){
 		return table.labelPlural || table.label || table.name;
 	};
-	
+
 	var genViewsManager = function(table){
 		var tables = table || this.getPipeRunner().getSourceTables();
 		if ( !_.isArray( tables ) ){
@@ -59,7 +59,7 @@ function sfToCloudantStep(){
 		return viewsManager;
 
 	}.bind( this );
-	
+
 	var createCloudantDbForTable = function( table, callback ){
 		//One database per table, create it now
 		var dbName =  "sf_" + table.name.toLowerCase();
@@ -78,9 +78,9 @@ function sfToCloudantStep(){
 
 		targetDb.on("cloudant_error", function(){
 			return callback("Fatal error from Cloudant database: unable to initialize " + dbName);
-		});	
+		});
 	}
-	
+
 	var getProcessTableFunctions = function( table ){
 		var processTableFunctions = [];
 		var targetDb = null;
@@ -101,22 +101,22 @@ function sfToCloudantStep(){
 				}
 				//Process for this table was successful, roll up the stats
 				return callback( null, stats );
-			});		
+			});
 		});
 		return processTableFunctions;
 	}
-	
+
 	//convenience method
 	var totalCopied = 0;
 	var formatCopyStepMessage = function( added ){
 		totalCopied += added;
 		var percent = totalCopied == 0 ? 0 : ((totalCopied/this.pipeRunStats.expectedTotalRecords)*100).toFixed(1);
 		this.setPercentCompletion( percent );
-		var message = totalCopied + " documents copied to Cloudant out of " + this.pipeRunStats.expectedTotalRecords 
+		var message = totalCopied + " documents copied to Cloudant out of " + this.pipeRunStats.expectedTotalRecords
 			+ " (" + percent + "%)";
 		this.setStepMessage( message );
 	}.bind(this);
-	
+
 	/**
 	 * @param: table: json object representing the source table
 	 * @param targetDb: the target db to write data to
@@ -129,10 +129,10 @@ function sfToCloudantStep(){
 			dbName : targetDb.getDbName(),
 			errors: []
 		};
-		
+
 		var pipeRunStats = this.pipeRunStats;
 		pipeRunStats.addTableStats( stats );
-		
+
 		var selectStmt = "SELECT ";
 		var first = true;
 		table.fields.forEach( function( field ){
@@ -141,17 +141,17 @@ function sfToCloudantStep(){
 		});
 		selectStmt += " FROM " + table.name;
 		//console.log( selectStmt );
-		
+
 		//Batch the docs to minimize number of requests
 		var batch = { batchDocs: [] };
 		var maxBatchSize = 200;
-		
+
 		var processBatch = function( force, callback ){
 			if ( batch.batchDocs.length > 0 && (force || batch.batchDocs.length >= maxBatchSize) ){
 				var thisBatch = { batchDocs:batch.batchDocs};
 				//Release the array for the next batch
 				batch.batchDocs = [];
-				
+
 				//Insert into the database
 				targetDb.run( function( err, db ){
 					if ( err ){
@@ -172,26 +172,26 @@ function sfToCloudantStep(){
 				callback();
 			}
 		}
-		
+
 		var conn = this.pipeRunStats.sfConnection;
 		conn.query(selectStmt)
 		.on("record", function(record) {
 			stats.numRecords++;
 
 			//Add the type to the record
-			record.pt_type = table.name; 
-			
+			record.pt_type = table.name;
+
 			batch.batchDocs.push( record );
 			processBatch( false );
 		})
 		.on("end", function(query) {
 			console.log("total in database : " + query.totalSize);
 			console.log("total fetched : " + query.totalFetched);
-			
+
 			processBatch( true, function( err ){
 				pipeRunStats.addTableStats( stats );
 				return callback(null, stats);
-			});			
+			});
 		})
 		.on("fetch", function(){
 			//Call garbage collector between fetches
@@ -205,18 +205,18 @@ function sfToCloudantStep(){
 		})
 		.run({ autoFetch : true, maxFetch : 100000 });
 	}.bind(this);
-	
+
 	//public APIs
 	this.run = function( callback ){
 		var stepStats = this.stats;
 		stepStats.numRecords = 0;
-		
+
 		//Get the tables to process
 		var tables = this.getPipeRunner().getSourceTables();
-		
+
 		//record stats for each table
 		this.pipeRunStats.tableStats = {};
-		
+
 		//Main dispatcher code
 		async.map( tables, function( table, callback ){
 			console.log("Starting processing table : " + table.name );
@@ -230,7 +230,7 @@ function sfToCloudantStep(){
 			});
 		}, function( err, statsArray ){
 			var hasErrors = false;
-		
+
 			if ( _.isArray( statsArray ) ){
 				_.forEach( statsArray, function(stats){
 					if ( stats ){
@@ -240,8 +240,8 @@ function sfToCloudantStep(){
 					}
 				});
 			}
-			
-			
+
+
 			if ( err ){
 				stepStats.status = "Unsuccessful: " + err;
 			}else if( hasErrors ){
@@ -249,8 +249,8 @@ function sfToCloudantStep(){
 			}else{
 				stepStats.status = "Successfully completed";
 			}
-			
-			this.setStepMessage("Successfully copied "+ totalCopied + " documents from Salesforce to Cloudant");		
+
+			this.setStepMessage("Successfully copied "+ totalCopied + " documents from Salesforce to Cloudant");
 			return callback( err );
 		}.bind(this));
 	}

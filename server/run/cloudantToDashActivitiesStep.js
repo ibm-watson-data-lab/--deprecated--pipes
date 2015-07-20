@@ -15,13 +15,13 @@ var _ = require('lodash');
  */
 function cloudantToDashActivitiesStep(){
 	pipeRunStep.call(this);
-	
-	this.label = "Creating and Running DataWorks Activities";
-	
+
+	this.label = "Creating and running DataWorks activities";
+
 		//public APIs
 	this.run = function( callback ){
 		var pipeRunStats = this.pipeRunStats;
-		
+
 		//Create a DataWorks instance
 		var dwInstance = new dataworks();
 		//Keep a reference of the dataWorks instance for the monitoring step
@@ -29,7 +29,7 @@ function cloudantToDashActivitiesStep(){
 		var stepStats = this.stats;
 		stepStats.numRunningActivities = 0;
 		var numCreated = 0;
-		
+
 		//convenience method
 		var expectedLength = this.getPipeRunner().getSourceTables().length;
 		var formatStepMessage = function(){
@@ -38,16 +38,16 @@ function cloudantToDashActivitiesStep(){
 			var message = numCreated + " DataWorks activities created, " + stepStats.numRunningActivities + " are successfully started (" + percent + "%)";
 			this.setStepMessage( message );
 		}.bind(this);
-		
+
 		formatStepMessage();
-		
+
 		//Create the activities if needed
 		dwInstance.listActivities( function( err, activities ){
 			if ( err ){
 				console.log( "Unable to get list of DataWorks activities: " + err );
 				return callback( err );
 			}
-			
+
 			async.forEachOfSeries( pipeRunStats.getTableStats(), function(tableStats, tableName, callback ){
 				var checkForRunningStateFn = function( activityId, activityRunId, callback ){
 					dwInstance.monitorActivityRun( activityId, activityRunId, function( err, activityRun ){
@@ -84,7 +84,7 @@ function cloudantToDashActivitiesStep(){
 				if ( activity ){
 					//console.log("Activity %s already exists", tableStats.dbName);
 					tableStats.activityId = activity.id;
-					
+
 					numCreated++;
 					//Run it now
 					runActivityFn(activity);
@@ -110,7 +110,7 @@ function cloudantToDashActivitiesStep(){
 						}
 
 						//Record the activity id and start execution
-						tableStats.activityId = activity.id;						
+						tableStats.activityId = activity.id;
 						console.log("SuccessFully created a new activity: " + require('util').inspect( activity, { showHidden: true, depth: null } ) );
 						numCreated++;
 						formatStepMessage();
@@ -122,10 +122,10 @@ function cloudantToDashActivitiesStep(){
 				if ( err ){
 					return callback(err);
 				}
-				
+
 				formatStepMessage();
 				return callback();
-			});	
+			});
 		});
 	}
 }
