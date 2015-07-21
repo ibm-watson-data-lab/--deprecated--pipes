@@ -11,7 +11,7 @@
 	</p>
 
 	<p>
-		<button type="button" class="btn btn-primary" ng-click="runNow()">Run now</button>
+		<button type="button" class="btn btn-primary" ng-click="disableRunNow=true;runNow()" ng-class="{'disabled': disableRunNow}">Run now</button>
 	</p>
 
 	<table class="table table-condensed table-hover" ng-show="runs && runs.length > 0">
@@ -76,18 +76,21 @@
 		  </div>
 		</div>
 
-		<div ng-repeat="step in steps" ng-show="step.status === 'RUNNING'">
-			<p>
-				{{ step.label }}
-			</p>
-		</div>
-
-		<p ng-show="!isPipeRunning()">
-			<a href="javascript:void(0)" ng-click="runningAnchor=false;fetchRuns()">View details</a>
+		<p ng-repeat="step in steps" ng-show="step.status === 'RUNNING'">
+			{{ step.label }}
 		</p>
 
+		<p ng-show="steps[steps.length - 1].status === 'FINISHED'">
+			Pipe run complete!
+		</p>
+
+		<p ng-show="!isPipeRunning()">
+			<button class="btn btn-primary" ng-click="runningAnchor=false;fetchRuns()">View details</button>
+		</p>
+<!--
 		<pre>
 			{{ isPipeRunning() | json }}
 		</pre>
+-->
 	</div>
 </div>
