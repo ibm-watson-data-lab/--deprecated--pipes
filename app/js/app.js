@@ -147,11 +147,40 @@ var mainApp = angular.module('dataMovingApp', [
  }]
 )
 
+.directive('displayUtcTime', function () {
+  return {
+    restrict: 'A',
+    require: 'ngModel',
+    link: function (scope, element, attrs, ngModel) {
+      ngModel.$formatters.push(function(value) {
+    	if ( !value || value === "" ){
+    		return "";
+    	}
+        return moment.utc(value).format("HH:mm A");
+      });
+
+      ngModel.$parsers.push(function(value) {
+    	  if ( !value || value === "" ){
+    		  return;
+    	  }
+    	  var date = moment(value, "HH:mm A", true);
+    	  if ( !date.isValid() ){
+    		  ngModel.$setValidity('invalid', true);
+    		  return;
+    	  }else{
+    		  ngModel.$setValidity('invalid', false);
+    	  }
+    	  return date.utc().format();
+      });
+    }
+  }
+})
+
 .controller('pipeDetailsController', ['$scope', '$http', '$location', '$state', '$stateParams','pipesService', 'salesforceService',
   function($scope, $http, $location, $state, $stateParams, pipesService, salesforceService) {
   $scope.selectedPipe = pipesService.findPipe( $stateParams.id);
   if ( $scope.selectedPipe.scheduleTime ){
-    $scope.selectedPipe.scheduleTime = moment( $scope.selectedPipe.scheduleTime ).toDate();
+    $scope.selectedPipe.scheduleTime = moment.utc( $scope.selectedPipe.scheduleTime ).toDate();
   }
 
   var port = $location.port();

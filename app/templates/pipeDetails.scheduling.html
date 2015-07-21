@@ -5,11 +5,16 @@
   If you'd rather run a job now instead of scheduling one, click next.
 </p>
 
-<form class="form-horizontal">
+<form class="form-horizontal" name="form">
   <div class="form-group">
     <label class="control-label col-sm-2">Pick a time</label>
     <div class="col-sm-10">
-      <input type="time" class="form-control" placeholder="HH:MM am/pm" ng-model="selectedPipe.scheduleTime" />
+      <!-- input type="time" class="form-control" placeholder="HH:MM am/pm" ng-model="selectedPipe.scheduleTime" /-->
+      <input name="schedule" type="text" display-utc-time class="form-control" placeholder="HH:MM am/pm" ng-model="selectedPipe.scheduleTime"/>
+      
+      <div ng-show="form.schedule.$error.parse" class="has-error">
+      	<span>Please use format HH:mm AM/PM</span>
+      </div>
     </div>
   </div>
 </form>

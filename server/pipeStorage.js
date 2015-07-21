@@ -34,8 +34,8 @@ var addScheduledJob = function(pipe){
 			removeScheduledJob( pipe );
 		}
 	}
-	
-	var m = moment( pipe.scheduleTime)
+
+	var m = moment( moment.utc( pipe.scheduleTime).toDate() );	//Parse in UTC then get local time
 	var rule = new schedule.RecurrenceRule();
 	rule.hour = m.hour()
 	rule.minute = m.minute();
