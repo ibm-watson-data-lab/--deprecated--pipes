@@ -340,6 +340,7 @@ var mainApp = angular.module('dataMovingApp', [
       pipesService.getLastRuns($scope.selectedPipe).then(
           function( runs ){
             $scope.runs = runs;
+            $scope.disableRunNow = false; // re-enables the Run Now button on monitoring
             if(!$scope.$$phase){
               $scope.$apply();
             }
