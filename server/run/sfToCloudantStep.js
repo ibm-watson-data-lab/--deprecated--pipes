@@ -185,7 +185,7 @@ function sfToCloudantStep(){
 			record.pt_type = table.name;
 			
 			//Process record transformation
-			transformer.process( record );
+			//transformer.process( record );
 
 			batch.batchDocs.push( record );
 			processBatch( false );
