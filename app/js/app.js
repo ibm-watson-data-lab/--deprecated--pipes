@@ -151,27 +151,34 @@ var mainApp = angular.module('dataMovingApp', [
   return {
     restrict: 'A',
     require: 'ngModel',
+    scope:false,
     link: function (scope, element, attrs, ngModel) {
-      ngModel.$formatters.push(function(value) {
-    	if ( !value || value === "" ){
-    		return "";
-    	}
-        return moment.utc(value).format("HH:mm A");
-      });
+    	ngModel.$formatters.push(function(value) {
+    		if ( !value || value === "" ){
+    			return "";
+    		}
+    		return moment(value).format("hh:mm a");
+    	});
 
-      ngModel.$parsers.push(function(value) {
-    	  if ( !value || value === "" ){
-    		  return;
-    	  }
-    	  var date = moment(value, "HH:mm A", true);
-    	  if ( !date.isValid() ){
-    		  ngModel.$setValidity('invalid', true);
-    		  return;
-    	  }else{
-    		  ngModel.$setValidity('invalid', false);
-    	  }
-    	  return date.utc().format();
-      });
+    	ngModel.$parsers.push(function( value ){
+    		if ( !value || value === "" ){
+    			return;
+    		}
+    		var date = moment(value, "hh:mm a", true);
+    		if ( !date.isValid() ){
+    			ngModel.$setValidity('parse', true);
+    			if ( scope && scope.$parent){
+    				scope.$parent.error = "Invalid Date";
+    			}
+    			return;
+    		}else{
+    			ngModel.$setValidity('parse', false);
+    			if ( scope && scope.$parent && scope.$parent.error ){
+    				delete scope.$parent.error;
+    			}
+    		}
+    		return date.format();
+    	});
     }
   }
 })
@@ -195,7 +202,6 @@ var mainApp = angular.module('dataMovingApp', [
   };
 
   $scope.savePipe = function( Obj ){
-
     Obj = Obj || {};
 
     var connect = (Obj.connect === "true" || Obj.connect === true) ? true : false;

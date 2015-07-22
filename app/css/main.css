@@ -91,3 +91,7 @@ section {
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
   white-space: normal;
 }
+
+#schedule.ng-invalid {
+	border: solid red 1px;
+}
