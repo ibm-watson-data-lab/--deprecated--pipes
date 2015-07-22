@@ -14,6 +14,10 @@
 		<button type="button" class="btn btn-primary" ng-click="disableRunNow=true;runNow()" ng-class="{'disabled': disableRunNow}">Run now</button>
 	</p>
 
+	<p ng-hide="runs && runs.length > 0">
+		No pipes have been run yet. Run one now, or schedule one.
+	</p>
+
 	<table class="table table-condensed table-hover" ng-show="runs && runs.length > 0">
 		<thead>
 			<tr>
