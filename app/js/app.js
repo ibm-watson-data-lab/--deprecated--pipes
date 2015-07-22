@@ -162,7 +162,11 @@ var mainApp = angular.module('dataMovingApp', [
 
     	ngModel.$parsers.push(function( value ){
     		if ( !value || value === "" ){
-    			return;
+    			ngModel.$setValidity('parse', false);
+    			if ( scope && scope.$parent && scope.$parent.error ){
+    				delete scope.$parent.error;
+    			}
+    			return "";
     		}
     		var date = moment(value, "hh:mm a", true);
     		if ( !date.isValid() ){
