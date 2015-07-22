@@ -10,6 +10,7 @@ var cloudant = require('../storage');
 var _ = require("lodash");
 var async = require("async");
 var global = require("../global");
+var recordTransformer = require("../transform/recordTransformer");
 
 /**
  * sfToCloudantStep class
@@ -145,6 +146,8 @@ function sfToCloudantStep(){
 		//Batch the docs to minimize number of requests
 		var batch = { batchDocs: [] };
 		var maxBatchSize = 200;
+		
+		var transformer = new recordTransformer( table );
 
 		var processBatch = function( force, callback ){
 			if ( batch.batchDocs.length > 0 && (force || batch.batchDocs.length >= maxBatchSize) ){
@@ -180,6 +183,9 @@ function sfToCloudantStep(){
 
 			//Add the type to the record
 			record.pt_type = table.name;
+			
+			//Process record transformation
+			transformer.process( record );
 
 			batch.batchDocs.push( record );
 			processBatch( false );
