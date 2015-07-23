@@ -53,9 +53,9 @@ function sfConnectStep(){
 		var processed = 0;
 		//Main dispatcher code
 		async.each( tables, function( table, callback ){
-			conn.query("SELECT COUNT() FROM "+ table.name)
-			.setMaxListeners(0)
-			.on("end", function(query) {
+			var sfQuery = conn.query("SELECT COUNT() FROM "+ table.name);
+			sfQuery.setMaxListeners(0);
+			sfQuery.on("end", function(query) {
 				this.pipeRunStats.expectedTotalRecords += query.totalSize;
 				this.setStepMessage("Connection to Salesforce Successful. " + this.pipeRunStats.expectedTotalRecords +" records have been found");
 				this.setPercentCompletion( (++processed/table.length).toFixed(1) );

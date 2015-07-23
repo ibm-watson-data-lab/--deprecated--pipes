@@ -70,7 +70,7 @@ function sfToCloudantStep(){
 			console.log("Delete all documents for table %s in database %s", table.name, dbName);
 			targetDb.destroyAndRecreate( function( err ){
 				if ( err ){
-					console.log("Unablet o recreate db : " + err );
+					console.log("Unable to recreate db : " + err );
 					return callback(err);
 				}
 				return callback( null, targetDb);

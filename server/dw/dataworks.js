@@ -86,7 +86,7 @@ function dataworks( options ){
 		}
 	}
 	
-	var getError = function( err, body ){
+	var getError = function( err, body, bodyExpected ){
 		if ( err ){
 			return err;
 		}
@@ -96,6 +96,11 @@ function dataworks( options ){
 				return body.msgExplanation || "Unexpected error";
 			}
 		}
+		
+		if ( !body && bodyExpected ){
+			return "Unexpected error: dataworks api returned no error but no response payload was received";
+		}
+		
 		return null;
 	}
 	
@@ -196,7 +201,7 @@ function dataworks( options ){
 		
 		//Make the request
 		request.post( makeUrl(), _.assign( getReqOptions(), {json: payload} ), function( err, response, body ){
-			return callback( getError(err, body), body );
+			return callback( getError(err, body, true), body );
 		});
 	}
 	
