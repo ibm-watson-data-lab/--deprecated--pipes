@@ -128,6 +128,7 @@ function pipeRunStats(pipe, steps, callback){
 	this.done = function(err ){
 		global.currentRun = null;
 		if ( err ){
+			logger.error( err );
 			runDoc.status = "ERROR";
 			runDoc.message = "" + err;
 		}else{
@@ -164,6 +165,13 @@ function pipeRunStats(pipe, steps, callback){
 			logger.info({
 				message: "Pipe Run complete",
 				runDoc: runDoc
+			});
+			
+			//Save the log file as an attachment to the run
+			pipeDb.attachLogFileToRun( logger.logPath, runDoc, function(err){
+				if ( err ){
+					logger.error("Unable to attach log file %s to run document %s : %s", logger.logPath, runDoc._id, err );
+				}				
 			});
 		});
 		

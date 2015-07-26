@@ -79,15 +79,14 @@ var globalFn = function(){
 			return path;
 		}
 		
+		var filePath = logPath(loggerName);
 		var logger = bunyan.createLogger({
 			name: loggerName,
 			src: true,
 			streams:[
 			    {
-			    	type: 'rotating-file',
-			    	path: logPath(loggerName),
-			    	level: "trace",
-			    	count: 5
+			    	path: filePath,
+			    	level: "trace"
 			    },
 			    {
 			    	stream: process.stderr,
@@ -95,6 +94,8 @@ var globalFn = function(){
 			    }
 			]
 		});
+		//Remember the logPath so we write it as an attachment to the run document
+		logger.logPath = filePath;
 		return logger;
 	};
 };

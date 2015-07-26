@@ -10,6 +10,7 @@ var _ = require('lodash');
 var moment = require('moment');
 var schedule = require('node-schedule');
 var global = require('./global');
+var fs = require('fs');
 
 var dbName =  process.env.CLOUDANT_DB_NAME || "pipe_db";
 var allPipesView = "all_pipes";
@@ -302,6 +303,31 @@ pipeDb.saveRun = function(pipe, run, callback){
 		}
 		return callback( null, runDoc );
 	}.bind(this));
+}
+
+/**
+ * Attach a log file to the run document
+ */
+pipeDb.attachLogFileToRun = function( logPath, run, callback ){
+	this.run( function( err, db ){
+		if ( err ){
+			return callback(err);
+		}
+		
+		//Retrieve the last rev
+		db.get( run._id, { include_docs: true }, function( err, runDoc ){				
+			if ( err ){
+				return callback(err);
+			}
+			
+			//Create a read stream to the file and pipe it to the database
+			fs.createReadStream(logPath).pipe(
+				db.attachment.insert( run._id, 'run.log', null, "application/json", {rev: runDoc._rev}, function( err, body){
+					return callback(err);
+				})
+			);			
+		});
+	});	
 }
 
 /**
