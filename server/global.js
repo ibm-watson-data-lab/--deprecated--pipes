@@ -10,6 +10,9 @@
 
 var _ = require('lodash');
 var events = require('events');
+var bunyan = require('bunyan');
+var fs = require('fs');
+var moment = require('moment');
 
 var globalFn = function(){
 	//Call constructor from super class
@@ -56,7 +59,44 @@ var globalFn = function(){
 		
 		res.status( code ).json({'error': message} );
 		return message;
-	}
+	};
+	
+	this.getLogger = function( loggerName ){
+		var logPath = function( logFileName ){
+			var logDir = require('path').resolve( __dirname, '..', 'logs');
+			var createDir = false;
+			try{
+				createDir = !fs.lstatSync( logDir ).isDirectory();
+			}catch(e){
+				createDir = true;
+			}
+			if ( createDir ){
+				fs.mkdirSync( logDir );
+			}
+			var path = logDir + "/" + logFileName + "." + moment().format("YYYYMMDD-HHmm") + ".log";
+			console.log("moment: " + moment().format() );
+			console.log( "log path: " + path );
+			return path;
+		}
+		
+		var logger = bunyan.createLogger({
+			name: loggerName,
+			src: true,
+			streams:[
+			    {
+			    	type: 'rotating-file',
+			    	path: logPath(loggerName),
+			    	level: "trace",
+			    	count: 5
+			    },
+			    {
+			    	stream: process.stderr,
+			    	level: "warning"
+			    }
+			]
+		});
+		return logger;
+	};
 };
 
 //Extend event Emitter

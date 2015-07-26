@@ -24,3 +24,5 @@ startpipes.sh
 npm-debug.log
 
 development/vcaps2.properties
+
+logs

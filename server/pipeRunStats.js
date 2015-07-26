@@ -16,6 +16,7 @@ var global = require("./global");
  */
 function pipeRunStats(pipe, steps, callback){
 	this.pipe = pipe;
+	var logger = this.logger = global.getLogger("pipesRun");
 	var runDoc = this.runDoc = {
 		type : "run",
 		startTime : moment(),
@@ -92,11 +93,13 @@ function pipeRunStats(pipe, steps, callback){
 	 * start: Called when a run is about to start
 	 */
 	this.start = function( callback ){
-		console.log("Starting a new run");
+		logger.info("Starting a new run");
 		
 		//Set the current run to this
 		if ( global.currentRun ){
-			return callback( "A run is already in progress %s", global.currentRun._id );
+			var msg = require.util( "A run is already in progress %s", global.currentRun._id );
+			logger.error( msg );
+			return callback( msg );
 		}
 		global.currentRun = this;
 		broadcastRunEvent();
@@ -111,6 +114,7 @@ function pipeRunStats(pipe, steps, callback){
 				pipe = storedPipe;
 				return storedPipe;
 			}, function( err ){
+				logger.error( err );
 				return callback( err );
 			});
 		}else{
@@ -142,7 +146,7 @@ function pipeRunStats(pipe, steps, callback){
 			}
 		})
 		
-		console.log( runDoc.message );
+		logger.info( runDoc.message );
 		
 		//Save the document
 		save();
@@ -155,8 +159,12 @@ function pipeRunStats(pipe, steps, callback){
 			return storedPipe;
 		}, function( err ){
 			if ( err ){
-				console.log("Unable to remove reference to run in pipe %s. Error is %s ", pipe._id, err );
+				logger.error("Unable to remove reference to run in pipe %s. Error is %s ", pipe._id, err );
 			}
+			logger.info({
+				message: "Pipe Run complete",
+				runDoc: runDoc
+			});
 		});
 		
 		broadcastRunEvent();

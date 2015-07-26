@@ -67,8 +67,11 @@ function pipeRunner( sf, pipe ){
 				return callback(err);
 			}
 			pipeRunStats.start( function(err){
+				if ( err ){
+					return pipeRunStats.done( err );
+				}
+				var logger = pipeRunStats.logger;
 				async.eachSeries( steps, function( step, callback ){
-					console.log( "Starting step : " + step.getLabel() );
 					try{
 						step.beginStep( this, pipeRunStats );
 						step.run( function( err ){
@@ -79,8 +82,8 @@ function pipeRunner( sf, pipe ){
 						});
 					}catch(e){
 						//Error caught
-						console.log("Exception caught: " + e);
-						console.log("Stack: " + e.stack);
+						logger.error("Exception caught: " + e);
+						logger.error("Stack: " + e.stack);
 						step.endStep( callback, e );
 					}
 				}.bind(this), function( err ){

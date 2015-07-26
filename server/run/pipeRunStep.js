@@ -43,6 +43,8 @@ function pipeRunStep(){
 	}
 	
 	this.beginStep = function( pipeRunner, pipeRunStats ){
+		pipeRunStats.logger.info( "Step %s started", this.getLabel() );
+		
 		//Reference to the main stats object
 		this.pipeRunStats = pipeRunStats;
 		this.pipeRunner = pipeRunner;
@@ -68,6 +70,11 @@ function pipeRunStep(){
 		}
 		this.setPercentCompletion(100);
 		this.pipeRunStats.save( callback );
+		
+		this.pipeRunStats.logger.info({
+			message: require('util').format("Step %s completed", this.getLabel() ),
+			stats: this.stats
+		});
 	}
 }
 

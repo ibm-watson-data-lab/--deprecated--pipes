@@ -22,6 +22,7 @@ function sfConnectStep(){
 	//public APIs
 	this.run = function( callback ){
 		this.setStepMessage("Connecting to Salesforce...");
+		var logger = this.pipeRunStats.logger;
 		var sf = this.getPipeRunner().sf;
 		var pipe = this.getPipe();
 		//Create jsForce connection
@@ -34,13 +35,13 @@ function sfConnectStep(){
 		});
 
 		conn.on("refresh", function(accessToken, res) {
-			console.log("Got a refreshed token: " + accessToken );
+			logger.info("Got a refreshed token: " + accessToken );
 			//Refresh the token for next time
 			pipe.sf.accessToken = accessToken;
 			//Save the pipe
 			pipeDb.savePipe( pipe, function( err, storedPipe ){
 				if ( err ){
-					return console.log( "Error saving the refreshed token: " + err );
+					return logger.error( "Error saving the refreshed token: " + err );
 				}
 				pipe = storedPipe;
 			})
@@ -63,7 +64,7 @@ function sfConnectStep(){
 			}.bind(this))
 			.on("error", function(err) {
 				//skip
-				console.log("Error getting count for table %s", table.name);
+				logger.error("Error getting count for table %s", table.name);
 				this.setPercentCompletion( (++processed/table.length).toFixed(1) );
 				return callback(null);
 			}.bind(this))

@@ -8,3 +8,4 @@ npm-debug.log
 .strong-pm/env.json
 development/vcaps.properties
 LookML
+logs

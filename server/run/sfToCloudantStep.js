@@ -61,16 +61,16 @@ function sfToCloudantStep(){
 
 	}.bind( this );
 
-	var createCloudantDbForTable = function( table, callback ){
+	var createCloudantDbForTable = function( logger, table, callback ){
 		//One database per table, create it now
 		var dbName =  "sf_" + table.name.toLowerCase();
 		var targetDb = new cloudant.db(dbName, genViewsManager( table ));
 		targetDb.on( "cloudant_ready", function(){
-			console.log("Data Pipe Configuration database (" + dbName + ") ready");
-			console.log("Delete all documents for table %s in database %s", table.name, dbName);
+			logger.info("Data Pipe Configuration database (" + dbName + ") ready");
+			logger.info("Delete all documents for table %s in database %s", table.name, dbName);
 			targetDb.destroyAndRecreate( function( err ){
 				if ( err ){
-					console.log("Unable to recreate db : " + err );
+					logger.error("Unable to recreate db : " + err );
 					return callback(err);
 				}
 				return callback( null, targetDb);
@@ -78,15 +78,17 @@ function sfToCloudantStep(){
 		});
 
 		targetDb.on("cloudant_error", function(){
-			return callback("Fatal error from Cloudant database: unable to initialize " + dbName);
+			var message = "Fatal error from Cloudant database: unable to initialize " + dbName;
+			logger.error( message )
+			return callback( message );
 		});
 	}
 
-	var getProcessTableFunctions = function( table ){
+	var getProcessTableFunctions = function( logger, table ){
 		var processTableFunctions = [];
 		var targetDb = null;
 		processTableFunctions.push( function( callback ){
-			createCloudantDbForTable(table, function( err, result){
+			createCloudantDbForTable(logger, table, function( err, result){
 				if ( err ){
 					return callback(err);
 				}
@@ -96,7 +98,7 @@ function sfToCloudantStep(){
 			});
 		});
 		processTableFunctions.push( function( callback ){
-			processTable( table, targetDb, function( err, stats ){
+			processTable( logger, table, targetDb, function( err, stats ){
 				if ( err ){
 					return callback( err );
 				}
@@ -123,7 +125,7 @@ function sfToCloudantStep(){
 	 * @param targetDb: the target db to write data to
 	 * @callback: function( err, stats )
 	 */
-	var processTable = function( table, targetDb, callback ){
+	var processTable = function( logger, table, targetDb, callback ){
 		var stats = {
 			tableName : table.name,
 			numRecords: 0,
@@ -141,7 +143,7 @@ function sfToCloudantStep(){
 			first = false;
 		});
 		selectStmt += " FROM " + table.name;
-		//console.log( selectStmt );
+		logger.trace( selectStmt );
 
 		//Batch the docs to minimize number of requests
 		var batch = { batchDocs: [] };
@@ -191,8 +193,8 @@ function sfToCloudantStep(){
 			processBatch( false );
 		})
 		.on("end", function(query) {
-			console.log("total in database : " + query.totalSize);
-			console.log("total fetched : " + query.totalFetched);
+			logger.trace("total in database : " + query.totalSize);
+			logger.trace("total fetched : " + query.totalFetched);
 
 			processBatch( true, function( err ){
 				pipeRunStats.addTableStats( stats );
@@ -204,7 +206,7 @@ function sfToCloudantStep(){
 			global.gc();
 		})
 		.on("error", function(err) {
-			console.log("Error while processing table " + table.name + ". Error is " + err );
+			logger.error("Error while processing table " + table.name + ". Error is " + err );
 			stats.errors.push( err );
 			pipeRunStats.addTableStats( stats );
 			return callback( null, stats );	//Do not stop other tables to go through
@@ -214,6 +216,7 @@ function sfToCloudantStep(){
 
 	//public APIs
 	this.run = function( callback ){
+		var logger = this.pipeRunStats.logger;
 		var stepStats = this.stats;
 		stepStats.numRecords = 0;
 
@@ -225,12 +228,15 @@ function sfToCloudantStep(){
 
 		//Main dispatcher code
 		async.map( tables, function( table, callback ){
-			console.log("Starting processing table : " + table.name );
-			async.series( getProcessTableFunctions(table), function( err, results){
+			logger.info("Starting processing table : " + table.name );
+			async.series( getProcessTableFunctions(logger, table), function( err, results){
 				var stats =  _.find( results, function( result ){
 					return result != null
 				});
-				console.log("Finished processing table " + table.name + ". Stats: " + JSON.stringify(stats));
+				logger.info({
+					message: "Finished processing table " + table.name,
+					stats: stats
+				});
 				stepStats.numRecords += stats.numRecords;
 				return callback(err, stats );
 			});
@@ -255,8 +261,9 @@ function sfToCloudantStep(){
 			}else{
 				stepStats.status = "Successfully completed";
 			}
-
-			this.setStepMessage("Successfully copied "+ totalCopied + " documents from Salesforce to Cloudant");
+			var message = require("util").format( "Successfully copied %d documents from Salesforce to Cloudant", totalCopied);
+			logger.info( message );
+			this.setStepMessage( message );
 			return callback( err );
 		}.bind(this));
 	}

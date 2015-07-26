@@ -20,6 +20,7 @@ function cloudantToDashActivitiesStep(){
 
 		//public APIs
 	this.run = function( callback ){
+		var logger = this.pipeRunStats.logger;
 		var pipeRunStats = this.pipeRunStats;
 
 		//Create a DataWorks instance
@@ -44,23 +45,31 @@ function cloudantToDashActivitiesStep(){
 		//Create the activities if needed
 		dwInstance.listActivities( function( err, activities ){
 			if ( err ){
-				console.log( "Unable to get list of DataWorks activities: " + err );
+				logger.error( "Unable to get list of DataWorks activities: " + err );
 				return callback( err );
 			}
-
-			async.forEachOfSeries( pipeRunStats.getTableStats(), function(tableStats, tableName, callback ){
+			
+			//RUN_SYNC env variable will let the user run the activities synchronously (default is sync)
+			var runSync = process.env.RUN_SYNC ? process.env.RUN_SYNC == "true": true;
+			if ( runSync ){
+				logger.info("Running DataWorks Activities synchronously");
+			}else{
+				logger.info("Running DataWorks Activities asynchronously");
+			}
+			var loopFn = (runSync ? async.forEachOfSeries : async.forEachOf );
+			loopFn( pipeRunStats.getTableStats(), function(tableStats, tableName, callback ){
 				var checkForRunningStateFn = function( activityId, activityRunId, callback ){
 					dwInstance.monitorActivityRun( activityId, activityRunId, function( err, activityRun ){
 						if ( err ){
 							return callback(err);
 						}
 						if ( dwInstance.isFinished( activityRun.status ) || dwInstance.isRunning( activityRun.status ) ){
-							//console.log("Activity is running. Wait for another 5 second before moving on...");
+							logger.debug("Activity is running. Wait for another 5 second before moving on...");
 							return setTimeout( function(){
 								return callback();
 							}, 100);
 						}
-						//console.log("Activity is not yet running, keep waiting...");
+						logger.trace("Activity is not yet running, keep waiting...");
 						setTimeout( function(){
 							return checkForRunningStateFn(activityId, activityRunId, callback )
 						}, (tableStats.numRecords && tableStats.numRecords < 1000) ? 1000 : 10000);
@@ -74,22 +83,22 @@ function cloudantToDashActivitiesStep(){
 						tableStats.activityRunId = activityRun.id;
 						stepStats.numRunningActivities++;
 						formatStepMessage();
-						//console.log("SuccessFully submitted a activity for running.");
-						return checkForRunningStateFn( activity.id, activityRun.id, callback );
+						logger.debug("SuccessFully submitted a activity for running.");
+						return runSync ? checkForRunningStateFn( activity.id, activityRun.id, callback ) : callback();
 					});
 				}
 				var activity = _.find( activities, function( act ){
 					return act.name.toLowerCase() === tableStats.dbName.toLowerCase();
 				});
 				if ( activity ){
-					//console.log("Activity %s already exists", tableStats.dbName);
+					logger.debug("Activity %s already exists", tableStats.dbName);
 					tableStats.activityId = activity.id;
 
 					numCreated++;
 					//Run it now
 					runActivityFn(activity);
 				}else{
-					//console.log("Creating activity for table " + tableStats.dbName );
+					logger.debug("Creating activity for table " + tableStats.dbName );
 
 					var srcConnection = dwInstance.newConnection("cloudant");
 					srcConnection.setDbName( tableStats.dbName.toLowerCase() );
@@ -111,7 +120,10 @@ function cloudantToDashActivitiesStep(){
 
 						//Record the activity id and start execution
 						tableStats.activityId = activity.id;
-						console.log("SuccessFully created a new activity: " + require('util').inspect( activity, { showHidden: true, depth: null } ) );
+						logger.info({
+							message: "SuccessFully created a new activity: ",
+							activity: activity
+						});
 						numCreated++;
 						formatStepMessage();
 						//Run it now

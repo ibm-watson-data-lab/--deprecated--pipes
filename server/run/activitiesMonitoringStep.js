@@ -21,6 +21,7 @@ function activitiesMonitoringStep(){
 
 	//public APIs
 	this.run = function( callback ){
+		var logger = this.pipeRunStats.logger;
 		var pipeRunStats = this.pipeRunStats;
 
 		//Get the DataWorks instance
@@ -44,7 +45,7 @@ function activitiesMonitoringStep(){
 		}.bind(this);
 
 		var sendAlert = function(){
-			console.log("Sending alert about possible DataWorks activities hung to metrics-collector");
+			logger.info("Sending alert about possible DataWorks activities hung to metrics-collector");
 			async.forEachOf( pipeRunStats.getTableStats(), function(tableStats, tableName, callback ){
 				if ( !tableStats.activityDone ){
 					var d = moment();
@@ -60,14 +61,14 @@ function activitiesMonitoringStep(){
 					};
 					request.get( {url: "http://metrics-collector.mybluemix.net/tracker", qs: props}, function(err, response, body){
 						if ( !err ){
-							console.log("Successfully logged an alert to metrics-collector");
+							logger.info("Successfully logged an alert to metrics-collector");
 						}
 						return callback( err );
 					});
 				}
 			},function(err){
 				if ( err ){
-					console.log("Unable to create DataWorks activity hung alert: " + err );
+					logger.error("Unable to create DataWorks activity hung alert: " + err );
 				}
 			});
 		}
@@ -85,7 +86,7 @@ function activitiesMonitoringStep(){
 							return callback(err);
 						}
 						if ( dwInstance.isFinished( activityRun.status ) ){
-							//console.log("ActivityRun complete");
+							logger.trace("ActivityRun %s complete", tableStats.activityRunId);
 							stepStats.numFinishedActivities++;
 							stepStats.numRunningActivities--;
 							tableStats.activityDone = true;
@@ -114,6 +115,7 @@ function activitiesMonitoringStep(){
 					return setTimeout( monitor, 10000 );
 				}
 				var message = "DataWorks activities are complete";
+				logger.info( message );
 				stepStats.status = message;
 				this.setStepMessage(message);
 				return callback();
