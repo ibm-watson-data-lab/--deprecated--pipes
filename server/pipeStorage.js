@@ -11,8 +11,9 @@ var moment = require('moment');
 var schedule = require('node-schedule');
 var global = require('./global');
 var fs = require('fs');
+var configManager = require('./configManager');
 
-var dbName =  process.env.CLOUDANT_DB_NAME || "pipe_db";
+var dbName =  configManager.get("CLOUDANT_DB_NAME") || "pipe_db";
 var allPipesView = "all_pipes";
 
 //Map of scheduled jobs

@@ -26,3 +26,5 @@ npm-debug.log
 development/vcaps2.properties
 
 logs
+
+tests/config

@@ -13,15 +13,16 @@ var events = require('events');
 var util = require('util');
 var _ = require('lodash');
 var async = require('async');
+var configManager = require('./configManager');
 
 //Discover cloudant service info and initialize connection
-var cloudantUrl = process.env.CLOUDANT_URL;
+var cloudantUrl = configManager.get( "CLOUDANT_URL" );
 var cloudantService = cloudantUrl ? 
 		{ 
 			name : "Cloudant Url", 
 			credentials: { url: cloudantUrl} 
 		} 
-		: require("./vcapServices").getService( process.env.CLOUDANT_SERVICE_NAME || "cloudant" );
+		: require("./vcapServices").getService( configManager.get( "CLOUDANT_SERVICE_NAME" ) || "cloudant" );
 if (!cloudantService) {
     console.log("Failed to find Cloudant service");
     throw new Error( "Failed to find Cloudant service" );
@@ -153,9 +154,31 @@ function storage( serviceDbName, viewsManager ){
 			self.emit("cloudant_error");
 		});
 	
+	/**
+	 * Return true if db is correctly initialized
+	 */
 	this.isDbInitialized = function(){
-		return this.storageDb;
+		return !!this.storageDb;
 	};
+	
+	/**
+	 * Destroy the current db
+	 */
+	this.destroy = function( callback ){
+		this.run( function( err, db ){
+			if ( err ){
+				return callback(err);
+			}
+			cloudant.db.destroy( serviceDbName, function(err){
+				if ( err ){
+					return callback(err);
+				}
+				//Set as not initialized
+				delete this.storageDb;
+				return callback();
+			}.bind(this));
+		}.bind(this));
+	}
 	
 	/**
 	 * Destroy and recreate the database

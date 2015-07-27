@@ -9,6 +9,7 @@ var pipeRunStep = require('./pipeRunStep');
 var dataworks = require("../dw/dataworks");
 var async = require('async');
 var _ = require('lodash');
+var configManager = require('../configManager');
 
 /**
  * cloudantToDashActivitiesStep class
@@ -50,7 +51,7 @@ function cloudantToDashActivitiesStep(){
 			}
 			
 			//RUN_SYNC env variable will let the user run the activities synchronously (default is sync)
-			var runSync = process.env.RUN_SYNC ? process.env.RUN_SYNC == "true": true;
+			var runSync = configManager.get( "RUN_SYNC") ? configManager.get( "RUN_SYNC" ) == "true": true;
 			if ( runSync ){
 				logger.info("Running DataWorks Activities synchronously");
 			}else{

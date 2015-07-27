@@ -12,6 +12,7 @@ var global = require('../global');
 var _ = require("lodash");
 var util = require("util");
 var vcapServices = require("../vcapServices");
+var configManager = require('../configManager');
 
 var proxyStarted = false;
 
@@ -42,7 +43,7 @@ function dataworks( options ){
 		proxyTarget = url.protocol + "//" + url.host;
 		proxyRoot = "/proxy";
 		
-		if ( process.env.START_PROXY && !proxyStarted){
+		if ( configManager.get("START_PROXY") && !proxyStarted){
 			//Don't start the proxy more than once. For dev purpose, only one DW Instance is supported
 			proxyStarted = true;
 			var proxy = require("http-proxy").createProxyServer();
@@ -70,7 +71,7 @@ function dataworks( options ){
 	//Private APIs
 	var serviceBindingUrl = "/dc/v1/activities";
 	var makeUrl = function( path ){
-		var baseUrl = process.env.USE_PROXY ? process.env.USE_PROXY + proxyRoot + url.pathname : dwService.credentials.url;
+		var baseUrl = configManager.get( "USE_PROXY") ? configManager.get("USE_PROXY") + proxyRoot + url.pathname : dwService.credentials.url;
 		return baseUrl + serviceBindingUrl + ( path || "" );
 	};
 	
@@ -141,6 +142,25 @@ function dataworks( options ){
 	this.getActivity = function( activityId, callback ){
 		request.get( makeUrl( "/" + activityId), getReqOptions(), function(err, response, body){
 			return callback( getError(err, body), body );
+		});
+	}
+	
+	/**
+	 * getActivityByName: find an activity by name
+	 * @param activityName: name of the activity
+	 * @param callback(err, activity)
+	 */
+	this.getActivityByName = function( activityName, callback ){
+		this.listActivities( function( err, activities ){
+			if ( err ){
+				return callback( err );
+			}
+			
+			var activity = _.find( activities, function( activity ){
+				return activity.name === activityName;
+			})
+			
+			return callback( null, activity );			
 		});
 	}
 	
