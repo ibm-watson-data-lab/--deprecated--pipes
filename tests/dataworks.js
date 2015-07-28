@@ -54,19 +54,44 @@ describe('testDataWorks', function() {
 					return done( err );
 				}
 				testActivityId = activity.id;
-				console.log("SuccessFully created a new activity: " + require('util').inspect( activity, { showHidden: true, depth: null } ) );
-				return done();
+				
+				//Check that the activity exists
+				dwInstance.getActivityByName( ACTIVITY_NAME, function( err, activity ){
+					assert.equal( !!err, false, "Error retrieving activities from DataWorks " + err);
+					assert.ok( activity, "Created an activity but couldn't find it again: " + ACTIVITY_NAME );
+					done(err);
+				})
 			});
 		});
 		
+		var runid = null;
 		it('should run an activity', function( done ){
 			assert.ok( testActivityId, "Didn't get a valid activity to run");
 			dwInstance.runActivity( testActivityId, function( err, activityDoc ){
 				if ( err ){
 					return done(err);
 				}
+				runid = activityDoc.id;
 				return done();
 			})
+		});
+		
+		it('should move the activity to running state', function( done ){
+			this.timeout(30000);
+			assert.ok( runid, "Didn't get a valid actvity run id");
+			
+			var monitor = function(){
+				dwInstance.monitorActivityRun( testActivityId, runid, function( err, activityRun ){
+					if ( err ){
+						return done(err);
+					}
+					if ( dwInstance.isRunning( activityRun.status ) || dwInstance.isFinished( activityRun.status ) ){
+						return done();
+					}
+					setTimeout( monitor, 1000);
+				});
+			};
+			monitor();
 		});
 	});
 	
