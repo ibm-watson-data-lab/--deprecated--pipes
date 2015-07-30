@@ -77,7 +77,7 @@ if ( ssoService ){
 app.use(express.static(path.join(__dirname, 'app')));
 
 //Configure the endpoints
-require("./server/sfAPI")(app);	//Salesforce
+require("./server/connectorAPI").initEndPoints(app);	//Pipe connector API
 var wssConfigurator = require("./server/pipeAPI")(app);	//Pipe configuration
 
 var connected = function() {

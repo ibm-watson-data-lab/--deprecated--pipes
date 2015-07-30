@@ -91,6 +91,18 @@ angular.module('pipes', [],function() {
         	
         	return deferred.promise;
         },
+        runPipe: function( pipe ){
+        	var deferred = $q.defer();
+        	$http.post('/runs/' + pipe._id )
+        		.success(function(data) {
+        			deferred.resolve( data );
+        		})
+        		.error( function (data, status, headers, config ){
+        			deferred.reject( (data && data.error) || status );
+        		});
+        	
+        	return deferred.promise;
+        },
         getLastRuns: function(pipe){
         	var deferred = $q.defer();
         	$http.get("/runs/" + pipe._id)

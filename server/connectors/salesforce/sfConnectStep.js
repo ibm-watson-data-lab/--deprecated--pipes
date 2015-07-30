@@ -5,10 +5,11 @@
 *	@Author: David Taieb
 */
 
-var pipeRunStep = require('./pipeRunStep');
+var pipeRunStep = require('../../run/pipeRunStep');
 var jsforce = require("jsforce");
-var pipeDb = require("../pipeStorage");
+var pipeDb = require("../../pipeStorage");
 var async = require("async");
+var sf = require('./sf');
 
 /**
  * sfConnectStep class
@@ -23,11 +24,17 @@ function sfConnectStep(){
 	this.run = function( callback ){
 		this.setStepMessage("Connecting to Salesforce...");
 		var logger = this.pipeRunStats.logger;
-		var sf = this.getPipeRunner().sf;
 		var pipe = this.getPipe();
+		var pipeRunner = this.getPipeRunner();
+		var sfConnection = pipeRunner.sf;
+		if ( !sfConnection ){
+			sfConnection = new sf( pipe._id );
+			pipeRunner.sf = sfConnection;
+		}		
+		
 		//Create jsForce connection
 		var conn = new jsforce.Connection({
-			oauth2 : sf.getOAuthConfig( pipe ),
+			oauth2 : sfConnection.getOAuthConfig( pipe ),
 			instanceUrl : pipe.sf.instanceUrl,
 			accessToken : pipe.sf.accessToken,
 			refreshToken : pipe.sf.refreshToken || null,

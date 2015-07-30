@@ -38,7 +38,7 @@ function pipeRunStats(pipe, steps, callback){
 		runDoc["step" + i] = steps[i].stats;
 	}
 	
-	var save = this.save = function(callback){
+	var save = this.save = function(callback, outerError){
 		//Create a new run doc and associate it with this pipe
 		pipeDb.saveRun( pipe, runDoc, function( err, runDocument ){
 			if ( err ){
@@ -48,7 +48,7 @@ function pipeRunStats(pipe, steps, callback){
 			//Replace with the latest doc from db
 			runDoc = runDocument;
 			broadcastRunEvent();
-			return callback && callback();
+			return callback && callback( outerError );
 		});
 	}
 	

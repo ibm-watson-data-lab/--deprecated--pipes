@@ -5,12 +5,12 @@
 *	@Author: David Taieb
 */
 
-var pipeRunStep = require('./pipeRunStep');
-var cloudant = require('../storage');
+var pipeRunStep = require('../../run/pipeRunStep');
+var cloudant = require('../../storage');
 var _ = require("lodash");
 var async = require("async");
-var global = require("../global");
-var recordTransformer = require("../transform/recordTransformer");
+var global = require("../../global");
+var recordTransformer = require("../../transform/recordTransformer");
 
 /**
  * sfToCloudantStep class
@@ -65,10 +65,18 @@ function sfToCloudantStep(){
 		//One database per table, create it now
 		var dbName =  "sf_" + table.name.toLowerCase();
 		var targetDb = new cloudant.db(dbName, genViewsManager( table ));
-		targetDb.on( "cloudant_ready", function(){
+		var ready = null;
+		targetDb.on( "cloudant_ready", ready = function(){
 			logger.info("Data Pipe Configuration database (" + dbName + ") ready");
 			logger.info("Delete all documents for table %s in database %s", table.name, dbName);
+			//Remove listener to avoid using the callback again in case we have downstream errors
+			targetDb.removeListener("cloudant_ready", ready );
+			var called = false;
 			targetDb.destroyAndRecreate( function( err ){
+				if ( called ){
+					return;
+				}
+				called = true;
 				if ( err ){
 					logger.error("Unable to recreate db : " + err );
 					return callback(err);

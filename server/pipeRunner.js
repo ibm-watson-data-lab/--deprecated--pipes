@@ -8,12 +8,11 @@
 var cloudant = require('./storage');
 var _ = require("lodash");
 var async = require("async");
-var jsforce = require("jsforce");
 var pipeDb = require("./pipeStorage");
+var connectorAPI = require("./connectorAPI");
 
-function pipeRunner( sf, pipe ){
+function pipeRunner( pipe ){
 	this.pipe = pipe;
-	this.sf = sf;
 	
 	//Private APIs
 	var validate = function(){
@@ -23,14 +22,14 @@ function pipeRunner( sf, pipe ){
 	}.bind( this );	
 	
 	var getSteps = function(){
-		var steps = [
-             new (require("./run/sfConnectStep"))(),
-             new (require("./run/sfToCloudantStep"))(),
-             new (require("./run/cloudantToDashActivitiesStep"))(),
-             new (require("./run/activitiesMonitoringStep"))()
-        ];
-		return steps;
-	}
+		//Get the steps from the connector associated with this pipe
+		var connector = connectorAPI.getConnector( pipe );
+		if ( !connector ){
+			console.log("Can't find connector %s", pipe.connectorId );
+			return [];
+		}
+		return connector.getSteps();
+	};
 	
 	//Public APIs
 	/**

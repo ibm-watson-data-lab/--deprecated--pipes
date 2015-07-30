@@ -3,7 +3,6 @@
 /* Main App Module */
 var mainApp = angular.module('dataMovingApp', [
   'pipes',
-  'salesforce',
   'ui.router',
   'ui.bootstrap'
 ],function($locationProvider) {
@@ -187,8 +186,8 @@ var mainApp = angular.module('dataMovingApp', [
   }
 })
 
-.controller('pipeDetailsController', ['$scope', '$http', '$location', '$state', '$stateParams','pipesService', 'salesforceService',
-  function($scope, $http, $location, $state, $stateParams, pipesService, salesforceService) {
+.controller('pipeDetailsController', ['$scope', '$http', '$location', '$state', '$stateParams','pipesService',
+  function($scope, $http, $location, $state, $stateParams, pipesService) {
   $scope.selectedPipe = pipesService.findPipe( $stateParams.id);
   if ( $scope.selectedPipe.scheduleTime ){
     $scope.selectedPipe.scheduleTime = moment.utc( $scope.selectedPipe.scheduleTime ).toDate();
@@ -241,7 +240,7 @@ var mainApp = angular.module('dataMovingApp', [
   }
 
   $scope.connect = function(){
-	  window.location.href = "/sf/" + $scope.selectedPipe._id + "?url=" + encodeURIComponent($location.absUrl());
+	  window.location.href = "/connect/" + $scope.selectedPipe._id + "?url=" + encodeURIComponent($location.absUrl());
 	  return;
   }
 
@@ -325,8 +324,8 @@ var mainApp = angular.module('dataMovingApp', [
   }]
 )
 
-.controller('pipeDetails.tab.monitoring.controller', ['$scope', '$http', '$location', '$state', '$stateParams','pipesService', 'salesforceService',
-    function($scope, $http, $location, $state, $stateParams, pipesService, salesforceService) {
+.controller('pipeDetails.tab.monitoring.controller', ['$scope', '$http', '$location', '$state', '$stateParams','pipesService',
+    function($scope, $http, $location, $state, $stateParams, pipesService) {
 	pipesService.scope = $scope;
     $scope.tabName = $stateParams.tab;
 
@@ -335,7 +334,7 @@ var mainApp = angular.module('dataMovingApp', [
     }
 
     $scope.runNow = function(){
-      salesforceService.runPipe( $scope.selectedPipe ).then(
+      pipesService.runPipe( $scope.selectedPipe ).then(
           function(){
             console.log("Pipe " + $scope.selectedPipe._id + " successfully started");
           },

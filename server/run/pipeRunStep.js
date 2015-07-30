@@ -69,12 +69,21 @@ function pipeRunStep(){
 			this.setStepMessage( err );
 		}
 		this.setPercentCompletion(100);
-		this.pipeRunStats.save( callback );
+		this.pipeRunStats.save( callback, err );
 		
 		this.pipeRunStats.logger.info({
 			message: require('util').format("Step %s completed", this.getLabel() ),
 			stats: this.stats
 		});
+	}
+	
+	/**
+	 * toJSON serialization function
+	 */
+	this.toJSON = function(){
+		return {
+			label: this.getLabel()
+		}
 	}
 }
 

@@ -8,9 +8,8 @@
 var jsforce = require('jsforce');
 var _ = require('lodash');
 var async = require('async');
-var pipeDb = require('./pipeStorage');
-var pipeRunner = require("./pipeRunner");
-var global = require("./global");
+var pipeDb = require('../../pipeStorage');
+var global = require("../../global");
 
 //Test data
 var testConfig = new function(){
@@ -67,8 +66,14 @@ function sf( pipeId ){
 			}
 			console.log( "Trying to connect using : " + JSON.stringify( pipe.name ) );
 			//Redirect authorization
-			res.redirect( this.getOAuthConfig( pipe ).getAuthorizationUrl({ scope : 'api id web refresh_token', state: JSON.stringify( {pipe: pipe._id, url: url } ) }));
-			
+			res.redirect( 
+				this.getOAuthConfig( pipe ).getAuthorizationUrl(
+					{ 
+						scope : 'api id web refresh_token', 
+						state: JSON.stringify( {pipe: pipe._id, url: url } ) 
+					}
+				)
+			);			
 		}.bind( this ));
 	};
 	
@@ -88,44 +93,6 @@ function sf( pipeId ){
 			});			
 		}.bind( this ));		
 	};
-	
-	this.run = function( callback ){
-		getPipe( function( err, pipe ){
-			if ( err ){
-				return callback( err );
-			}
-			console.log( "Running pipe using : " + pipe.name );			
-			var doRunInstance = function(){
-				var pipeRunnerInstance = new pipeRunner( this, pipe );			
-				pipeRunnerInstance.newRun( function( err, pipeRun ){
-					if ( err ){
-						//Couldn't start the run
-						return callback( err );
-					}
-					return callback( null, pipeRun );
-				});
-			}.bind( this );
-			
-			if ( pipe.run ){
-				//Check if the run is finished, if so remove the run
-				pipeDb.getRun( pipe.run, function( err, run ){
-					if ( err || run.status ){
-						console.log("Pipe has a reference to a run that has already completed. OK to proceed...");
-						//Can't find the run or run completed, ok to run
-						return doRunInstance();
-					}
-					//Can't create a new run while a run is in progress
-					var message = "Error: a run is already in progress for pipe " + pipe.name;
-					console.log( message );
-					return callback( message );
-				});
-			}else{
-				doRunInstance();
-			}
-			
-		}.bind( this ), true);
-	};
-
 }
 
 //Export the module

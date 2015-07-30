@@ -10,8 +10,21 @@ var global = require('./global');
 var webSocket = require('ws');
 var webSocketServer = webSocket.Server;
 var _  = require('lodash');
+var pipeRunner = require("./pipeRunner");
+var connectorAPI = require("./connectorAPI");
 
 module.exports = function( app ){
+	
+	//Private APIs
+	var getPipe = function( pipeId, callback, noFilterForOutbound ){
+		pipeDb.getPipe( pipeId, function( err, pipe ){
+			if ( err ){
+				return callback( err );
+			}
+			
+			callback( null, pipe );			
+		}.bind(this), noFilterForOutbound || false);
+	}.bind(this);
 	
 	/**
 	 * Get list of existing data pipes
@@ -86,6 +99,128 @@ module.exports = function( app ){
 		});
 	});
 	
+	/**
+	 * Private API for running a pipe
+	 * @param pipeId: id of the pipe to run
+	 * @param callback(err, pipeRun)
+	 */
+	var runPipe = function( pipeId, callback ){
+		getPipe( pipeId, function( err, pipe ){
+			if ( err ){
+				return callback(err);
+			}
+			console.log( "Running pipe using : " + pipe.name );			
+			var doRunInstance = function(){
+				var pipeRunnerInstance = new pipeRunner( pipe );			
+				pipeRunnerInstance.newRun( function( err, pipeRun ){
+					if ( err ){
+						//Couldn't start the run
+						return callback(err);
+					}
+					return callback( null, pipeRun );
+				});
+			};
+			
+			if ( pipe.run ){
+				//Check if the run is finished, if so remove the run
+				pipeDb.getRun( pipe.run, function( err, run ){
+					if ( err || run.status ){
+						console.log("Pipe has a reference to a run that has already completed. OK to proceed...");
+						//Can't find the run or run completed, ok to run
+						return doRunInstance();
+					}
+					//Can't create a new run while a run is in progress
+					var message = "Error: a run is already in progress for pipe " + pipe.name;
+					console.log( message );
+					return callback( message );
+				});
+			}else{
+				doRunInstance();
+			}
+			
+		}, true);
+	}
+	
+	/**
+	 * Start a new pipe run
+	 * @param pipeId: id of the pipe to run
+	 */
+	app.post("/runs/:pipeId", function( req, res ){
+		runPipe( req.params.pipeId, function( err, pipeRunDoc){
+			if ( err ){
+				return global.jsonError( res, err );
+			}
+			//Return a 202 accepted code to the client with information about the run
+			return res.status( 202 ).json( pipeRunDoc.getId() );
+		});
+	});
+	
+	/**
+	 * Connect to connector data source
+	 */
+	app.get("/connect/:id", function( req, res){
+		getPipe( req.params.id, function( err, pipe ){
+			if ( err ){
+				return global.jsonError( res, err );
+			}
+			var connector = connectorAPI.getConnector( pipe );
+			if ( !connector ){
+				return global.jsonError("Unable to get Connector for " + pipe.connectorId );
+			}
+			connector.connectDataSource( req, res, pipe._id, req.query.url, function( err, results ){
+				if ( err ){
+					return global.jsonError( res, err );
+				}
+				return res.json( results );
+			});
+		});
+	});
+	
+	/**
+	 * authCallback: url for OAuth callback
+	 */
+	app.get("/authCallback", function( req, res ){
+		var code = req.query.code;
+		var state = JSON.parse( req.query.state);
+		var pipeId = state.pipe;
+		
+		console.log("AuthCallback called with return url : " + state.url );
+		
+		if ( !code || !pipeId ){
+			return global.jsonError( res, "No code or state specified in OAuth callback request");
+		}
+		
+		console.log("OAuth callback called with pipe id: " + pipeId );
+		
+		getPipe( pipeId, function( err, pipe ){
+			if ( err ){
+				return global.jsonError( res, err );
+			}
+			var connector = connectorAPI.getConnector( pipe );
+			if ( !connector ){
+				return global.jsonError( res, "Unable to find connector for " + pipeId)
+			}
+			
+			connector.authCallback( code, pipeId, function( err, pipe ){
+				if ( err ){
+					return res.type("html").status(401).send("<html><body>" +
+						"Authentication error: " + err +
+						"</body></html>");
+				}
+				
+				//Save the pipe
+				pipeDb.savePipe( pipe, function( err, data ){
+					if ( err ){
+						return global.jsonError( res, err );
+					}
+
+					res.redirect(state.url);
+				})
+				
+			});
+		});
+	});
+	
 	//Catch all for uncaught exceptions
 	process.on("uncaughtException", function( err ){
 		console.log("Unexpected exception: " + err );
@@ -94,6 +229,16 @@ module.exports = function( app ){
 		if ( global.currentRun ){
 			global.currentRun.done(err);
 		}		
+	});
+	
+	//Listen to scheduled event runs
+	global.on("runScheduledEvent", function( pipeId){
+		runPipe( pipeId, function( err, run ){
+			if ( err ){
+				return console.log("Unable to execute a scheduled run for pipe %s", pipeId);
+			}
+			console.log('New Scheduled run started for pipe %s', pipeId);
+		});
 	});
 	
 	//Returns a function that configure the webSocket server to push notification about runs
