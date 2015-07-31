@@ -2,6 +2,7 @@
 
 var cachedPipes = [];	//cache of existing pipes
 var newPipes = [];	//placeholder for newly created newPipe
+var connectors = null;
 
 angular.module('pipes', [],function() {
 
@@ -16,6 +17,23 @@ angular.module('pipes', [],function() {
     	allTables: {
     		labelPlural: "All Tables",
     		name: null
+    	},
+    	
+    	getConnectors: function(){
+    		var deferred = $q.defer();
+    		if ( connectors ){
+    			deferred.resolve( connectors );
+    		}else{
+    			$http.get('/connectors')
+	        		.success(function(data) {
+	        			connectors = data;
+	        			deferred.resolve( connectors );
+	        		})
+	        		.error( function (data, status, headers, config ){
+	        			deferred.reject( status );
+	        		});
+    		}
+    		return deferred.promise;
     	},
         listPipes: function(){        	
         	var deferred = $q.defer();

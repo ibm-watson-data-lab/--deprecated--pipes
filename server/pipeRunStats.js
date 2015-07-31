@@ -129,6 +129,9 @@ function pipeRunStats(pipe, steps, callback){
 		global.currentRun = null;
 		if ( err ){
 			logger.error( err );
+			if ( err.stack ){
+				logger.error( err.stack );
+			}
 			runDoc.status = "ERROR";
 			runDoc.message = "" + err;
 		}else{

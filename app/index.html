@@ -36,8 +36,13 @@
 		                </a>
 		            </span>
 		        </div>
-		        <div class="navbar-header col-sm-6" ng-if="userid">
-		        	<span class="pull-right" style="margin-top:17px;color:white">
+				<div class="navbar-header col-sm-6">
+					<div class="dropdown pull-right">
+						<button id="dLabel" type="button" data-toggle="dropdown">Pipes<span class="caret"></span></button>
+						<div class="dropdown-menu" ui-view="pipeSelector">
+						</div>
+					</div>
+		        	<span class="pull-right" style="margin-top:17px;color:white" ng-if="userid">
 		            	Welcome {{userid}}
 			         </span>
 		        </div>

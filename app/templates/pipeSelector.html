@@ -1,0 +1,27 @@
+<div class="panel panel-default" style="min-width:300px; min-height:400px;background-color: cornsilk;">
+
+	<div id="pipeSelector" class="dropdown">
+	  <button type="button" class="dropdown-toggle" data-toggle="dropdown">Create New Pipe
+	  	<span class="caret"></span>
+	  </button>
+	  <ul id="pipeList" class="dropdown-menu">
+	   	<li ng-repeat="connector in connectors">
+	   		<a href="#">{{connector.label}}</a>
+	   	</li>
+	  </ul>
+	</div>
+	<div class="panel-body" style="padding-left:0px; padding-right:0px">		
+		<ul class="nav nav-pills nav-stacked">
+			<li ng-repeat="pipe in pipes" ui-sref-active="active" style="display:flex">
+				<a ui-sref="home.pipeDetails.tab({tab:'connection', id:pipe._id})" ng-mouseenter="hovering='block'" 
+					ng-mouseleave="hovering='none'" style="width:100%">{{ (pipe.new ? "*" : "") + pipe.name}} 
+				</a>
+				<button type="button" class="btn btn-default pull-right" ng-click="removePipe()" ng-style="{'display': hovering}">
+					<i class="glyphicon glyphicon-minus"></i>
+				</button>
+				
+			</li>
+		</ul>
+	</div>
+</div>
+

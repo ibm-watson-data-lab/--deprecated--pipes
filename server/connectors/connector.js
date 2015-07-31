@@ -13,6 +13,7 @@ var path = require('path');
 
 function connector(){
 	var id = null;
+	var label = null;
 	var steps = [];
 	
 	/**
@@ -27,6 +28,20 @@ function connector(){
 	 */
 	this.setId = function( _id ){
 		id = _id;
+	};
+	
+	/**
+	 * getLabel: return the unique id for this connector
+	 */
+	this.getLabel = function(){
+		return label;
+	};
+	
+	/**
+	 * setLabel: set the unique id for this connector
+	 */
+	this.setLabel = function( _label ){
+		label = _label;
 	};
 	
 	/**
@@ -86,6 +101,7 @@ function connector(){
 	this.toJSON = function(){
 		return {
 			id: this.getId(),
+			label: this.getLabel(),
 			steps: this.getSteps()
 		}
 	}

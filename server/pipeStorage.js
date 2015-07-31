@@ -124,7 +124,7 @@ pipeDb.on( "cloudant_ready", function(){
 			return console.log( err );
 		}
 		_.forEach( pipes, function( pipe ){
-			if ( pipe.run ){
+			if ( pipe.run || !pipe.connectorId){
 				pipeDb.upsert( pipe._id, function( storedPipe ){
 					if ( storedPipe && storedPipe.hasOwnProperty("run") ){
 						//Mark the run as STOPPED
@@ -139,6 +139,11 @@ pipeDb.on( "cloudant_ready", function(){
 						});						
 					}
 					delete storedPipe["run"];
+					
+					if ( storedPipe && !storedPipe.hasOwnProperty("connectorId") ){
+						//Backward compat, we default to salesforce 
+						storedPipe.connectorId = "SalesForce"
+					}
 					return storedPipe;
 				}, function( err, doc ){
 					if ( err ){

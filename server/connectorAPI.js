@@ -68,11 +68,6 @@ function connectorAPI(){
 	 */
 	this.getConnector = function(pipe){
 		var connectorId = _.isString( pipe ) ? pipe : pipe.connectorId;
-		if ( !connectorId ){
-			//Hard coded for now, TODO remove it
-			connectorId = "SalesForce";
-		}
-		
 		return _.find( connectors, function( connector ){
 			return connector.getId() === connectorId;
 		});

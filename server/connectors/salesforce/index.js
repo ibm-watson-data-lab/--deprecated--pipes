@@ -22,6 +22,7 @@ function sfConnector( parentDirPath ){
 	
 	//Set the id
 	this.setId("SalesForce");
+	this.setLabel("SalesForce");
 	
 	//Set the steps
 	this.setSteps([

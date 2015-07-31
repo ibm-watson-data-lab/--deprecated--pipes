@@ -41,6 +41,25 @@ var mainApp = angular.module('dataMovingApp', [
               'pipeSidebar':{
                 templateUrl: "/templates/pipeSidebar.html",
                   controller: 'pipesController'
+              },
+              'pipeSelector':{
+            	  templateUrl: "/templates/pipeSelector.html",
+            	  controller: function($scope, $controller, pipesService){
+            		  //call Parent controller
+            		  $controller('pipesController', {$scope: $scope});
+            		  pipesService.getConnectors().then(
+            				 function(connectors){
+            					 $scope.connectors = connectors;
+            				 },function( reason ){
+            					 console.log("error getting connectors: " + reason );
+            				 }
+            		  );
+            		  $('#pipeSelector.dropdown').hover(function() {
+            			  $(this).find('.dropdown-menu').stop(true, true).delay(200).fadeIn(500);
+            		  }, function() {
+            			  $(this).find('.dropdown-menu').stop(true, true).delay(200).fadeOut(500);
+            		  });
+            	  }
               }
           }
         })
