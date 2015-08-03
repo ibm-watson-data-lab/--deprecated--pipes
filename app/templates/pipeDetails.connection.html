@@ -1,5 +1,5 @@
 <h1>
-  Connect to Salesforce via OAuth
+  Connect to {{selectedConnector.label}} via OAuth
 </h1>
 
 <div ng-show="selectedPipe.tables && selectedPipe.tables.length > 0" class="alert alert-success">
@@ -11,19 +11,19 @@
 <div id="connect-form" ng-class="{collapse: selectedPipe.tables && selectedPipe.tables.length > 0}">
   <div class="alert alert-info">
     <p>
-      <strong>Note</strong>: If this is your first time setting up OAuth in Salesforce, check out our tutorial for <a href="http://developer.ibm.com/clouddataservices/simple-data-pipe/" target="_blank">more detailed instructions</a>.
+      <strong>Note</strong>: If this is your first time setting up OAuth in {{selectedConnector.label}}, check out our tutorial for <a href="http://developer.ibm.com/clouddataservices/simple-data-pipe/" target="_blank">more detailed instructions</a>.
     </p>
   </div>
   <p>
-    Before copying data from Salesforce to IBM dashDB, you need to connect to Salesforce via OAuth. If you don't have admin access to Salesforce, ask your Salesforce administrator to grant it to you.
+    Before copying data from {{selectedConnector.label}} to IBM dashDB, you need to connect to {{selectedConnector.label}} via OAuth. If you don't have admin access to {{selectedConnector.label}}, ask your {{selectedConnector.label}} administrator to grant it to you.
   </p>
 
   <section>
     <h2>
-      Add your OAuth callback to Salesforce
+      Add your OAuth callback to {{selectedConnector.label}}
     </h2>
     <p>
-      Copy and paste this callback URL into your Salesforce app.
+      Copy and paste this callback URL into your {{selectedConnector.label}} app.
     </p>
     <form class="form-horizontal">
       <div class="form-group">
@@ -40,12 +40,12 @@
       Add your consumer key and secret
     </h2>
     <p>
-      On the same Salesforce screen, copy your consumer key and secret and paste them here. Then click the connect button.
+      On the same {{selectedConnector.label}} screen, copy your consumer key and secret and paste them here. Then click the connect button.
     </p>
 
     <div class="alert alert-warning">
       <p>
-        <span class="glyphicon glyphicon-warning-sign"></span> If you've just added Simple Data Pipe to Salesforce, you need to wait ~10 minutes before you can connect.
+        <span class="glyphicon glyphicon-warning-sign"></span> If you've just added Simple Data Pipe to {{selectedConnector.label}}, you need to wait ~10 minutes before you can connect.
       </p>
     </div>
 
@@ -53,14 +53,14 @@
       <div class="form-group">
         <label for="clientId" class="control-label col-sm-3">Consumer key</label>
         <div class="col-sm-9">
-          <input type="text" class="form-control" id="clientId" required ng-model="selectedPipe.clientId" placeholder="Salesforce consumer key">
+          <input type="text" class="form-control" id="clientId" required ng-model="selectedPipe.clientId" placeholder="{{selectedConnector.label}} consumer key">
         </div>
       </div>
 
       <div class="form-group">
         <label for="clientSecret" class="control-label col-sm-3">Consumer secret</label>
         <div class="col-sm-9">
-          <input type="text" class="form-control" id="clientSecret" required ng-model="selectedPipe.clientSecret" placeholder="Salesforce consumer secret">
+          <input type="text" class="form-control" id="clientSecret" required ng-model="selectedPipe.clientSecret" placeholder="{{selectedConnector.label}} consumer secret">
         </div>
       </div>
 
@@ -69,8 +69,8 @@
           <div class="checkbox">
             <label>
               <input type="checkbox" value="" ng-model="selectedPipe.useSandbox">
-                Use the Salesforce sandbox<br />
-                <strong>Only use this option if your Salesforce administrator set up a sandbox for you or your organization.</strong>
+                Use the {{selectedConnector.label}} sandbox<br />
+                <strong>Only use this option if your {{selectedConnector.label}} administrator set up a sandbox for you or your organization.</strong>
             </label>
           </div>
         </div>
@@ -78,7 +78,7 @@
 
       <div class="form-group">
         <div class="col-sm-offset-3 col-sm-9">
-          <button class="btn btn-primary" data-toggle="modal" data-target="#OAuthWaitLogin" ng-click="savePipe({connect:true})">Connect to Salesforce</button>
+          <button class="btn btn-primary" data-toggle="modal" data-target="#OAuthWaitLogin" ng-click="savePipe({connect:true})">Connect to {{selectedConnector.label}}</button>
         </div>
       </div>
     </form>
@@ -93,7 +93,7 @@
         <h4 class="modal-title" id="myModalLabel">OAuth Validation</h4>
       </div>
       <div class="modal-body">
-        Redirecting to Salesforce.com. Please wait...
+        Redirecting to {{selectedConnector.label}}.com. Please wait...
       </div>
     </div>
   </div>

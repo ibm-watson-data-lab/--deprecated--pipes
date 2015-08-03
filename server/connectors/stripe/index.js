@@ -20,8 +20,8 @@ function stripes( parentDirPath ){
 	connector.call(this);
 	
 	//Set the id
-	this.setId("stripes");
-	this.setLabel("Stripes");
+	this.setId("stripe");
+	this.setLabel("Stripe");
 	
 	//Set the steps
 	this.setSteps([

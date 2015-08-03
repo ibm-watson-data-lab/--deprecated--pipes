@@ -6,7 +6,7 @@
 	  </button>
 	  <ul id="pipeList" class="dropdown-menu">
 	   	<li ng-repeat="connector in connectors">
-	   		<a href="#">{{connector.label}}</a>
+	   		<a href="javascript:;" data-toggle="modal" data-target="#createNewPipe" data-connector="{{connector.id}}">{{connector.label}}</a>
 	   	</li>
 	  </ul>
 	</div>
@@ -24,4 +24,5 @@
 		</ul>
 	</div>
 </div>
+
 

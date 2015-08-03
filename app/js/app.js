@@ -162,6 +162,34 @@ var mainApp = angular.module('dataMovingApp', [
       );
     }
   }
+  
+  //Create new pipe
+  $('#createNewPipe').on('show.bs.modal', function (event) {
+	  var sourceElt = $(event.relatedTarget);
+	  $rootScope.creatingConnector = JSON.parse( JSON.stringify(pipesService.getConnector( sourceElt.data('connector')) ));
+	  $rootScope.creatingConnector.connectorId = $rootScope.creatingConnector.id;
+	  delete $rootScope.creatingConnector.id;
+	  $rootScope.$apply();
+  });
+  
+  $rootScope.createNewPipe = function( newPipe ){
+	//Mark it as new so it passes validation
+	newPipe['new'] = true;
+    pipesService.savePipe( newPipe ).then(
+      function(){
+        console.log("Pipe " + newPipe._id + " successfully saved");
+        setTimeout( function(){
+        	$('#createNewPipe').modal('hide');
+    		//TODO: show the page
+        },500);
+      },
+      function( err ){
+        var message = "Unable to save pipe: " + err;
+        console.log(message);
+        alert(message)
+      }
+    );
+  }
  }]
 )
 
@@ -211,6 +239,15 @@ var mainApp = angular.module('dataMovingApp', [
   if ( $scope.selectedPipe.scheduleTime ){
     $scope.selectedPipe.scheduleTime = moment.utc( $scope.selectedPipe.scheduleTime ).toDate();
   }
+  
+  //Get info about the current connector, wait until the connectors are loaded
+  pipesService.getConnectors().then(
+	  function(connectors){
+		  $scope.selectedConnector = pipesService.getConnector( $scope.selectedPipe );
+	  },function( reason ){
+		  console.log("error getting connectors: " + reason );
+	  }
+  );  
 
   var port = $location.port();
   $scope.oauthCallback=$location.protocol() + "://" + $location.host() + ( (port === 80 || port === 443) ? "" : (":" + port)) +"/authCallback";

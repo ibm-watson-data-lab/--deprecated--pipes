@@ -39,7 +39,13 @@ module.exports = function( app ){
 	});
 	
 	function validatePipePayload( pipe ){
-		var requiredFields = ['name', 'clientId', 'clientSecret', 'connectorId'];
+		var requiredFields = null;
+		if ( pipe.hasOwnProperty("new") ){
+			requiredFields = ['name', 'connectorId'];
+			delete pipe['new'];
+		}else{
+			requiredFields = ['name', 'clientId', 'clientSecret', 'connectorId'];
+		}
 		
 		requiredFields.forEach( function( field ){
 			if ( !pipe.hasOwnProperty( field ) ){

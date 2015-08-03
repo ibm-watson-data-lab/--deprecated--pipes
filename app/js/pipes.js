@@ -35,6 +35,15 @@ angular.module('pipes', [],function() {
     		}
     		return deferred.promise;
     	},
+    	getConnector: function( id ){
+    		var connectorId = _.isString( id ) ? id : (id && id.connectorId);
+    		if ( !connectorId ){
+    			return null;
+    		}
+    		return _.find( connectors, function( connector ){
+    			return connector.id === connectorId;
+    		})
+    	},
         listPipes: function(){        	
         	var deferred = $q.defer();
         	if ( cachedPipes.length > 0 ){
