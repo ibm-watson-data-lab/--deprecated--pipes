@@ -7,7 +7,9 @@
   	"test": "NODE_CONFIG=tests/config/configYS1 ./node_modules/.bin/mocha ./tests",
     "postinstall": "./node_modules/bower/bin/bower cache clean && ./node_modules/bower/bin/bower install"
   },
-  "repository": { "url":"https://github.com/ibm-cds-labs/pipes"},
+  "repository": { 
+    "url":"https://github.com/ibm-cds-labs/pipes"
+  },
   "keywords": [
     "dataworks",
     "Salesforce",
