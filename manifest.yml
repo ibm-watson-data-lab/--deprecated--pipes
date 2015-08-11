@@ -13,7 +13,7 @@ declared-services:
     label: SingleSignOn
     plan: standard
 applications:
-- name: pipes-BUG22
+- name: pipes
   memory: 512M
   instances: 1
   domain: mybluemix.net
