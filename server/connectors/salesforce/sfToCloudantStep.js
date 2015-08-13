@@ -219,7 +219,7 @@ function sfToCloudantStep(){
 			pipeRunStats.addTableStats( stats );
 			return callback( null, stats );	//Do not stop other tables to go through
 		})
-		.run({ autoFetch : true, maxFetch : 100000 });
+		.run({ autoFetch : true, maxFetch : (table.expectedNumRecords || 200000) });
 	}.bind(this);
 
 	//public APIs
