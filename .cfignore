@@ -10,3 +10,4 @@ development/vcaps.properties
 LookML
 logs
 tests
+config

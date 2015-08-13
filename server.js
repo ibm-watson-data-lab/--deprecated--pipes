@@ -15,6 +15,7 @@ var errorHandler = require('errorhandler');
 var morgan = require('morgan');
 var global = require('./server/global');
 var appEnv = require("cfenv").getAppEnv();
+var configManager = require('./server/configManager');
 
 var cfEnv = require("cfenv");
 var appEnv = cfEnv.getAppEnv();
@@ -54,7 +55,7 @@ if ('development' === env || 'test' === env) {
 	app.use(errorHandler()); // Error handler - has to be last
 }
 
-var port = process.env.VCAP_APP_PORT || process.env.DEV_PORT;
+var port = process.env.VCAP_APP_PORT || configManager.get("DEV_PORT");
 if (process.env.VCAP_APP_HOST){
 	global.appHost = appEnv.urls[0];
 }else{
