@@ -11,30 +11,9 @@ var async = require('async');
 var pipeDb = require('../../pipeStorage');
 var global = require("../../global");
 
-//Test data
-var testConfig = new function(){
-	this.oAuthConfigDevSF = new jsforce.OAuth2({
-			 loginUrl: "https://login.salesforce.com",
-			 clientId: "3MVG98SW_UPr.JFgLYoFuZUV8udi_s_hhQnh76fvudHrj40npYfGHLQYuHJ8iQV2VN6cAoxzXa3WLSEfzDdGk",
-		     clientSecret: "1389549770213154921",
-		     redirectUri: global.getHostUrl() + "/authCallback"
-		});
-
-	this.oAuthConfigCDSSandbox = new jsforce.OAuth2({
-			 loginUrl: "https://test.salesforce.com",
-			 clientId: "3MVG9_7ddP9KqTzdj6CqVC0uI_RpkkogtVDUV1GgYAxxIWTY.naY.FtEYMwCtwOuivHaIp0uRRDaMMeWbv574",
-		     clientSecret: "5717758873660437002",
-		     redirectUri: global.getHostUrl() + "/authCallback"
-		});
-
-	this.configCDSSandbox = {
-		logLevel: "DEBUG",
-		loginUrl: "https://test.salesforce.com/",
-		instanceUrl: "https://cs10.salesforce.com",
-		oauth2: this.oAuthConfigCDSSandbox
-	}
-};
-
+/**
+ * Helper class for SalesForce connector
+ */
 function sf( pipeId ){
 	this.pipeId = pipeId;	//Remember our pipe id which should never change
 	
