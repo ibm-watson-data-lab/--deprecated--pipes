@@ -216,6 +216,9 @@ function inboundPayload( storedPipe, pipe ){
 pipeDb.savePipe = function( pipe, callback ){
 	//Make sure doc has the right type
 	pipe.type = "pipe";
+
+	pipe.version = 1.0;
+
 	//If new pipe, then _id is just a placeholder, new to remove it before saving it
 	if ( pipe.hasOwnProperty("new") ){
 		pipe._id = null;
