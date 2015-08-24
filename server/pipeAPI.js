@@ -6,7 +6,7 @@
 */
 
 var pipeDb = require( './pipeStorage');
-var global = require('./global');
+var global = require('bluemix-helper-config').global;
 var webSocket = require('ws');
 var webSocketServer = webSocket.Server;
 var _  = require('lodash');

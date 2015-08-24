@@ -10,7 +10,7 @@ var express = require('express');
 var passport = require('passport');
 var session = require('express-session');
 var openIDConnectStrategy = require('./idaas/strategy');
-var global = require('./global');
+var global = require('bluemix-helper-config").global;
 var _ = require('lodash');
 
 /**

@@ -13,9 +13,10 @@ var bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser')
 var errorHandler = require('errorhandler');
 var morgan = require('morgan');
-var global = require('./server/global');
+var bluemixHelperConfig = require('bluemix-helper-config');
+var global = bluemixHelperConfig.global;
 var appEnv = require("cfenv").getAppEnv();
-var configManager = require('./server/configManager');
+var configManager = bluemixHelperConfig.configManager;
 
 var cfEnv = require("cfenv");
 var appEnv = cfEnv.getAppEnv();
@@ -65,7 +66,7 @@ if (process.env.VCAP_APP_HOST){
 }
 
 //Configure security if we are bound to an SSO service
-var ssoService = require("./server/vcapServices").getService( "pipes-sso" );
+var ssoService = bluemixHelperConfig.vcapServices.getService( "pipes-sso" );
 if ( ssoService ){
 	console.log("INFO: Security is enabled");
 	require('./server/sso.js')(app, ssoService);

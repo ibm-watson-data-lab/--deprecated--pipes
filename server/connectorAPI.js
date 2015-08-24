@@ -6,7 +6,7 @@
 */
 
 var fs = require('fs');
-var global = require('./global.js');
+var global = require('bluemix-helper-config').global;
 var connector = require('./connectors/connector.js');
 var _ = require('lodash');
 var path = require("path");

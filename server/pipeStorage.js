@@ -9,9 +9,10 @@ var cloudant = require('./storage');
 var _ = require('lodash');
 var moment = require('moment');
 var schedule = require('node-schedule');
-var global = require('./global');
+var bluemixHelperConfig = require('bluemix-helper-config');
+var global = bluemixHelperConfig.global;
 var fs = require('fs');
-var configManager = require('./configManager');
+var configManager = bluemixHelperConfig.configManager;
 
 var dbName =  configManager.get("CLOUDANT_DB_NAME") || "pipe_db";
 var allPipesView = "all_pipes";

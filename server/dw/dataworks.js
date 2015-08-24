@@ -8,11 +8,12 @@
  * @author David Taieb
  */
 var request = require('request');
-var global = require('../global');
+var bluemixHelperConfig = require("bluemix-helper-config");
+var global = bluemixHelperConfig.global;
 var _ = require("lodash");
 var util = require("util");
-var vcapServices = require("../vcapServices");
-var configManager = require('../configManager');
+var vcapServices = bluemixHelperConfig.vcapServices;
+var configManager = bluemixHelperConfig.configManager;
 
 var proxyStarted = false;
 

@@ -9,7 +9,7 @@ var pipeRunStep = require('./pipeRunStep');
 var dataworks = require("../dw/dataworks");
 var async = require('async');
 var _ = require('lodash');
-var configManager = require('../configManager');
+var configManager = require('bluemix-helper-config').configManager;
 
 /**
  * cloudantToDashActivitiesStep class

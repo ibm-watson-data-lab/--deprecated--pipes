@@ -9,7 +9,7 @@ var jsforce = require('jsforce');
 var _ = require('lodash');
 var async = require('async');
 var pipeDb = require('../../pipeStorage');
-var global = require("../../global");
+var global = require("bluemix-helper-config").global;
 
 /**
  * Helper class for SalesForce connector

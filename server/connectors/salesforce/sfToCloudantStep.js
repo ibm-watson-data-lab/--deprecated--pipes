@@ -9,7 +9,7 @@ var pipeRunStep = require('../../run/pipeRunStep');
 var cloudant = require('../../storage');
 var _ = require("lodash");
 var async = require("async");
-var global = require("../../global");
+var global = require("bluemix-helper-config").global;
 var recordTransformer = require("../../transform/recordTransformer");
 
 /**

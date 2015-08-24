@@ -13,7 +13,7 @@ var events = require('events');
 var util = require('util');
 var _ = require('lodash');
 var async = require('async');
-var configManager = require('./configManager');
+var configManager = require('bluemix-helper-config').configManager;
 
 //Discover cloudant service info and initialize connection
 var cloudantUrl = configManager.get( "CLOUDANT_URL" );
@@ -22,7 +22,7 @@ var cloudantService = cloudantUrl ?
 			name : "Cloudant Url", 
 			credentials: { url: cloudantUrl} 
 		} 
-		: require("./vcapServices").getService( configManager.get( "CLOUDANT_SERVICE_NAME" ) || "cloudant" );
+		: require("bluemix-helper-config").vcapServices.getService( configManager.get( "CLOUDANT_SERVICE_NAME" ) || "cloudant" );
 if (!cloudantService) {
     console.log("Failed to find Cloudant service");
     throw new Error( "Failed to find Cloudant service" );

@@ -8,7 +8,7 @@
 var moment = require("moment");
 var pipeDb = require("./pipeStorage");
 var _ = require("lodash");
-var global = require("./global");
+var global = require("bluemix-helper-config").global;
 
 /**
  * PipeRunStats class
