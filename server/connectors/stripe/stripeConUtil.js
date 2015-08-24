@@ -1,0 +1,139 @@
+//-------------------------------------------------------------------------------
+// Copyright IBM Corp. 2015
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//-------------------------------------------------------------------------------
+
+var cloudant = require('../../storage');
+var _ = require('lodash');
+
+/*
+* Returns the OAuth configuration information for the specifid stripe 
+* @param pipe 
+*/
+var getOAuthConfig = function (pipe){
+
+	// make sure the parameter identifies a valid stripe pipe 
+	if((pipe === null) || (pipe.connectorId !== 'stripe')) {
+		return null;
+	}
+
+	//console.log('getOAuthConfig() - using pipe ' + JSON.stringify(pipe));
+
+	return {
+		 loginUrl: 'https://connect.stripe.com/oauth/authorize',
+		 tokenUrl: 'https://connect.stripe.com/oauth/token',
+		 clientId: pipe.clientId,										// CLIENT_ID: issued by stripe
+	     clientSecret: pipe.clientSecret								// API_KEY: issued by stripe
+	};
+};
+
+/*
+* Returns list of stripe tables (object types) that can be retrieved.
+* Refer to https://stripe.com/docs/api for details
+*/
+var getTableList = function() {
+
+	// note: stripe provides an API with object type specific methods. Therefore
+	// each object type ('table') listed here must be backed by a dedicated API call.
+	// 
+	// See TBD for details.
+	// TODO - can we get rid of tablePlural? (requires change in UI)
+	return([{name : 'account', labelPlural : 'account', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'application_fee', labelPlural : 'application_fee', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'balance_transaction', labelPlural : 'balance_transaction', description : 'See https://stripe.com/docs/api#intro for details'},
+//			{name : 'bank_account', labelPlural : 'bank_account', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'customer', labelPlural : 'customer', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'coupon', labelPlural : 'coupon', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'event', labelPlural : 'event', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'invoice', labelPlural : 'invoice', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'invoiceitem', labelPlural : 'invoiceitem', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'plan', labelPlural : 'plan', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'recipient', labelPlural : 'recipient', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'transfer', labelPlural : 'transfer', description : 'See https://stripe.com/docs/api#intro for details'}
+    ]);
+};
+
+/*
+* Returns the database name for the specified stripe object type (aka table)
+*/
+var getCloudantDatabaseName = function(tableName) {
+	return 'st_' + tableName.toLowerCase(); 
+};
+
+/*
+*   Private 
+*   TODO common module for all connectors?
+*/
+	var genViewsManager = function(table){
+		var tables = table || this.getPipeRunner().getSourceTables();
+		if ( !_.isArray( tables ) ){
+			tables = [tables];
+		}
+		var viewsManager = [];
+		_.forEach( tables, function( table ){
+			var manager = new cloudant.views( '_design/' + table.name );
+			manager.addView(
+					table.labelPlural || table.label || table.name,
+					JSON.parse("{"+
+							"\"map\": \"function(doc){" +
+							"if ( doc.pt_type === '" + table.name + "'){" +
+							"emit( doc._id, {'_id': doc._id, 'rev': doc._rev } );" +
+							"}" +
+							"}\"" +
+							"}"
+					), 2 //Version
+			);
+			viewsManager.push( manager );
+		});
+		return viewsManager;
+
+	}.bind( this );
+
+	var createCloudantDbForTable = function( logger, table, callback ){
+		//One database per table, create it now
+		var dbName = getCloudantDatabaseName(table.name);
+
+		var targetDb = new cloudant.db(dbName, genViewsManager( table ));
+		var ready = null;
+		targetDb.on( 'cloudant_ready', ready = function(){
+			logger.info('Data Pipe Configuration database (' + dbName + ') ready');
+			logger.info('Delete all documents for table %s in database %s', table.name, dbName);
+			//Remove listener to avoid using the callback again in case we have downstream errors
+			targetDb.removeListener('cloudant_ready', ready );
+			var called = false;
+			targetDb.destroyAndRecreate( function( err ){
+				if ( called ){
+					return;
+				}
+				called = true;
+				if ( err ){
+					logger.error('Unable to recreate db : ' + err );
+					return callback(err);
+				}
+				return callback( null, targetDb);
+			});
+		});
+
+		targetDb.on('cloudant_error', function(){
+			var message = 'Fatal error from Cloudant database: unable to initialize ' + dbName;
+			logger.error( message );
+			return callback( message );
+		});
+	};
+
+// exports
+module.exports.getOAuthConfig = getOAuthConfig;
+module.exports.getTableList = getTableList;
+module.exports.getCloudantDatabaseName = getCloudantDatabaseName;
+module.exports.createCloudantDbForTable = createCloudantDbForTable;
