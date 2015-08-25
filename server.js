@@ -37,7 +37,7 @@ app.use( function( req, res, next ){
 
 if ( process.env.START_PROXY ){
 	//Development only, creates a proxy server to enable local environment access to dw servers
-	var dataworks = require("./server/dw/dataworks");
+	var dataworks = require("nodejs-dataworks").dataload;
 	var dwInstance = new dataworks();
 }
 
