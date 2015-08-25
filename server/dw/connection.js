@@ -8,7 +8,8 @@
  * @author David Taieb
  */
 
-var vcapServices = require("../vcapServices");
+var bluemixHelperConfig = require("bluemix-helper-config");
+var vcapServices = bluemixHelperConfig.vcapServices;
 var _ = require("lodash");
 
 /**
