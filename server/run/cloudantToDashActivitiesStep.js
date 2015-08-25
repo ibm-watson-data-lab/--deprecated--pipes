@@ -6,7 +6,7 @@
 */
 
 var pipeRunStep = require('./pipeRunStep');
-var dataworks = require("../dw/dataworks");
+var dataworks = require("nodejs-dataworks").dataload;
 var async = require('async');
 var _ = require('lodash');
 var configManager = require('bluemix-helper-config').configManager;

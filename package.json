@@ -21,6 +21,7 @@
   "dependencies": {
     "bluemix-helper-config": "*",
     "bluemix-helper-sso": "*",
+    "nodejs-dataworks": "*",
     "async": "^1.2.1",
     "body-parser": "^1.11.0",
     "bower": "^1.4.1",
@@ -37,7 +38,6 @@
     "request": "~2.58.0",
     "when": "~3.7.3",
     "ws": "~0.7.2",
-    "http-proxy": "~1.11.1",
     "cookie-parser": "~1.3.5",
     "passport": "~0.2.2",
     "jws": "0.2.5",
