@@ -69,7 +69,7 @@ if (process.env.VCAP_APP_HOST){
 var ssoService = bluemixHelperConfig.vcapServices.getService( "pipes-sso" );
 if ( ssoService ){
 	console.log("INFO: Security is enabled");
-	require('./server/sso.js')(app, ssoService);
+	require('bluemix-helper-sso')(app, ssoService);
 }else{
 	app.get("/userid", function( req, res, next ){
 		res.status(200).end();

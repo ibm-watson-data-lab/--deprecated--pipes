@@ -20,6 +20,7 @@
   ],
   "dependencies": {
     "bluemix-helper-config": "*",
+    "bluemix-helper-sso": "*",
     "async": "^1.2.1",
     "body-parser": "^1.11.0",
     "bower": "^1.4.1",
