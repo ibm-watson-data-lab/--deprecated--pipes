@@ -50,8 +50,8 @@ function cloudantToDashActivitiesStep(){
 				return callback( err );
 			}
 			
-			//RUN_SYNC env variable will let the user run the activities synchronously (default is sync)
-			var runSync = configManager.get( "RUN_SYNC") ? configManager.get( "RUN_SYNC" ) == "true": true;
+			//RUN_SYNC env variable will let the user run the activities synchronously (default is async)
+			var runSync = configManager.get( "RUN_SYNC") ? configManager.get( "RUN_SYNC" ) == "true": false;
 			if ( runSync ){
 				logger.info("Running DataWorks Activities synchronously");
 			}else{
