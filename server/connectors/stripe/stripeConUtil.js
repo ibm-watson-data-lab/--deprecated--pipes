@@ -14,7 +14,9 @@
 // limitations under the License.
 //-------------------------------------------------------------------------------
 
-var cloudant = require('../../storage');
+'use strict';
+
+var cloudant = require('../../storage.js');
 var _ = require('lodash');
 
 /*
@@ -27,8 +29,6 @@ var getOAuthConfig = function (pipe){
 	if((pipe === null) || (pipe.connectorId !== 'stripe')) {
 		return null;
 	}
-
-	//console.log('getOAuthConfig() - using pipe ' + JSON.stringify(pipe));
 
 	return {
 		 loginUrl: 'https://connect.stripe.com/oauth/authorize',
@@ -44,24 +44,35 @@ var getOAuthConfig = function (pipe){
 */
 var getTableList = function() {
 
-	// note: stripe provides an API with object type specific methods. Therefore
-	// each object type ('table') listed here must be backed by a dedicated API call.
-	// 
-	// See TBD for details.
-	// TODO - can we get rid of tablePlural? (requires change in UI)
+	// Note: Stripe provides an API with object type specific methods. Therefore
+	// each object type ('table') listed here must be backed by a dedicated stripe 
+	// API call in copyJob.js
+	// Not yet supported because multiple fetches may be required to retrieve the information: 
+	//   - card (requires customer ID)
+	//   - subscription (requires customer ID)
+	//   - transfer_reversal (requires transfer ID)
+	//   - fee_refund (requires application fee ID)
+	// Intentionally not supported:
+	//   - token (no list API call) 
+	//
 	return([{name : 'account', labelPlural : 'account', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'application_fee', labelPlural : 'application_fee', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'balance_transaction', labelPlural : 'balance_transaction', description : 'See https://stripe.com/docs/api#intro for details'},
-//			{name : 'bank_account', labelPlural : 'bank_account', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'bank_account', labelPlural : 'bank_account', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'bitcoin_receiver', labelPlural : 'bitcoin_receiver', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'charge', labelPlural : 'charge', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'customer', labelPlural : 'customer', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'coupon', labelPlural : 'coupon', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'dispute', labelPlural : 'dispute', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'event', labelPlural : 'event', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'invoice', labelPlural : 'invoice', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'invoiceitem', labelPlural : 'invoiceitem', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'plan', labelPlural : 'plan', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'recipient', labelPlural : 'recipient', description : 'See https://stripe.com/docs/api#intro for details'},
+			{name : 'refund', labelPlural : 'refund', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'transfer', labelPlural : 'transfer', description : 'See https://stripe.com/docs/api#intro for details'}
     ]);
+
 };
 
 /*

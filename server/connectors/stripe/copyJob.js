@@ -16,7 +16,6 @@
 
 'use strict';
 
-// var cloudant = require('../../storage');
 var stripeConUtil = require('./stripeConUtil.js');
 
 //function run(that, tableName, dbHandle, stripeHandle) {
@@ -43,24 +42,43 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 
 	/*
 	 * Invoked if an error occurred while an attempt was made to fetch data from stripe.
-	 * @param err a stripe error object 
+	 * @param err an error object, which must include the mandatory message property 
 	 */
 	var processStripeRetrievalErrors = function (err) {
 
 		logger.error('A fatal error occurred while trying to retrieve data from stripe.com');
+
+		// message property is mandatory
 		logger.error('Error message: ' + err.message);
-		logger.error('Error type: ' + err.type);
-		logger.error('Error raw type: ' + err.rawType);
-		logger.error('Error code: ' +err. code);
-		logger.error('Error parameters: ' + err.param);
-		logger.error('Error detail: ' + err.detail);
 		
+		if(err.hasOwnProperty('type')) {
+			logger.error('Error type: ' + err.type);
+		}
+		if(err.hasOwnProperty('rawType')) {
+			logger.error('Error raw type: ' + err.rawType);
+		}
+		if(err.hasOwnProperty('code')) {
+			logger.error('Error code: ' +err.code);
+		}
+		if(err.hasOwnProperty('param')) {
+			logger.error('Error parameters: ' + err.param);
+		}
+		if(err.hasOwnProperty('detail')) {
+			logger.error('Error detail: ' + err.detail);
+		}
+
 		// save error information
 		stats.errors.push(err);
 		pipeRunStats.addTableStats(stats);
 
-		// Invoke the callback the copyFromStripeToCloudantStep.run() method. By returning an error processing for this tabe will be aborted.
-		return callback(err);
+		if(bulkSavesPendingCount < 1) {
+			// there is no more data that needs to be processed; signal to the parent (copyFromStripeToCloudantStep.run) that the job is done
+			logger.debug('copyJob.saveStripeObjectListInCloudant() No more data needs to be saved.');
+			return callback(null, stats); 
+		}
+
+		// Do not invoke the callback from the copyFromStripeToCloudantStep.run() method with err set. It would cause all processing to be aborted.
+		// return callback(err);
 
 	}; // processStripeRetrievalErrors
 
@@ -162,7 +180,11 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 			 case 'balance_transaction':
 				 // provide number of objects to be returned and the offset
 				 promise = stripe.balance.listTransactions({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
-				 break;		 
+				 break;	
+			case 'bitcoin_receiver':
+			 	 // provide number of objects to be returned and the offset
+				 promise = stripe.bitcoinReceivers.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 	 break;				 	 
 			 case 'charge':
 				 // provide number of objects to be returned and the offset
 				 promise = stripe.charges.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
@@ -199,14 +221,21 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 				 // provide number of objects to be returned and the offset
 				 promise = stripe.recipients.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;	
+			 case 'refund':
+				 // provide number of objects to be returned and the offset
+				 promise = stripe.refunds.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 break;					 
 			 case 'transfer':
 				 // provide number of objects to be returned and the offset
 				 promise = stripe.transfers.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;			 		
 			 default:
 		 	 	// unrecoverable error - a request was made to fetch data for an object type that is currently not supported
-			 	logger.error('copyJob.transferStripeObjectListToCloudant(): Data copy for stripe objects of type ' + tableName + ' is not supported.');
-			 	return callback('Data copy for stripe objects of type ' + tableName + ' is not supported.');
+				logger.error('copyJob.transferStripeObjectListToCloudant(): Data copy for stripe objects of type ' + tableName + ' is not supported.');
+				processStripeRetrievalErrors({
+					message : 'Data copy for stripe objects of type ' + tableName + ' is not supported.',
+					detail : 'Reported by processStripeObjectList'
+				});
 			}
 
 		} 
@@ -243,10 +272,14 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 			 // see above
 			 promise = stripe.balance.listTransactions({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;		 
+		case 'bitcoin_receiver':
+			 // see above
+			 promise = stripe.bitcoinReceivers.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 break;
 		case 'bank_account':
 			 // see above
 			 promise = stripe.accounts.listExternalAccounts({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
-			 break;
+			 break;			 
 		 case 'charge':
 			 // see above
 			 promise = stripe.charges.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
@@ -283,14 +316,23 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 			 // see above
 			 promise = stripe.recipients.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;	
+		 case 'refund':
+			 // see above
+			 promise = stripe.refunds.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 break;				 
 		 case 'transfer':
 			 // see above
 			 promise = stripe.transfers.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;			 
-		 default:
-		 	 // unrecoverable error - a request was made to fetch data for an object type that is currently not supported
-			 logger.error('copyJob.transferStripeObjectListToCloudant(): Data copy for stripe objects of type ' + tableName + ' is not supported.');
-			 return callback('Data copy for stripe objects of type ' + tableName + ' is not supported.');
+		default:
+		 	// unrecoverable error - a request was made to fetch data for an object type that is currently not supported
+			logger.error('copyJob.transferStripeObjectListToCloudant(): Data copy for stripe objects of type ' + tableName + ' is not supported.');
+
+			processStripeRetrievalErrors({
+					message : 'Data copy for stripe objects of type ' + tableName + ' is not supported.',
+					detail : 'Reported by copyStripeObjectsToCloudant'
+			});
+
 		}
 
 		logger.trace('copyJob.copyStripeObjectsToCloudant() - Exit');	

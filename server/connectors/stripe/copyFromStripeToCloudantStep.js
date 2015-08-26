@@ -16,7 +16,7 @@
 
 'use strict';
 
-var pipeRunStep = require('../../run/pipeRunStep');
+var pipeRunStep = require('../../run/pipeRunStep.js');
 var Stripe = require('stripe');
 var stripeConUtil = require('./stripeConUtil.js'); 
 var _ = require('lodash');
@@ -40,15 +40,13 @@ function copyFromStripeToCloudantStep(){
 
 		this.setStepMessage('Copying data from stripe.com to Cloudant staging area ...');
 		
-		var stepStats = this.stats;	// TODO
-		stepStats.numRecords = 0;   // TODO 
+		var stepStats = this.stats;	
+		stepStats.numRecords = 0;   
 
 		// get logger
 		var logger = this.pipeRunStats.logger;
 
 		logger.trace('copyFromStripeToCloudantStep.run() - Entry');	
-
-console.log('DEBUG 0820: stats ' + JSON.stringify(stepStats));		
 		
 		var pipe = this.getPipe();
 
@@ -59,9 +57,12 @@ console.log('DEBUG 0820: stats ' + JSON.stringify(stepStats));
 
 		// instruct the nodejs library to send the secret stripe API key with each request
 		var stripe = new Stripe(this.getPipe().clientSecret);
-
 		
 		logger.debug('copyFromStripeToCloudantStep.run(): ' + tables.length + ' tables will be processed.');
+
+		// keep track of progress
+		var processedTableCount = 0;
+		this.setPercentCompletion( 0 );
 
 		// process selected stripe object types 
 		async.map( tables, function( table, callback ){
@@ -78,6 +79,13 @@ console.log('DEBUG 0820: stats ' + JSON.stringify(stepStats));
 
 					logger.debug('copyFromStripeToCloudantStep.run() - processing for table ' + table.name + ' complete: ' + JSON.stringify(results));		
 
+					// 
+					// update step progress after processing for a table has completed
+					// 
+					processedTableCount++; 
+
+					this.setPercentCompletion( processedTableCount == 0 ? 0 : ((processedTableCount/tables.length)*100).toFixed(1) );
+
 					// results is an array containing the output from each table function call.
 					// Only the second step (copyJob.run) should return a result. Get it.
 					var tableStats =  _.find( results, function( result ){	
@@ -90,8 +98,9 @@ console.log('DEBUG 0820: stats ' + JSON.stringify(stepStats));
 		
 					return callback(err, tableStats); // signal async.map that processing for a specific table has completed
 
-				}); // async.series
-			}, function (err, statsArray) {
+				}.bind(this)); // async.series
+
+			}.bind(this), function (err, statsArray) {
 			
 				// Aggregate record count after async.map has finished
 				logger.debug('copyFromStripeToCloudantStep.run() - aggregating statistics: ' + JSON.stringify(statsArray));	

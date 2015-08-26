@@ -26,7 +26,7 @@ var connector = require('../connector');
 var pipeDb = require('../../pipeStorage');
 var qs = require('querystring');
 var request = require('request');
-var stripeConn = require('./stripeConUtil.js');
+var stripeConUtil = require('./stripeConUtil.js');
 
 /**
  * stripe connector
@@ -47,11 +47,50 @@ function stripe( parentDirPath ){
     ]);
 	
 	/**
+	 * This function is invoked after the user has provided an OAuth consumer key and consumer secret.
+	 * The main purpose of this function is to contact the OAuth provider and request the OAuth access token.
+	 * If the request is approved, the OAuth provider will invoke the pipe's callback and provide the access token (see above). 
+	 * @param req
+	 * @param res
+	 * @param pipeId
+	 * @param url: the value of this parameter must be sent to the OAuth provider using the state property.
+	 * @param callback(err, results)
+	 */
+	this.connectDataSource = function( req, res, pipeId, url, callback ){
+		
+		console.log('connectDataSource(' + pipeId +') - entry');
+
+		pipeDb.getPipe( pipeId, function( err, pipe ){
+			if ( err ){
+				console.log('connectDataSource() - exit (lookup error for pipe ' + pipeId + ')');
+				return callback( err );
+			}
+
+			var oAuthConfig = stripeConUtil.getOAuthConfig(pipe);
+
+			console.log('connectDataSource() - FFDC: ' + oAuthConfig.loginUrl + '?' + qs.stringify({response_type: 'code',
+																   scope: 'read_only',
+																   stripe_landing : 'login',
+	       														   client_id: oAuthConfig.clientId,
+																   state: JSON.stringify( {pipe: pipe._id, url: url })}));	
+
+			// send request for an access code to stripe.com (the response will be processed by authCallback above)
+			res.redirect(oAuthConfig.loginUrl + '?' + qs.stringify({response_type: 'code',
+														  				 scope: 'read_only',
+														  				 stripe_landing : 'login',
+														  				 client_id: oAuthConfig.clientId,
+														  				 state: JSON.stringify( {pipe: pipe._id, url: url })})); 
+
+
+		}); // pipeDb.getPipe
+	}; // connectDataSource
+
+	/**
 	 * authCallback: callback for OAuth authentication protocol
 	 * Collects OAuth information from the OAuth server and retrieves list of available 'tables' (stripe objects) that can be moved by the pipe
 	 * @param oAuthCode the authenticaion code that was sent by the OAuth server
 	 * @param pipeId the pipe for which oAuth and data source information is collected
-	 * @param callback(err, pipe )
+	 * @param callback(err, pipe ) error information in case of a problem or the updated pipe
 	 */
 	this.authCallback = function( oAuthCode, pipeId, callback ){
 				
@@ -65,7 +104,7 @@ function stripe( parentDirPath ){
 				return callback( err );
 			}
 
-			var oAuthConfig = stripeConn.getOAuthConfig(pipe);
+			var oAuthConfig = stripeConUtil.getOAuthConfig(pipe);
 
 			// request an access token from the stripe.com OAuth provider
             var authTokenRequest = {
@@ -90,11 +129,10 @@ function stripe( parentDirPath ){
 		        var accessToken = JSON.parse(body).access_token;
 	
 	    		// save the code (should we save the token instead?)
-				// TODO refreshToken?
 				pipe.oAuth = { accessToken : accessToken };
 
 				// determine which stripe object types can be retrieved
-				pipe.tables = stripeConn.getTableList();
+				pipe.tables = stripeConUtil.getTableList();
 
 				console.log('authCallback() - exit (pipe)');
 				callback( null, pipe );			
@@ -102,43 +140,7 @@ function stripe( parentDirPath ){
 		});		
 	};
 	
-	/**
-	 * connectDataSource: connect to the backend data source
-	 * @param req
-	 * @param res
-	 * @param pipeId
-	 * @param url: login url
-	 * @param callback(err, results)
-	 */
-	this.connectDataSource = function( req, res, pipeId, url, callback ){
-		
-		console.log('connectDataSource(' + pipeId +') - entry');
-
-		pipeDb.getPipe( pipeId, function( err, pipe ){
-			if ( err ){
-				console.log('connectDataSource() - exit (lookup error for pipe ' + pipeId + ')');
-				return callback( err );
-			}
-
-			var oAuthConfig = stripeConn.getOAuthConfig(pipe);
-
-			console.log('connectDataSource() - FFDC: ' + oAuthConfig.loginUrl + '?' + qs.stringify({response_type: 'code',
-																   scope: 'read_only',
-																   stripe_landing : 'login',
-	       														   client_id: oAuthConfig.clientId,
-																   state: JSON.stringify( {pipe: pipe._id, url: url })}));	
-
-			// send request for an access code to stripe.com (the response will be processed by authCallback above)
-			res.redirect(oAuthConfig.loginUrl + '?' + qs.stringify({response_type: 'code',
-														  				 scope: 'read_only',
-														  				 stripe_landing : 'login',
-														  				 client_id: oAuthConfig.clientId,
-														  				 state: JSON.stringify( {pipe: pipe._id, url: url })})); 
-
-
-		}); // pipeDb.getPipe
-	}; // connectDataSource
-} 
+} // stripe
 
 //Extend event Emitter
 require('util').inherits(stripe, connector);
