@@ -96,13 +96,13 @@ var getCloudantDatabaseName = function(tableName) {
 			var manager = new cloudant.views( '_design/' + table.name );
 			manager.addView(
 					table.labelPlural || table.label || table.name,
-					JSON.parse("{"+
-							"\"map\": \"function(doc){" +
-							"if ( doc.pt_type === '" + table.name + "'){" +
-							"emit( doc._id, {'_id': doc._id, 'rev': doc._rev } );" +
-							"}" +
-							"}\"" +
-							"}"
+					JSON.parse('{'+
+							'"map": "function(doc){' +
+							'if ( doc.object === \'' + table.name + '\'){' +
+							'emit( doc._id, {\'_id\': doc._id, \'rev\': doc._rev } );' +
+							'}' +
+							'}"' +
+							'}'
 					), 2 //Version
 			);
 			viewsManager.push( manager );
