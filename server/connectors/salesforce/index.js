@@ -8,7 +8,9 @@
  * @author David Taieb
  */
 
-var connector = require("../connector");
+var connectorExt = require("../connectorExt");
+var pipeDb = require("../../pipeStorage");
+var jsforce = require("jsforce");
 var sf = require("./sf");
 var async = require('async');
 var _ = require('lodash');
@@ -18,19 +20,107 @@ var _ = require('lodash');
  */
 function sfConnector( parentDirPath ){
 	//Call constructor from super class
-	connector.call(this);
+	connectorExt.call(this, "SalesForce", "SalesForce");
 	
-	//Set the id
-	this.setId("SalesForce");
-	this.setLabel("SalesForce");
+	this.doConnectStep = function( done, pipeRunStep, pipeRunStats, logger, pipe, pipeRunner ){
+		var sfConnection = pipeRunner.sf;
+		if ( !sfConnection ){
+			sfConnection = new sf( pipe._id );
+			pipeRunner.sf = sfConnection;
+		}		
+		
+		//Create jsForce connection
+		var conn = new jsforce.Connection({
+			oauth2 : sfConnection.getOAuthConfig( pipe ),
+			instanceUrl : pipe.sf.instanceUrl,
+			accessToken : pipe.sf.accessToken,
+			refreshToken : pipe.sf.refreshToken || null,
+			logLevel2: "DEBUG"
+		});
+
+		conn.on("refresh", function(accessToken, res) {
+			logger.info("Got a refreshed token: " + accessToken );
+			//Refresh the token for next time
+			pipe.sf.accessToken = accessToken;
+			//Save the pipe
+			pipeDb.savePipe( pipe, function( err, storedPipe ){
+				if ( err ){
+					return logger.error( "Error saving the refreshed token: " + err );
+				}
+				pipe = storedPipe;
+			})
+		});
+
+		//Compute the total number of records so we can compute progression
+		var tables = pipeRunner.getSourceTables();
+		pipeRunStats.expectedTotalRecords = 0;
+
+		var processed = 0;
+		//Main dispatcher code
+		async.each( tables, function( table, callback ){
+			var sfQuery = conn.query("SELECT COUNT() FROM "+ table.name);
+			sfQuery.setMaxListeners(0);
+			sfQuery.on("end", function(query) {
+				pipeRunStats.expectedTotalRecords += query.totalSize;
+				table.expectedNumRecords = query.totalSize;
+				pipeRunStep.setStepMessage("Connection to Salesforce Successful. " + pipeRunStats.expectedTotalRecords +" records have been found");
+				pipeRunStep.setPercentCompletion( (++processed/table.length).toFixed(1) );
+				return callback();
+			})
+			.on("error", function(err) {
+				//skip
+				logger.error("Error getting count for table %s", table.name);
+				pipeRunStep.setPercentCompletion( (++processed/table.length).toFixed(1) );
+				return callback(null);
+			})
+			.run();
+		}, function( err ){
+			if ( err ){
+				pipeRunStep.setStepMessage("Connection to Salesforce unsuccessful: %s", err);
+				return done( err );
+			}
+			//Keep a reference of the connection for the next steps
+			pipeRunStats.sfConnection = conn;
+			pipeRunStep.setStepMessage("Connection to Salesforce Successful. " + pipeRunStats.expectedTotalRecords +" records have been found");
+			return done();
+		});
+	}
 	
-	//Set the steps
-	this.setSteps([
-		new (require("./sfConnectStep"))(),
-		new (require("./sfToCloudantStep"))(),
-		new (require("../../run/cloudantToDashActivitiesStep"))(),
-		new (require("../../run/activitiesMonitoringStep"))()
-    ]);
+	this.getTablePrefix = function(){
+		return "sf";
+	}
+	
+	this.fetchRecords = function( table, pushRecordFn, done, pipeRunStep, pipeRunStats, logger, pipe, pipeRunner ){
+		var selectStmt = "SELECT ";
+		var first = true;
+		table.fields.forEach( function( field ){
+			selectStmt += (first ? "": ",") + field.name;
+			first = false;
+		});
+		selectStmt += " FROM " + table.name;
+		logger.trace( selectStmt );
+
+		var conn = pipeRunStats.sfConnection;
+		conn.query(selectStmt)
+		.on("record", function(record) {
+			pushRecordFn( record );
+		})
+		.on("end", function(query) {
+			logger.trace("total in database : " + query.totalSize);
+			logger.trace("total fetched : " + query.totalFetched);
+
+			return done();
+		})
+		.on("fetch", function(){
+			//Call garbage collector between fetches
+			global.gc();
+		})
+		.on("error", function(err) {
+			logger.error("Error while processing table " + table.name + ". Error is " + err );
+			return done(err);
+		})
+		.run({ autoFetch : true, maxFetch : (table.expectedNumRecords || 200000) });
+	}
 	
 	/**
 	 * authCallback: callback for OAuth authentication protocol
@@ -125,6 +215,6 @@ function sfConnector( parentDirPath ){
 }
 
 //Extend event Emitter
-require('util').inherits(sfConnector, connector);
+require('util').inherits(sfConnector, connectorExt);
 
 module.exports = new sfConnector();
