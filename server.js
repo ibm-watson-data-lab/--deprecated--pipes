@@ -73,7 +73,20 @@ if ( ssoService ){
 		ssoService: ssoService,
 		relaxedUrls:[
 		    "/js", "/img", "/css", "/bower_components", "templates"
-		]
+		],
+		createSessionStore: function( session ){
+			//Create a session store based on redis if available, if not, use the default in-memory store
+			var redisService = bluemixHelperConfig.vcapServices.getService("pipes-redis");
+			if ( redisService ){
+				var redisStore = require('connect-redis')(session);
+				return new redisStore({
+					host: redisService.credentials.hostname,
+					port: redisService.credentials.port,
+					pass: redisService.credentials.password
+				});
+			}
+			return null;
+		}
 	});
 }else{
 	app.get("/userid", function( req, res, next ){
