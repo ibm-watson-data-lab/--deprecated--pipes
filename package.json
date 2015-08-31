@@ -19,8 +19,8 @@
     "Data Movement"
   ],
   "dependencies": {
-    "bluemix-helper-config": "*",
-    "bluemix-helper-sso": "*",
+    "bluemix-helper-config": "^0.1.4",
+    "bluemix-helper-sso": "^0.1.7",
     "nodejs-dataworks": "*",
     "async": "^1.2.1",
     "body-parser": "^1.11.0",

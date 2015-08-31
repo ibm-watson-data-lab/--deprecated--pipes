@@ -15,11 +15,7 @@ var errorHandler = require('errorhandler');
 var morgan = require('morgan');
 var bluemixHelperConfig = require('bluemix-helper-config');
 var global = bluemixHelperConfig.global;
-var appEnv = require("cfenv").getAppEnv();
 var configManager = bluemixHelperConfig.configManager;
-
-var cfEnv = require("cfenv");
-var appEnv = cfEnv.getAppEnv();
 
 var VCAP_APPLICATION = JSON.parse(process.env.VCAP_APPLICATION || "{}");
 var VCAP_SERVICES = JSON.parse(process.env.VCAP_SERVICES || "{}");
@@ -57,9 +53,7 @@ if ('development' === env || 'test' === env) {
 }
 
 var port = process.env.VCAP_APP_PORT || configManager.get("DEV_PORT");
-if (process.env.VCAP_APP_HOST){
-	global.appHost = appEnv.urls[0];
-}else{
+if (!process.env.VCAP_APP_HOST){
 	//Running locally. Salesforce requires authCallbacks to use SSL by default
 	global.appHost = "https://127.0.0.1";
 	global.appPort = port;
