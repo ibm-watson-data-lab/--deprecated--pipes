@@ -57,22 +57,13 @@ function stripe( parentDirPath ){
 	 * @param callback(err, results)
 	 */
 	this.connectDataSource = function( req, res, pipeId, url, callback ){
-		
-		console.log('connectDataSource(' + pipeId +') - entry');
 
 		pipeDb.getPipe( pipeId, function( err, pipe ){
 			if ( err ){
-				console.log('connectDataSource() - exit (lookup error for pipe ' + pipeId + ')');
 				return callback( err );
 			}
 
 			var oAuthConfig = stripeConUtil.getOAuthConfig(pipe);
-
-			console.log('connectDataSource() - FFDC: ' + oAuthConfig.loginUrl + '?' + qs.stringify({response_type: 'code',
-																   scope: 'read_only',
-																   stripe_landing : 'login',
-	       														   client_id: oAuthConfig.clientId,
-																   state: JSON.stringify( {pipe: pipe._id, url: url })}));	
 
 			// send request for an access code to stripe.com (the response will be processed by authCallback above)
 			res.redirect(oAuthConfig.loginUrl + '?' + qs.stringify({response_type: 'code',
@@ -94,13 +85,9 @@ function stripe( parentDirPath ){
 	 */
 	this.authCallback = function( oAuthCode, pipeId, callback ){
 				
-		console.log('authCallback('+ oAuthCode + ',' + pipeId +') Entry');
-				
 		// retrieve pipe from the data store
-		// TODO do we need to specify third input parm (noFilterForOutbound) ?
 		pipeDb.getPipe( pipeId, function( err, pipe ){
 			if ( err ){
-				console.log('connectDataSource() - exit (lookup error for pipe ' + pipeId + ')');
 				return callback( err );
 			}
 
@@ -119,12 +106,16 @@ function stripe( parentDirPath ){
 
 			// request an access token	
 		    request.post(authTokenRequest, function(err, response, body) {
-	    
+
 	    		if(err) {
-	    			console.log('authCallback() - FFDC: ' + JSON.stringify(authTokenRequest));
-	    			console.log('authCallback() - exit (access token request error)');
 					return(callback(err, null));
 	    		}
+
+	    		err = JSON.parse(body).error_description;
+
+	    		if(err) {
+					return(callback(err, null));	
+		    	}
 
 		        var accessToken = JSON.parse(body).access_token;
 	
