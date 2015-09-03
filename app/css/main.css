@@ -191,3 +191,7 @@ tbody > tr.selectedRunDetailFINISHED > td {
         transform: rotate(360deg);
     }
 }
+.has-error > p.help-block {
+	font-size: 0.88em;
+	padding-left: 2px;
+}
