@@ -29,7 +29,8 @@
 			</tr>
 		</thead>
 		<tbody>
-			<tr ng-repeat="run in runs" ng-class="{'ERROR':'danger', 'RUNNING':'info', 'FINISHED':'success'}[run.status]">
+			<tr ng-repeat="run in runs" ng-class="{'ERROR':'danger', 'RUNNING':'info', 'FINISHED':'success'}[run.status]"
+				class="{{run.startTime == activeRun.startTime && run.pipeId == activeRun.pipeId && 'selectedRunDetail'+run.status || ''}}">
 				<td>{{run.startTime}}</td>
 				<td>{{run.numRecords}}</td>
 				<td>{{run.elapsedTime}}</td>

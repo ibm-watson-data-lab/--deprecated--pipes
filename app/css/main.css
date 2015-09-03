@@ -35,6 +35,9 @@ section {
 .sprite {
 	background-image: url("/img/sprite.png") !important;
 }
+.navbar-fixed-top {
+	box-shadow: 0 1px 3px #000000;
+}
 .sidebar {
     background: none repeat scroll 0 0 #343031;
     border-right: 1px solid #eee;
@@ -46,32 +49,47 @@ section {
     padding: 70px 20px 20px;
     position: fixed;
     top: 0;
+    font-weight: 500;
 }
 .sidebar-title {
     color: #eee;
     padding: 20px 0 20px 10px;
     font-size: 1.4em;
 }
+
 .nav-sidebar {
     margin-bottom: 20px;
     margin-left: -20px;
     margin-right: -21px;
 }
+.nav-sidebar > li {
+	background-color: transparent;
+}
+.nav-sidebar > li.active {
+	background-color: #111111;
+}
 .nav-sidebar > li > a {
     padding: 20px 20px 20px 30px;
-    color: #999999 !important;
+    border-left-style: solid;
+    border-left-width: 5px;
+    border-left-color: transparent;
 }
-.nav-sidebar > .active > a,
-.nav-sidebar > .active > a:hover,
-.nav-sidebar > .active > a:focus {
-    background-color: #111111 !important;
-    color: #fff !important;
+.nav-sidebar > li > a:link, 
+.nav-sidebar > li > a:visited {
+    text-decoration: none;
+    color: #FFFFFF !important;
+    cursor: pointer;
+    outline: 0;
 }
 .nav-sidebar > li > a:hover,
 .nav-sidebar > li > a:focus {
-    background-color: #666666;
-    color: #FFFFFF !important;
+	background-color: #111111;
 }
+.nav-sidebar > li.active > a,
+.nav-sidebar > li > a:focus {
+    border-left-color: #0D82AA !important;
+}
+
 .popover {
   position: absolute;
   top: 0;
@@ -94,4 +112,82 @@ section {
 
 #schedule.ng-invalid {
 	border: solid red 1px;
+}
+
+li.panel {
+	background-color: transparent;
+    border: 0px none;
+    border-radius: 0px;
+    box-shadow: none;
+    margin-bottom: 0px;
+}
+li.panelHover {
+    background-color: #111111;
+}
+li.panel > ul.nav {
+	font-weight: 300;
+}
+li.panel > ul.nav > li.active {
+	font-weight: 600;
+}
+
+li.panel > ul.nav > li > a {
+    padding: 0 0 30px 50px;
+    border-left-style: solid;
+    border-left-width: 5px;
+    border-left-color: #0D82AA !important;
+}
+li.panel > ul.nav > li > a:link, 
+li.panel > ul.nav > li > a:visited {
+    text-decoration: none;
+    color: #FFFFFF !important;
+    cursor: pointer;
+    outline: 0;
+}
+li.panel > ul.nav > li > a:hover,
+li.panel > ul.nav > li > a:focus {
+	background-color: #111111;
+	font-weight: 600;
+}
+
+.remove-link {
+	float: right;
+	background-color: transparent !important;
+	top: -60px;
+	border: none !important;
+}
+.nav-sidebar > li > a.create-button {
+	color: #808080 !important;
+}
+tbody > tr > td.selectedRunDetailERROR,
+tbody > tr.selectedRunDetailERROR > td {
+  background-color: #ebcccc !important;
+  font-weight: bold;
+}
+tbody > tr > td.selectedRunDetailRUNNING ,
+tbody > tr.selectedRunDetailRUNNING > td {
+  background-color: #c4e3f3 !important;
+  font-weight: bold;
+	
+}
+tbody > tr > td.selectedRunDetailFINISHED,
+tbody > tr.selectedRunDetailFINISHED > td {
+  background-color: #d0e9c6 !important;
+  font-weight: 600;
+}
+.glyphicon-spinner {
+    -webkit-animation: 1000ms linear 0s normal none infinite running spinner;
+    animation: 1000ms linear 0s normal none infinite running spinner;
+}
+@keyframes spinner {
+    0% {
+    	-ms-transform: rotate(0deg);
+        -webkit-transform: rotate(0deg);
+        transform: rotate(0deg);
+    }
+    100% {
+    	-ms-transform: rotate(360deg);
+        -webkit-transform: rotate(360deg);
+        transform: rotate(360deg);
+    }
 }

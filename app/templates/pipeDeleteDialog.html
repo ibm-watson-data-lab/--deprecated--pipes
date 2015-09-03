@@ -1,0 +1,10 @@
+<div class="modal-header">
+	<h4 class="modal-title">Delete Pipe</h4>
+</div>
+<div class="modal-body" id="createPipeBody">
+	<span>Delete Pipe {{pipeToDelete.name}}?</span>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+	<button type="button" class="btn btn-primary" ng-click="removePipe(pipeToDelete._id)">Proceed</button>
+</div>

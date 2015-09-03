@@ -2,24 +2,38 @@
 	Simple Data Pipe
 </div>
 <div>
-	<ul class="nav nav-sidebar" ng-repeat="pipe in pipes|limitTo:1" ng-init="connected = pipe.hasOwnProperty('tables')">
-		<li ui-sref-active="active">
-			<a ng-class="{'active':!selectedPage || selectedPage === 'about'}" ng-click="selectedPage = 'about'" ui-sref="home.pipeDetails.tab({tab:'about', id:pipe._id})">About</a>
+	<ul class="nav nav-sidebar" id="accordion">
+		<li ui-sref-active="active" ng-class="{'active':!selectedPage || selectedPage === 'about'}">
+			<a ng-click="collapsePipeNavMenu(); selectedPage = 'about'" ui-sref="about">About</a>
 		</li>
-		<li ui-sref-active="active">
-			<a ng-class="{'active':selectedPage === 'connection'}" ng-click="selectedPage = 'connection'" ui-sref="home.pipeDetails.tab({tab:'connection', id:pipe._id})">Connect</a>
+		<li>
+			<a href="javascript:;" data-toggle="modal" data-target="#createNewPipe" class="create-button">Create A New Pipe</a>
 		</li>
-		<li ng-class="{'disabled':!connected}" ui-sref-active="active">
-			<a ng-class="{'active':selectedPage === 'tables'}" ng-click="selectedPage = 'tables'" ui-sref="home.pipeDetails.tab({tab:'tables', id:pipe._id})">Pick Tables</a>
+		<li ng-repeat="pipe in pipes" ng-init="connected = pipe.hasOwnProperty('tables')" class="panel" ng-mouseenter="showRemove = true" ng-mouseleave="showRemove = false" ng-class="{panelHover:showRemove}">
+			<a class="collapsed pipeLink" data-toggle="collapse" data-parent="#accordion" href="#{{pipe._id}}" id="{{pipe._id}}_collapse">{{pipe.name}}</a>
+			<a href="javascript:;" data-toggle="modal" data-target="#deletePipe" class="remove-link" ng-show="showRemove" data-pipeId="{{pipe._id}}">
+          		<span class="glyphicon glyphicon-remove"></span>
+        	</a>
+<!--
+			<span class="glyphicon glyphicon-refresh glyphicon-spinner"></span>
+-->
+			<ul class="nav collapse" id="{{pipe._id}}">
+				<li ui-sref-active="active">
+					<a ng-class="{'active':selectedPage === 'connection'}" ng-click="selectedPage = 'connection'" ui-sref="home.pipeDetails.tab({tab:'connection', id:pipe._id})">Connect</a>
+				</li>
+				<li ng-class="{'disabled':!connected}" ui-sref-active="active">
+					<a ng-class="{'active':selectedPage === 'tables'}" ng-click="selectedPage = 'tables'" ui-sref="home.pipeDetails.tab({tab:'tables', id:pipe._id})">Pick Tables</a>
+				</li>
+				<li ng-class="{'disabled':!connected}" ui-sref-active="active">
+					<a ng-class="{'active':selectedPage === 'scheduling'}" ng-click="selectedPage = 'scheduling'" ui-sref="home.pipeDetails.tab({tab:'scheduling', id:pipe._id})">Schedule</a>
+				</li>
+				<li ng-class="{'disabled':!connected}" ui-sref-active="active">
+					<a ng-class="{'active':selectedPage === 'monitoring'}" ng-click="selectedPage = 'monitoring'" ui-sref="home.pipeDetails.tab({tab:'monitoring', id:pipe._id})">Activity</a>
+				</li>
+			</ul>
 		</li>
-		<li ng-class="{'disabled':!connected}" ui-sref-active="active">
-			<a ng-class="{'active':selectedPage === 'scheduling'}" ng-click="selectedPage = 'scheduling'" ui-sref="home.pipeDetails.tab({tab:'scheduling', id:pipe._id})">Schedule</a>
-		</li>
-		<li ng-class="{'disabled':!connected}" ui-sref-active="active">
-			<a ng-class="{'active':selectedPage === 'monitoring'}" ng-click="selectedPage = 'monitoring'" ui-sref="home.pipeDetails.tab({tab:'monitoring', id:pipe._id})">Activity</a>
-		</li>
-		<li ui-sref-active="active">
-			<a ng-class="{'active':selectedPage === 'faq'}" ng-click="selectedPage = 'faq'" ui-sref="home.pipeDetails.tab({tab:'faq'})">FAQ</a>
+		<li ui-sref-active="active" ng-class="{'active':selectedPage === 'faq'}">
+			<a ng-click="collapsePipeNavMenu(); selectedPage = 'faq'" ui-sref="faq">FAQ</a>
 		</li>
 	</ul>
 </div>

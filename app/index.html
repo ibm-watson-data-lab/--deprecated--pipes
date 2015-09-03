@@ -37,11 +37,6 @@
 		            </span>
 		        </div>
 				<div class="navbar-header col-sm-6">
-					<div class="dropdown pull-right">
-						<button id="dLabel" type="button" data-toggle="dropdown">Pipes<span class="caret"></span></button>
-						<div class="dropdown-menu" ui-view="pipeSelector">
-						</div>
-					</div>
 		        	<span class="pull-right" style="margin-top:17px;color:white" ng-if="userid">
 		            	Welcome {{userid}}
 			         </span>
@@ -102,25 +97,15 @@ end footer -->
 <div class="modal fade" id="createNewPipe" tabindex="-1" role="dialog">
 	<div class="modal-dialog">
 		<div class="modal-content">
-			<div class="modal-header">
-				<h4 class="modal-title">Create New Pipe for {{creatingConnector.label}}</h4>
-			</div>
-			<div class="modal-body" id="createPipeBody">
-				<form>
-					<div class="form-group">
-						<label for="pipe-name" class="control-label">Name:</label>
-						<input type="text" class="form-control" id="pipe-name" ng-model="creatingConnector.name">
-					</div>
-					<div class="form-group">
-						<label for="pipe-description" class="control-label">Description:</label>
-						<textarea class="form-control" id="pipe-description" ng-model="creatingConnector.description"></textarea>
-					</div>
-				</form>
-			</div>
-			<div class="modal-footer">
-		        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
-		        <button type="button" class="btn btn-primary" ng-click="createNewPipe(creatingConnector)">Proceed</button>
-     			</div>
+			<div ui-view="pipeCreateDialog"></div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="deletePipe" tabindex="-1" role="dialog">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div ui-view="pipeDeleteDialog"></div>
 		</div>
 	</div>
 </div>

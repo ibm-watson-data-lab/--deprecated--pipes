@@ -74,6 +74,8 @@ angular.module('pipes', [],function() {
         	
         	$http.delete('/pipes/' + id)
         		.success(function(data) {
+        			_.remove( newPipes, conn );
+        			_.remove( cachedPipes, conn );
         			deferred.resolve();
         		})
         		.error( function (data, status, headers, config ){
@@ -110,7 +112,12 @@ angular.module('pipes', [],function() {
         	var deferred = $q.defer();
         	$http.post('/pipes', pipe, {json: true})
         		.success(function(data) {
-        			deferred.resolve();
+        			if ( ! _.find( newPipes, function( conn ) {
+            			return conn.name == data.name;
+            		})) {
+        				newPipes.push(data);
+        			}
+        			deferred.resolve(data);
         		})
         		.error( function (data, status, headers, config ){
         			deferred.reject( data.error || data );

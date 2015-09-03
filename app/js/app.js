@@ -9,10 +9,11 @@ var mainApp = angular.module('dataMovingApp', [
     //$locationProvider.html5Mode({'enabled': true, 'requireBase': false});
 })
 
-.run( ['$rootScope', '$state', '$stateParams', '$http',
-    function ($rootScope,   $state,   $stateParams, $http) {
+.run( ['$rootScope', '$state', '$stateParams', '$http', '$timeout',
+    function ($rootScope,   $state,   $stateParams, $http, $timeout) {
     $rootScope.$state = $state;
     $rootScope.$stateParams = $stateParams;
+    $rootScope.$timeout = $timeout;
 
     //Get the user id if security is enabled
     $http.get('/userid').success(function(data) {
@@ -40,10 +41,10 @@ var mainApp = angular.module('dataMovingApp', [
               },
               'pipeSidebar':{
                 templateUrl: "/templates/pipeSidebar.html",
-                  controller: 'pipesController'
+                controller: 'pipesController'
               },
-              'pipeSelector':{
-            	  templateUrl: "/templates/pipeSelector.html",
+              'pipeCreateDialog':{
+            	  templateUrl: "/templates/pipeCreateDialog.html",
             	  controller: function($scope, $controller, pipesService){
             		  //call Parent controller
             		  $controller('pipesController', {$scope: $scope});
@@ -54,14 +55,30 @@ var mainApp = angular.module('dataMovingApp', [
             					 console.log("error getting connectors: " + reason );
             				 }
             		  );
-            		  $('#pipeSelector.dropdown').hover(function() {
-            			  $(this).find('.dropdown-menu').stop(true, true).delay(200).fadeIn(500);
-            		  }, function() {
-            			  $(this).find('.dropdown-menu').stop(true, true).delay(200).fadeOut(500);
-            		  });
             	  }
+              },
+              'pipeDeleteDialog':{
+            	  templateUrl: "/templates/pipeDeleteDialog.html"
               }
           }
+        })
+        .state('about', {
+        	parent: 'home',
+        	url:'/about',
+        	views: {
+        		'pipeDetails@': {
+        			templateUrl: '/templates/pipeDetails.about.html'
+        		}
+        	}
+        })
+        .state('faq', {
+        	parent: 'home',
+        	url:'/faq',
+        	views: {
+        		'pipeDetails@': {
+        			templateUrl: '/templates/pipeDetails.faq.html'
+        		}
+        	}
         })
         .state('home.pipeDetails', {
             url:'/:id',
@@ -73,10 +90,10 @@ var mainApp = angular.module('dataMovingApp', [
             },
             views: {
               'pipeDetails@' : {
-                templateUrl: '/templates/pipeDetails.html',
-                  controller: 'pipeDetailsController'
+              	templateUrl: '/templates/pipeDetails.html',
+              	controller: 'pipeDetailsController'
               }
-            }
+        	}
         })
         .state('home.pipeDetails.tab',{
         	parent: 'home.pipeDetails',
@@ -136,25 +153,97 @@ var mainApp = angular.module('dataMovingApp', [
     );
   }
 
+  $rootScope.$on('$stateChangeSuccess', 
+		  function(event, toState, toParams, fromState, fromParams) {
+	  //expand the pipename menu
+	  $rootScope.$timeout(function() {
+		  if (toParams.id) {
+			  if (!$rootScope.selectedPipe || $rootScope.selectedPipe._id != toParams.id) {
+				  $rootScope.selectedPipe = pipesService.findPipe(toParams.id);
+			  }
+			  //expand the pipename menu
+			  if (toParams.id != fromParams.id) {
+				  $rootScope.expandPipeNavMenu(toParams.id);
+			  }
+			  //default to connection page
+			  if (!toParams.tab) {
+				  $rootScope.$state.go("home.pipeDetails.tab", {tab:'connection', id: $scope.selectedPipe._id });
+			  }
+			  
+			  $rootScope.selectedPage = toParams.tab || 'connection';
+			  $("#"+toParams.id).parent().addClass("active");
+		  }
+		  
+		  if (fromParams.id && (toParams.id != fromParams.id)) {
+			  $("#"+fromParams.id).parent().removeClass("active");
+		  }
+	  },1);
+  });
+  
   listPipes();
 
   $scope.createNewPipe = function(){
-    pipesService.createPipe()
-    .then( function( pipe ){
-      listPipes();
-      $scope.$apply();
-    }, function( reason ){
-      alert("Unable to create new pipe: " + reason );
-    });
+	  if (arguments) {
+		  $rootScope.createNewPipe(arguments[0]);
+	  } else {
+	    pipesService.createPipe()
+	    .then( function( pipe ){
+	      listPipes();
+	      $scope.$apply();
+	    }, function( reason ){
+	      alert("Unable to create new pipe: " + reason );
+	    });
+	  }
   }
 
-  $scope.removePipe = function(){
-    if ( !$rootScope.$stateParams.id ){
+  $rootScope.collapsePipeNavMenu = function(pipeId) {
+	  var collapsible = null;
+	  if (pipeId) {
+		  collapsible = $("#" + eltId);
+	  }
+	  else {
+		  collapsible = $("li.panel > ul.collapse.in");
+	  }
+	  if (collapsible) {
+		  collapsible.collapse("hide");
+		  if (collapsible.get(0)) {
+			  var menu = $("#" + collapsible.get(0).id + "_collapse");
+			  if (menu) {
+				  menu.addClass("collapsed");
+			  }
+		  }
+	  }
+  }
+
+  $rootScope.expandPipeNavMenu = function(pipeId) {
+	  if (pipeId) {
+		  var collapsible = $("#" + pipeId);
+		  if (collapsible) {
+			  $("#" + pipeId + "_collapse").trigger("click");
+			  collapsible.collapse("show");
+			  if (collapsible.get(0)) {
+				  var menu = $("#" + collapsible.get(0).id + "_collapse");
+				  if (menu) {
+					  menu.focus();
+				  }
+			  }
+		  }
+	  }
+  }
+
+  $rootScope.removePipe = function(pipeId){
+	var pipeid = pipeId || $rootScope.$stateParams.id;
+    if ( !pipeid ){
       alert("No Pipe selected");
     }else{
-      pipesService.removePipe( $rootScope.$stateParams.id ).then(
+      pipesService.removePipe( pipeid ).then(
         function(){
-          console.log("Pipe " + $rootScope.$stateParams.id + " successfully removed");
+          console.log("Pipe " + pipeid + " successfully removed");
+          setTimeout( function(){
+        	pipesService.listPipes();
+        	$('#deletePipe').modal('hide');
+        	$rootScope.$state.go("about", null, { reload: true });
+          },500);
         },
         function( err ){
           alert("Unable to remove the pipe: " + err );
@@ -163,12 +252,10 @@ var mainApp = angular.module('dataMovingApp', [
     }
   }
   
-  //Create new pipe
-  $('#createNewPipe').on('show.bs.modal', function (event) {
+  //delete pipe
+  $('#deletePipe').on('show.bs.modal', function (event) {
 	  var sourceElt = $(event.relatedTarget);
-	  $rootScope.creatingConnector = JSON.parse( JSON.stringify(pipesService.getConnector( sourceElt.data('connector')) ));
-	  $rootScope.creatingConnector.connectorId = $rootScope.creatingConnector.id;
-	  delete $rootScope.creatingConnector.id;
+	  $rootScope.pipeToDelete = JSON.parse( JSON.stringify( pipesService.findPipe(sourceElt.data('pipeid')) ));
 	  $rootScope.$apply();
   });
   
@@ -176,11 +263,12 @@ var mainApp = angular.module('dataMovingApp', [
 	//Mark it as new so it passes validation
 	newPipe['new'] = true;
     pipesService.savePipe( newPipe ).then(
-      function(){
-        console.log("Pipe " + newPipe._id + " successfully saved");
+      function(response){
+        console.log("Pipe " + response._id + " successfully saved");
         setTimeout( function(){
+        	pipesService.listPipes();
         	$('#createNewPipe').modal('hide');
-    		//TODO: show the page
+        	$rootScope.$state.go("home.pipeDetails.tab", {tab:"connection", id: response._id }, { reload: true });
         },500);
       },
       function( err ){
@@ -236,8 +324,20 @@ var mainApp = angular.module('dataMovingApp', [
 .controller('pipeDetailsController', ['$scope', '$http', '$location', '$state', '$stateParams','pipesService',
   function($scope, $http, $location, $state, $stateParams, pipesService) {
   $scope.selectedPipe = pipesService.findPipe( $stateParams.id);
-  if ( $scope.selectedPipe.scheduleTime ){
-    $scope.selectedPipe.scheduleTime = moment.utc( $scope.selectedPipe.scheduleTime ).toDate();
+  if ($scope.selectedPipe) {
+	  if ( $scope.selectedPipe.scheduleTime ){
+	    $scope.selectedPipe.scheduleTime = moment.utc( $scope.selectedPipe.scheduleTime ).toDate();
+	  }
+	  //expand the pipename menu
+	  $scope.$timeout(function() {
+//		  $("#" + $scope.selectedPipe._id + "_collapse").trigger("click");
+		  $scope.expandPipeNavMenu($scope.selectedPipe._id);
+		  if ($state.params && $state.params.tab) {
+			  $scope.selectedPage = $state.params.tab;
+			  $("li.active").removeClass("active");
+			  $("#"+$scope.selectedPipe._id).parent().addClass("active");
+		  }
+	  }, 1);
   }
   
   //Get info about the current connector, wait until the connectors are loaded
