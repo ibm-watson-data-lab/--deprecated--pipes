@@ -208,3 +208,21 @@ tbody > tr.selectedRunDetailFINISHED > td {
 	font-size: 0.88em;
 	padding-left: 2px;
 }
+
+.selected-pipe-activiy {
+	font-weight: bold;
+	margin: 25px 0;
+	display: inline-block;
+    width: 200px;
+}
+.selected-pipe-activiy-btn {
+	float: right;
+    width: 200px;
+}
+.selected-pipe-activiy-btn > ul > li > span {
+	padding: 2px 10px;
+}
+.pipenotfound {
+	font-style: italic;
+	font-size: 0.88em;
+}

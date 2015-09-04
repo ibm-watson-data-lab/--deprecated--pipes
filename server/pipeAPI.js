@@ -89,10 +89,29 @@ module.exports = function( app ){
 	/**
 	 * Returns the last 10 runs
 	 */
-	app.get("/runs/:pipeid", function( req, res ){
+	app.get("/runs", function( req, res ){
 		pipeDb.run( function( err, db ){
 			db.view( 'application', "all_runs", 
 					{startkey: [{}, req.params.pipeid], endKey:[0, req.params.pipeid],'include_docs':true, 'limit': 10, descending:true},
+				function(err, data) {
+					if ( err ){
+						console.log(err);
+						//No runs yet, return empty array
+						return res.json( [] );
+					}
+					return res.json( data.rows );
+				}
+			);
+		});
+	});
+	
+	/**
+	 * Returns the last 10 runs for given pipe
+	 */
+	app.get("/runs/:pipeid", function( req, res ){
+		pipeDb.run( function( err, db ){
+			db.view( 'application', "all_runs_for_pipe", 
+					{key: req.params.pipeid,'include_docs':true, 'limit': 10, descending:true},
 				function(err, data) {
 					if ( err ){
 						console.log(err);

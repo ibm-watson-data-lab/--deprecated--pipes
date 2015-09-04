@@ -14,6 +14,18 @@
 		<button type="button" class="btn btn-primary" ng-click="disableRunNow=true;runNow()" ng-class="{'disabled': disableRunNow}">Run now</button>
 	</p>
 
+	<p class="selected-pipe-activiy">
+		<span>{{ allPipesSelected ? 'All Pipes' : selectedPipe.name }} Activity</span>
+	</p>
+	<div class="selected-pipe-activiy-btn btn-group">
+	  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+	    {{ allPipesSelected ? 'All Pipes' : 'Current Pipe' }} <span class="caret"></span>
+	  </button>
+	  <ul class="dropdown-menu">
+	    <li><span ng-click="allPipesSelected = !allPipesSelected;runningAnchor=false;fetchRuns(allPipesSelected);activateRun()">{{ allPipesSelected ? 'Current Pipe' : 'All Pipes' }}</span></li>
+	  </ul>
+	</div>
+
 	<p ng-hide="runs && runs.length > 0">
 		No pipes have been run yet. Run one now, or schedule one.
 	</p>
@@ -22,6 +34,7 @@
 		<thead>
 			<tr>
 				<th>Date/Time</th>
+				<th ng-if="allPipesSelected">Pipe</th>
 				<th>Records Processed</th>
 				<th>Run Time</th>
 				<th>Message</th>
@@ -32,6 +45,10 @@
 			<tr ng-repeat="run in runs" ng-class="{'ERROR':'danger', 'RUNNING':'info', 'FINISHED':'success'}[run.status]"
 				class="{{run.startTime == activeRun.startTime && run.pipeId == activeRun.pipeId && 'selectedRunDetail'+run.status || ''}}">
 				<td>{{run.startTime}}</td>
+				<td ng-if="name=getPipeName(run);allPipesSelected">
+					<span ng-if="name">{{name}}</span>
+					<span ng-if="!name" class="pipenotfound">Pipe no longer exists</span>
+				</td>
 				<td>{{run.numRecords}}</td>
 				<td>{{run.elapsedTime}}</td>
 				<td>{{run.message}}</td>
@@ -90,7 +107,7 @@
 		</p>
 
 		<p ng-show="!isPipeRunning()">
-			<button class="btn btn-primary" ng-click="runningAnchor=false;fetchRuns()">View details</button>
+			<button class="btn btn-primary" ng-click="allPipesSelected=false;runningAnchor=false;fetchRuns(false)">View details</button>
 		</p>
 <!--
 		<pre>

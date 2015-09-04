@@ -139,7 +139,11 @@ angular.module('pipes', [],function() {
         },
         getLastRuns: function(pipe){
         	var deferred = $q.defer();
-        	$http.get("/runs/" + pipe._id)
+        	var url = "/runs";
+        	if (pipe) {
+        		url += ("/" + pipe._id);
+        	}
+        	$http.get(url)
         		.success(function( data ){
         			var runs = _.map( data, function( row ){
         				var doc = row.doc;

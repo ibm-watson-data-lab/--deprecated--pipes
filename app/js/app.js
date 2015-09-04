@@ -497,6 +497,17 @@ var mainApp = angular.module('dataMovingApp', [
     	return $scope.selectedPipe && $scope.currentRun;
     }
 
+    $scope.getPipeName = function(run) {
+    	var name = null;
+    	if (run && run.pipeId) {
+    		var pipe = pipesService.findPipe(run.pipeId);
+    		if (pipe) {
+    			name = pipe.name;
+    		}
+    	}
+    	return name;
+    }
+
     $scope.runNow = function(){
       pipesService.runPipe( $scope.selectedPipe ).then(
           function(){
@@ -509,8 +520,8 @@ var mainApp = angular.module('dataMovingApp', [
     }
 
     //Get the list of runs
-    $scope.fetchRuns = function(){
-      pipesService.getLastRuns($scope.selectedPipe).then(
+    $scope.fetchRuns = function(allPipes){
+      pipesService.getLastRuns(allPipes ? null : $scope.selectedPipe).then(
           function( runs ){
             $scope.runs = runs;
             $scope.disableRunNow = false; // re-enables the Run Now button on monitoring
@@ -523,6 +534,6 @@ var mainApp = angular.module('dataMovingApp', [
       );
     }
 
-    $scope.fetchRuns();
+    $scope.fetchRuns(false);
   }]
 )

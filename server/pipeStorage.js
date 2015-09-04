@@ -113,6 +113,16 @@ viewsManager
 		}
 	}, 4 //Version
 )
+.addView(
+	"all_runs_for_pipe",
+	{
+		map: function(doc){
+			if ( doc.pipeId && doc.type === "run" ){
+				emit( doc.pipeId, doc._id );
+			}
+		}
+	}, 1
+)
 var pipeDb = new cloudant.db(dbName, viewsManager );
 
 pipeDb.on( "cloudant_ready", function(){
