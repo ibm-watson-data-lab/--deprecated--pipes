@@ -9,7 +9,11 @@
 		<li>
 			<a href="javascript:;" data-toggle="modal" data-target="#createNewPipe" class="create-button">Create A New Pipe</a>
 		</li>
-		<li ng-repeat="pipe in pipes" ng-init="connected = pipe.hasOwnProperty('tables')" class="panel" ng-mouseenter="showRemove = true" ng-mouseleave="showRemove = false" ng-class="{panelHover:showRemove}">
+		<li class="pipes-loading-sidebar">
+			<span>Loading... </span>
+			<span class="glyphicon glyphicon-refresh glyphicon-spinner pipes-loading-spinner"></span>
+		</li>
+		<li pipes-loading-directive ng-repeat="pipe in pipes" ng-init="connected = pipe.hasOwnProperty('tables')" class="panel" ng-mouseenter="showRemove = true" ng-mouseleave="showRemove = false" ng-class="{panelHover:showRemove}">
 			<a class="collapsed pipeLink" data-toggle="collapse" data-parent="#accordion" href="#{{pipe._id}}" id="{{pipe._id}}_collapse">{{pipe.name}}</a>
 			<a href="javascript:;" data-toggle="modal" data-target="#deletePipe" class="remove-link" ng-show="showRemove" data-pipeId="{{pipe._id}}" title="Delete Pipe">
           		<span class="glyphicon glyphicon-remove"></span>

@@ -474,6 +474,14 @@ var mainApp = angular.module('dataMovingApp', [
   };
 })
 
+.directive('pipesLoadingDirective', function() {
+  return function(scope, element, attrs) {
+    if (scope.$last){
+    	$(".pipes-loading-sidebar").addClass("ng-hide");
+    }
+  };
+})
+
 .controller('pipeDetails.tab.controller', ['$scope', '$http', '$location', '$stateParams','pipesService',
     function($scope, $http, $location, $stateParams, pipesService) {
     $scope.tabName = $stateParams.tab;

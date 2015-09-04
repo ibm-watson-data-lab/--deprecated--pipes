@@ -150,6 +150,19 @@ li.panel > ul.nav > li > a:focus {
 	background-color: #111111;
 }
 
+
+.pipes-loading-sidebar {
+	color: #FFFFFF;
+}
+.pipes-loading-sidebar > span {
+	padding: 35px;
+	display: block;
+}
+.pipes-loading-sidebar> .pipes-loading-spinner {
+	float: right;
+	display: inline-block;
+	top: -90px;
+}
 .remove-link {
 	float: right;
 	background-color: transparent !important;
