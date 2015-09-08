@@ -260,15 +260,6 @@ pipeDb.listPipes = function( callback ){
 					return callback( null, [] );
 				}
 				
-				if ( data.rows && data.rows.length == 0 ){
-					//Need at least one pipe, create a place holder now
-					return pipeDb.savePipe( {name:'Pipe1'}, function( err, pipe ){
-						if ( err ){
-							return callback( err );
-						}						
-						return callback( null, [pipe]);
-					});
-				}
 				return callback( null, _.map( data.rows, function( row ){
 					return outboundPayload(row.doc);
 				}));

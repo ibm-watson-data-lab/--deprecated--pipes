@@ -52,6 +52,7 @@ angular.module('pipes', [],function() {
 	        	$http.get('/pipes')
 	        		.success(function(data) {
 	        			cachedPipes = data;
+	        			newPipes = []; //clear placeholder
 	        			deferred.resolve( cache() );
 	        		})
 	        		.error( function (data, status, headers, config ){
@@ -82,30 +83,6 @@ angular.module('pipes', [],function() {
         			deferred.reject( data.error || data );
         		});
         	
-        	return deferred.promise;
-        },
-        createPipe: function(){
-        	var deferred = $q.defer();
-        	var seq = 1;
-        	var name;
-        	while ( true ){
-        		name = "Pipe " + seq++;
-        		if ( ! _.find( newPipes, function( conn ){
-        			return conn.name == name;
-        		})){
-        			break;
-        		}
-        	}
-        	
-        	var newPipe = {
-        		name: name,
-        		_id: name,
-        		loginUrl: "https://login.salesforce.com",
-        		"new": true
-        	};
-        	
-        	newPipes.push( newPipe );
-        	deferred.resolve( newPipe );
         	return deferred.promise;
         },
         savePipe: function( pipe ){

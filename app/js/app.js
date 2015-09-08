@@ -182,17 +182,27 @@ var mainApp = angular.module('dataMovingApp', [
   
   listPipes();
 
-  $scope.createNewPipe = function(){
-	  if (arguments) {
-		  $rootScope.createNewPipe(arguments[0]);
+  $rootScope.createNewPipe = function(newPipe){
+	  if (newPipe) {
+			//Mark it as new so it passes validation
+			newPipe['new'] = true;
+		    pipesService.savePipe( newPipe ).then(
+		      function(response){
+		        console.log("Pipe " + response._id + " successfully saved");
+		        setTimeout( function(){
+		        	pipesService.listPipes();
+		        	$('#createNewPipe').modal('hide');
+		        	$rootScope.$state.go("home.pipeDetails.tab", {tab:"connection", id: response._id }, { reload: true });
+		        },500);
+		      },
+		      function( err ){
+		        var message = "Unable to save pipe: " + err;
+		        console.log(message);
+		        alert(message)
+		      }
+		    );
 	  } else {
-	    pipesService.createPipe()
-	    .then( function( pipe ){
-	      listPipes();
-	      $scope.$apply();
-	    }, function( reason ){
-	      alert("Unable to create new pipe: " + reason );
-	    });
+	      alert("Unable to create new pipe: Missing required parameters.");
 	  }
   }
 
@@ -258,26 +268,6 @@ var mainApp = angular.module('dataMovingApp', [
 	  $rootScope.pipeToDelete = JSON.parse( JSON.stringify( pipesService.findPipe(sourceElt.data('pipeid')) ));
 	  $rootScope.$apply();
   });
-  
-  $rootScope.createNewPipe = function( newPipe ){
-	//Mark it as new so it passes validation
-	newPipe['new'] = true;
-    pipesService.savePipe( newPipe ).then(
-      function(response){
-        console.log("Pipe " + response._id + " successfully saved");
-        setTimeout( function(){
-        	pipesService.listPipes();
-        	$('#createNewPipe').modal('hide');
-        	$rootScope.$state.go("home.pipeDetails.tab", {tab:"connection", id: response._id }, { reload: true });
-        },500);
-      },
-      function( err ){
-        var message = "Unable to save pipe: " + err;
-        console.log(message);
-        alert(message)
-      }
-    );
-  }
  }]
 )
 
@@ -478,6 +468,9 @@ var mainApp = angular.module('dataMovingApp', [
   return function(scope, element, attrs) {
     if (scope.$last){
     	$(".pipes-loading-sidebar").addClass("ng-hide");
+    }
+    else if (scope.$first) {
+    	$(".pipes-loading-sidebar").removeClass("ng-hide");
     }
   };
 })
