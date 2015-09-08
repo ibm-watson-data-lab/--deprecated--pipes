@@ -186,7 +186,7 @@ var mainApp = angular.module('dataMovingApp', [
 	  if (newPipe) {
 			//Mark it as new so it passes validation
 			newPipe['new'] = true;
-		    pipesService.savePipe( newPipe ).then(
+		    pipesService.createPipe( newPipe ).then(
 		      function(response){
 		        console.log("Pipe " + response._id + " successfully saved");
 		        setTimeout( function(){

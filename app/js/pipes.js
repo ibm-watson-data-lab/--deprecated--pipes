@@ -85,7 +85,7 @@ angular.module('pipes', [],function() {
         	
         	return deferred.promise;
         },
-        savePipe: function( pipe ){
+        createPipe: function(pipe) {
         	var deferred = $q.defer();
         	$http.post('/pipes', pipe, {json: true})
         		.success(function(data) {
@@ -94,6 +94,18 @@ angular.module('pipes', [],function() {
             		})) {
         				newPipes.push(data);
         			}
+        			deferred.resolve(data);
+        		})
+        		.error( function (data, status, headers, config ){
+        			deferred.reject( data.error || data );
+        		});
+        	
+        	return deferred.promise;
+        },
+        savePipe: function( pipe ){
+        	var deferred = $q.defer();
+        	$http.post('/pipes', pipe, {json: true})
+        		.success(function(data) {
         			deferred.resolve(data);
         		})
         		.error( function (data, status, headers, config ){
