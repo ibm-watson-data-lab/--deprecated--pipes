@@ -17,6 +17,7 @@
 'use strict';
 
 var cloudant = require('../../storage.js');
+var global = require("bluemix-helper-config").global;
 var _ = require('lodash');
 
 /*
@@ -33,6 +34,7 @@ var getOAuthConfig = function (pipe){
 	return {
 		 loginUrl: 'https://connect.stripe.com/oauth/authorize',
 		 tokenUrl: 'https://connect.stripe.com/oauth/token',
+		 redirectUri: global.getHostUrl() + "/authCallback",
 		 clientId: pipe.clientId,										// CLIENT_ID: issued by stripe
 	     clientSecret: pipe.clientSecret								// API_KEY: issued by stripe
 	};

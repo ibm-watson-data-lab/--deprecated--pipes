@@ -70,6 +70,7 @@ function stripe( parentDirPath ){
 														  				 scope: 'read_only',
 														  				 stripe_landing : 'login',
 														  				 client_id: oAuthConfig.clientId,
+														  				 redirect_uri : oAuthConfig.redirectUri,
 														  				 state: JSON.stringify( {pipe: pipe._id, url: url })})); 
 
 
