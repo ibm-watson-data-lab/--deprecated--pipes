@@ -4,16 +4,17 @@
   "description": "Tool for moving data to the cloud: e.g. Salesforce to Cloud",
   "main": "server.js",
   "scripts": {
-  	"test": "NODE_CONFIG=tests/config/configYP ./node_modules/.bin/mocha ./tests",
-    "postinstall": "./node_modules/bower/bin/bower cache clean && ./node_modules/bower/bin/bower install"
+    "test": "NODE_CONFIG=tests/config/configYP ./node_modules/.bin/mocha ./tests",
+    "postinstall": "node ./node_modules/bower/bin/bower cache clean && node ./node_modules/bower/bin/bower install"
   },
   "repository": {
-   "type" : "git",
-   "url": "https://github.com/ibm-cds-labs/pipes"
+    "type": "git",
+    "url": "https://github.com/ibm-cds-labs/pipes"
   },
   "keywords": [
     "dataworks",
     "Salesforce",
+    "stripe",
     "dashDb",
     "Cloudant",
     "Data Movement"
@@ -52,6 +53,8 @@
     "connect-redis": "^2.5.0"
   },
   "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-jshint": "^0.11.3",
     "mocha": "*"
   },
   "author": "david_taieb@us.ibm.com",
