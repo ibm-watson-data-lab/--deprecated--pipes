@@ -50,6 +50,8 @@ function copyFromStripeToCloudantStep(){
 		
 		var pipe = this.getPipe();
 
+		logger.info('Running pipe ' + pipe._id + ' using stripe connector version ' + stripeConUtil.getMetaInfo().version);
+
 		var pipeRunStats = this.pipeRunStats;
 		
 		// process the selected table(s)
@@ -62,12 +64,12 @@ function copyFromStripeToCloudantStep(){
 
 		// keep track of progress
 		var processedTableCount = 0;
-		this.setPercentCompletion( 0 );
+		this.setPercentCompletion( 1 );
 
 		// process selected stripe object types 
 		async.map( tables, function( table, callback ){
 
-				logger.info('copyFromStripeToCloudantStep.run(): Started processing of table ' + table +'.');
+				logger.info('copyFromStripeToCloudantStep.run(): Started processing of table ' + table.name +'.');
 
 				async.series( getProcessTableFunctions(logger, table, pipe, pipeRunStats, stripe), function( err, results) {
 
@@ -84,7 +86,7 @@ function copyFromStripeToCloudantStep(){
 					// 
 					processedTableCount++; 
 
-					this.setPercentCompletion( processedTableCount == 0 ? 0 : ((processedTableCount/tables.length)*100).toFixed(1) );
+					this.setPercentCompletion( processedTableCount == 0 ? 1 : ((processedTableCount/tables.length)*100).toFixed(1) );
 
 					// results is an array containing the output from each table function call.
 					// Only the second step (copyJob.run) should return a result. Get it.
