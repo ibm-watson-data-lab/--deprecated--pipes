@@ -36,8 +36,8 @@ function stripe( parentDirPath ){
 	connector.call(this);
 	
 	//Set the id
-	this.setId('stripe');
-	this.setLabel('Stripe');
+	this.setId(stripeConUtil.getMetaInfo().id);
+	this.setLabel(stripeConUtil.getMetaInfo().label);
 	
 	//Set the steps
 	this.setSteps([      
@@ -125,6 +125,9 @@ function stripe( parentDirPath ){
 
 				// determine which stripe object types can be retrieved
 				pipe.tables = stripeConUtil.getTableList();
+
+				// store connector metadata
+				pipe.connector = { 'id' : stripeConUtil.getMetaInfo().id, 'version' : stripeConUtil.getMetaInfo().version};
 
 				console.log('authCallback() - exit (pipe)');
 				callback( null, pipe );			

@@ -21,18 +21,20 @@ var stripeConUtil = require('./stripeConUtil.js');
 //function run(that, tableName, dbHandle, stripeHandle) {
 function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, callback) {
 	
-	logger.trace('copyJob.run() - Entry');
+	logger.trace('copyJob.run(' + tableName + ') - Entry');
 
 	var cloudantDB = dbHandle;
 	var stripe = stripeHandle;
 
-	var bulkSavesPendingCount = 0;
-	var lastFetchSubmitted = false;
+	var bulkSavesPendingCount = 0;	// if non-zero, indicates that data still needs to be saved to the staging database
+	var lastFetchSubmitted = false;	// indicates whether additional records need to be fetched
+	var maxBatchSize = 100;			// defines how many records will be fetched from stripe; max supported is 100
 
 	// runstats for this table (this information is persisted in a run document in cloudant)
 	var stats = {
 			tableName : tableName,			// table name
 			numRecords: 0,					// total number of records written to Cloudant
+			expectedRecordCount: 0,			// expected number of records to be written to Cloudant
 			dbName : stripeConUtil.getCloudantDatabaseName(tableName),
 			errors: []						// list of errors
 	};
@@ -45,6 +47,8 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 	 * @param err an error object, which must include the mandatory message property 
 	 */
 	var processStripeRetrievalErrors = function (err) {
+
+		logger.trace('copyJob.processStripeRetrievalErrors() - Entry');
 
 		logger.error('A fatal error occurred while trying to retrieve data from stripe.com');
 
@@ -73,12 +77,14 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 
 		if(bulkSavesPendingCount < 1) {
 			// there is no more data that needs to be processed; signal to the parent (copyFromStripeToCloudantStep.run) that the job is done
-			logger.debug('copyJob.saveStripeObjectListInCloudant() No more data needs to be saved.');
+			logger.debug('processStripeRetrievalErrors() - Aborting. The are no more pending document save operations: ' + JSON.stringify(stats));
 			return callback(null, stats); 
 		}
 
 		// Do not invoke the callback from the copyFromStripeToCloudantStep.run() method with err set. It would cause all processing to be aborted.
 		// return callback(err);
+
+		logger.trace('copyJob.processStripeRetrievalErrors() - Exit');
 
 	}; // processStripeRetrievalErrors
 
@@ -87,14 +93,18 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 	 */
 	var saveStripeObjectListInCloudant = function (objectList) {
 
-		logger.trace('copyJob.saveStripeObjectListInCloudant() - Entry: ' + objectList.data.length + ' records need to be persisted.');
+		logger.trace('copyJob.saveStripeObjectListInCloudant('+ objectList.url + ') - Entry');
+		logger.debug('saveStripeObjectListInCloudant fetch list FFDC: src_url:' + objectList.url + ' data_count:' + objectList.data.length);
 
 		// don't proceed if no data was fetched
 		if(objectList.data.length === 0)  {
 			bulkSavesPendingCount--;
 			if(bulkSavesPendingCount < 1) {
 				// there is no more data that needs to be processed; signal to the parent (copyFromStripeToCloudantStep.run) that the job is done
-				logger.debug('copyJob.saveStripeObjectListInCloudant() No more data needs to be saved.');
+				if(stats.expectedRecordCount !== stats.numRecords) {
+					logger.warning('Records available from ' + objectList.url + ' (' + stats.numRecords + ') does not match saved record count (' + stats.numRecords + ').');
+				}
+
 				return callback(null, stats);
 			}
 			else {
@@ -108,20 +118,22 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 		// use the storage utility funtion to perform the bulk insert
 		cloudantDB.run(function(err, db) {
 			if(err) {
-				// signal to the parent (copyFromStripeToCloudantStep.run) that an error was encountered during processing 
+				// signal to the parent (copyFromStripeToCloudantStep.run) that an error was encountered during processing
+				logger.error('saveStripeObjectListInCloudant() - Cloudant returned error ' + err + ' in response to a connection request.'); 
 				return callback(err);
 			}
-			// bulk insert (100 rows max)
+			// bulk insert (maxBatchSize rows max)
 			db.bulk(
 					jsonDoc, 
 					function(err, body, header){
 						if(err) {
 							// signal to the parent (copyFromStripeToCloudantStep.run) that an error was encountered during processing 
+							logger.error('saveStripeObjectListInCloudant() - Cloudant returned error ' + err + ' while storing data fetched from ' + objectList.url + '. Processing aborted.'); 
 							stats.errors.push(err);
 							return callback(err);
 						}
 						else {
-							logger.debug('saveStripeObjectListInCloudant(): Inserted ' + objectList.data.length + ' objects into the ' + objectList.data[0].object + ' database');
+							logger.debug('saveStripeObjectListInCloudant(): Saved ' + objectList.data.length + ' documents fetched from ' + objectList.url);
 							// update the statistics
 							stats.numRecords = stats.numRecords + objectList.data.length;
 							pipeRunStats.addTableStats(stats);
@@ -130,13 +142,16 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 							bulkSavesPendingCount--;
 							if((lastFetchSubmitted)&&(bulkSavesPendingCount < 1)) {
 								// there is no more data that needs to be processed; signal to the parent (copyFromStripeToCloudantStep.run) that the job is done
+								if(stats.expectedRecordCount !== stats.numRecords) {
+									logger.warning('Records available from ' + objectList.url + ' (' + stats.numRecords + ') does not match saved record count (' + stats.numRecords + ').');
+								}
 								return callback(null, stats);
 							}
 						}
 					});	
 		});
 
-		logger.trace('copyJob.saveStripeObjectListInCloudant() - Exit');
+		logger.trace('copyJob.saveStripeObjectListInCloudant('+ objectList.url + ') - Exit');
 
 	}; // saveStripeObjectListInCloudant 
 
@@ -146,11 +161,17 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 	*/
 	var processStripeObjectList = function(objectList) {
 
-		logger.trace('copyJob.processStripeObjectList() - Entry: ' + objectList.data.length + ' records need to be persisted.');
-
-		logger.debug('copyJob.processStripeObjectList() ' + JSON.stringify(objectList));
+		logger.trace('copyJob.processStripeObjectList('+ objectList.url + ') - Entry');
+		logger.debug('processStripeObjectList fetch list FFDC: src_url:' + objectList.url + ' data_count:' + objectList.data.length + ' has_more:' + objectList.has_more);
 		
-		if(objectList.has_more === false) {
+		if(objectList.hasOwnProperty('total_count')) {
+			// this property is only retrieved by the first fetch operation and indicates the total number of available records
+			logger.info('A total of ' + objectList.total_count + ' records will be retrieved from ' + objectList.url);
+			stats.expectedRecordCount = objectList.total_count;
+			pipeRunStats.addTableStats(stats);
+		}
+
+		if(! objectList.has_more) {
 			// There are no more fetch operations pending at this point. 
 			lastFetchSubmitted = true;
 		} 
@@ -160,74 +181,76 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 		saveStripeObjectListInCloudant(objectList);
 		
 		// if there's more data to fetch ...
-		if(! lastFetchSubmitted) {	
+		if(objectList.has_more) {	
 
 			// retrieve the OAuth access token, which grants us read-only access to the customer's data 
 			var accessToken = pipe.oAuth.accessToken;
+
+			logger.debug('copyJob.processStripeObjectList() - fetching more records using API call ' + objectList.url + ' and offset "' + objectList.data[objectList.data.length - 1].id + '". Batch size: ' + maxBatchSize);
 
 			var promise; // returned by stripe.[object].list (all calls are asynchronous)
 			
 			switch (tableName) {		
 			 case 'account':
-			 	 // retrieve list of accounts (a maximum of 100 records will be returned by stripe, starting with the record follow the last one that was retrieved)
+			 	 // retrieve list of accounts (a maximum of maxBatchSize records will be returned by stripe, starting with the record follow the last one that was retrieved)
 			 	 // if no problem was encountered, method processStripeObjectList is invoked, method processStripeRetrievalErrors otherwise
-				 promise = stripe.acounts.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.acounts.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;	
 			 case 'application_fee':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.applicationFees.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.applicationFees.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;
 			 case 'balance_transaction':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.balance.listTransactions({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.balance.listTransactions({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;	
 			case 'bitcoin_receiver':
 			 	 // provide number of objects to be returned and the offset
-				 promise = stripe.bitcoinReceivers.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.bitcoinReceivers.list({ limit:maxBatchSize, 'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 	 break;				 	 
 			 case 'charge':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.charges.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.charges.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;
 			 case 'coupon':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.coupons.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.coupons.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;
 			 case 'customer':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.customers.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.customers.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;
 			 case 'dispute':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.disputes.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.disputes.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;		
 			 case 'event':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.events.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.events.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;			 
 			 case 'invoice':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.invoices.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.invoices.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;	 
 			 case 'invoiceitem':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.invoiceItems.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.invoiceItems.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;	 		 
 			 case 'plan':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.plans.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.plans.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;
 			 case 'recipient':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.recipients.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.recipients.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;	
 			 case 'refund':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.refunds.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.refunds.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;					 
 			 case 'transfer':
 				 // provide number of objects to be returned and the offset
-				 promise = stripe.transfers.list({ limit:100,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+				 promise = stripe.transfers.list({ limit:maxBatchSize,'starting_after' : objectList.data[objectList.data.length - 1].id}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 				 break;			 		
 			 default:
 		 	 	// unrecoverable error - a request was made to fetch data for an object type that is currently not supported
@@ -236,11 +259,11 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 					message : 'Data copy for stripe objects of type ' + tableName + ' is not supported.',
 					detail : 'Reported by processStripeObjectList'
 				});
-			}
 
+			}
 		} 
 
-		logger.trace('copyJob.processStripeObjectList() - Exit');
+		logger.trace('copyJob.processStripeObjectList('+ objectList.url + ') - Exit');
 
 	}; // processStripeObjectList
 
@@ -252,77 +275,74 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 
 		logger.trace('copyJob.copyStripeObjectsToCloudant() processing object type: ' + tableName);
 
+		logger.debug('copyJob.copyStripeObjectsToCloudant() - fetching initial batch of records for ' + tableName + ' Batch size: ' + maxBatchSize);
+
 		// retrieve the OAuth access token, which grants us read-only access to the customer's data 
 		var accessToken = pipe.oAuth.accessToken;
-	
 		var promise; // from stripe.[object].list
 		
 		switch (tableName) {
 		 case 'account':
-			 // retrieve list of accounts (a maximum of 100 records will be returned by stripe)
+			 // retrieve list of accounts (a maximum of maxBatchSize records will be returned by stripe)
 			 // if no problem was encountered, method processStripeObjectList is invoked, method processStripeRetrievalErrors otherwise
 			 // stripe.*.list API calls are asynchronous
-			 promise = stripe.accounts.list({ limit:100}, accessToken).then(processStripeObjectList , processStripeRetrievalErrors);
+			 promise = stripe.accounts.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList , processStripeRetrievalErrors);
 			 break;	
 		 case 'application_fee':
 			 // see above
-			 promise = stripe.applicationFees.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.applicationFees.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;
 		 case 'balance_transaction':
 			 // see above
-			 promise = stripe.balance.listTransactions({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.balance.listTransactions({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;		 
 		case 'bitcoin_receiver':
 			 // see above
-			 promise = stripe.bitcoinReceivers.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
-			 break;
-		case 'bank_account':
-			 // see above
-			 promise = stripe.accounts.listExternalAccounts({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
-			 break;			 
+			 promise = stripe.bitcoinReceivers.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 break;		 
 		 case 'charge':
 			 // see above
-			 promise = stripe.charges.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.charges.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;
 		 case 'coupon':
 			 // see above
-			 promise = stripe.coupons.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.coupons.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;
 		 case 'customer':
 			 // see above
-			 promise = stripe.customers.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.customers.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;
 		 case 'dispute':
 			 // see above
-			 promise = stripe.disputes.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.disputes.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;		
 		 case 'event':
 			 // see above
-			 promise = stripe.events.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.events.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;			 
 		 case 'invoice':
 			 // see above
-			 promise = stripe.invoices.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.invoices.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;	 
 		 case 'invoiceitem':
 			 // see above
-			 promise = stripe.invoiceItems.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.invoiceItems.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;	 		 
 		 case 'plan':
 			 // see above
-			 promise = stripe.plans.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.plans.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;
 		 case 'recipient':
 			 // see above
-			 promise = stripe.recipients.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.recipients.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;	
 		 case 'refund':
 			 // see above
-			 promise = stripe.refunds.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.refunds.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;				 
 		 case 'transfer':
 			 // see above
-			 promise = stripe.transfers.list({ limit:100}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
+			 promise = stripe.transfers.list({ limit:maxBatchSize,'include[]':'total_count'}, accessToken).then(processStripeObjectList, processStripeRetrievalErrors);
 			 break;			 
 		default:
 		 	// unrecoverable error - a request was made to fetch data for an object type that is currently not supported
@@ -335,12 +355,14 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 
 		}
 
-		logger.trace('copyJob.copyStripeObjectsToCloudant() - Exit');	
+		logger.trace('copyJob.copyStripeObjectsToCloudant(' + tableName + ') - Exit');	
 
 	}; // copyStripeObjectsToCloudant
 
- // start the data copy
+ // start data copy for the selected table
  copyStripeObjectsToCloudant();
+
+ logger.trace('copyJob.run(' + tableName + ') - Exit');
 
 } // run
 

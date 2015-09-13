@@ -17,8 +17,18 @@
 'use strict';
 
 var cloudant = require('../../storage.js');
-var global = require("bluemix-helper-config").global;
+var global = require('bluemix-helper-config').global;
 var _ = require('lodash');
+
+var connectorMetaInfo = {
+							id : 'stripe',
+							version : '0.2.0',
+							label : 'Stripe'
+						};
+
+var getMetaInfo = function() {
+	return connectorMetaInfo;
+};
 
 /*
 * Returns the OAuth configuration information for the specifid stripe 
@@ -34,7 +44,7 @@ var getOAuthConfig = function (pipe){
 	return {
 		 loginUrl: 'https://connect.stripe.com/oauth/authorize',
 		 tokenUrl: 'https://connect.stripe.com/oauth/token',
-		 redirectUri: global.getHostUrl() + "/authCallback",
+		 redirectUri: global.getHostUrl() + '/authCallback',
 		 clientId: pipe.clientId,										// CLIENT_ID: issued by stripe
 	     clientSecret: pipe.clientSecret								// API_KEY: issued by stripe
 	};
@@ -60,7 +70,7 @@ var getTableList = function() {
 	return([{name : 'account', labelPlural : 'account', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'application_fee', labelPlural : 'application_fee', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'balance_transaction', labelPlural : 'balance_transaction', description : 'See https://stripe.com/docs/api#intro for details'},
-			{name : 'bank_account', labelPlural : 'bank_account', description : 'See https://stripe.com/docs/api#intro for details'},
+//	requires account ID		{name : 'bank_account', labelPlural : 'bank_account', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'bitcoin_receiver', labelPlural : 'bitcoin_receiver', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'charge', labelPlural : 'charge', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'customer', labelPlural : 'customer', description : 'See https://stripe.com/docs/api#intro for details'},
@@ -85,8 +95,7 @@ var getCloudantDatabaseName = function(tableName) {
 };
 
 /*
-*   Private 
-*   TODO common module for all connectors?
+*   
 */
 	var genViewsManager = function(table){
 		var tables = table || this.getPipeRunner().getSourceTables();
@@ -146,6 +155,7 @@ var getCloudantDatabaseName = function(tableName) {
 	};
 
 // exports
+module.exports.getMetaInfo = getMetaInfo;
 module.exports.getOAuthConfig = getOAuthConfig;
 module.exports.getTableList = getTableList;
 module.exports.getCloudantDatabaseName = getCloudantDatabaseName;
