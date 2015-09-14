@@ -26,13 +26,16 @@
 					<a ng-class="{'active':selectedPage === 'connection'}" ng-click="selectedPage = 'connection'" ui-sref="home.pipeDetails.tab({tab:'connection', id:pipe._id})">Connect</a>
 				</li>
 				<li ng-class="{'disabled':!connected}" ui-sref-active="active">
-					<a ng-class="{'active':selectedPage === 'tables'}" ng-click="selectedPage = 'tables'" ui-sref="home.pipeDetails.tab({tab:'tables', id:pipe._id})">Pick Tables</a>
+					<a ng-if="connected" ng-class="{'active':selectedPage === 'tables'}" ng-click="selectedPage = 'tables'" ui-sref="home.pipeDetails.tab({tab:'tables', id:pipe._id})">Pick Tables</a>
+					<a ng-if="!connected">Pick Tables</a>
 				</li>
 				<li ng-class="{'disabled':!connected}" ui-sref-active="active">
-					<a ng-class="{'active':selectedPage === 'scheduling'}" ng-click="selectedPage = 'scheduling'" ui-sref="home.pipeDetails.tab({tab:'scheduling', id:pipe._id})">Schedule</a>
+					<a ng-if="connected" ng-class="{'active':selectedPage === 'scheduling'}" ng-click="selectedPage = 'scheduling'" ui-sref="home.pipeDetails.tab({tab:'scheduling', id:pipe._id})">Schedule</a>
+					<a ng-if="!connected">Schedule</a>
 				</li>
 				<li ng-class="{'disabled':!connected}" ui-sref-active="active">
-					<a ng-class="{'active':selectedPage === 'monitoring'}" ng-click="selectedPage = 'monitoring'" ui-sref="home.pipeDetails.tab({tab:'monitoring', id:pipe._id})">Activity</a>
+					<a ng-if="connected" ng-class="{'active':selectedPage === 'monitoring'}" ng-click="selectedPage = 'monitoring'" ui-sref="home.pipeDetails.tab({tab:'monitoring', id:pipe._id})">Activity</a>
+					<a ng-if="!connected">Activity</a>
 				</li>
 			</ul>
 		</li>

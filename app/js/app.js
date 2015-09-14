@@ -392,6 +392,9 @@ var mainApp = angular.module('dataMovingApp', [
 
   $scope.getTablesList = function(){
     var tables = [ pipesService.allTables ];
+    if (!$scope.selectedPipe.selectedTableId) {
+    	$scope.selectTable(tables[0]);
+    }
     _.forEach( $scope.selectedPipe.tables, function( table ){
       tables.push( table );
     });
@@ -420,6 +423,12 @@ var mainApp = angular.module('dataMovingApp', [
     link: function(scope, elem, attrs){
       scope.connect = attrs.connect;
       scope.nextPageTab = attrs.nextpagetab;
+      if (attrs.confirmbuttondisabled == true || attrs.confirmbuttondisabled == "true") {
+    	  $(".buttonBarConfirm").prop("disabled",true);
+      }
+      if (attrs.skipbuttondisabled == true || attrs.skipbuttondisabled == "true") {
+    	  $(".buttonBarSkip").prop("disabled",true);
+      }
     }
   };
 })

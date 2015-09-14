@@ -1,10 +1,10 @@
 <section class="process">
 
-	<button type="button" class="save" ng-class="['btn', 'btn-primary' ]" data-toggle="modal" 
-		data-target="#savePipe" ng-disabled="error" ng-click="savePipe({'connect': connect, 'nextPageTab': nextPageTab })">Save and continue</button>
+	<button type="button" class="save buttonBarConfirm" ng-class="['btn', 'btn-primary' ]" data-toggle="modal" 
+		data-target="#savePipe" ng-click="savePipe({'connect': connect, 'nextPageTab': nextPageTab })">Save {{nextPageTab && nextPageTab.length > 0 ? 'and continue' : ''}}</button>
 
 
-	<button type="button" class="next" ng-class="['btn', 'btn-default' ]" ng-click="goToNextPage(nextPageTab)">Skip</button>
+	<button type="button" class="next buttonBarSkip" ng-class="['btn', 'btn-default' ]" ng-click="goToNextPage(nextPageTab)">Skip</button>
 
 
 	<div class="modal fade" id="savePipe" tabindex="-1" role="dialog">
