@@ -7,10 +7,10 @@
 
 <form class="form-horizontal" name="form">
   <div class="form-group">
-    <label class="control-label col-sm-2">Pick a time</label>
-    <div class="col-sm-10 form-inline">
+    <label class="control-label col-sm-4">Pick a time (using your local timezone):</label>
+    <div class="col-sm-5 form-inline" ng-class="{'has-error':form.schedule.$error.parse}">
       <input id="schedule" name="schedule" type="text" display-utc-time class="form-control" placeholder="hh:mm am/pm" ng-model="selectedPipe.scheduleTime"/>
-      <span ng-show="form.schedule.$error.parse" style="padding-left: 5px">Please use format hh:mm am/pm (hh must be between 1-12)</span>
+      <span ng-show="form.schedule.$error.parse" class="help-block">Please use format hh:mm am/pm (hh must be between 1-12)</span>
     </div>
   </div>
 </form>

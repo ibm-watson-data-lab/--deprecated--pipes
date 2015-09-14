@@ -232,6 +232,7 @@ tbody > tr.selectedRunDetailFINISHED > td {
         transform: rotate(360deg);
     }
 }
+.has-error > span.help-block,
 .has-error > p.help-block {
 	font-size: 0.88em;
 	padding-left: 2px;
@@ -256,6 +257,11 @@ tbody > tr.selectedRunDetailFINISHED > td {
 }
 .pipename {
 	max-width: 400px;
+}
+.piperecord {
+    float: right;
+    position: relative;
+    right: 5px;
 }
 .ellipsize {
 	display: inline-block;

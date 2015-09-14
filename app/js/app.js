@@ -305,6 +305,9 @@ var mainApp = angular.module('dataMovingApp', [
     			return "";
     		}
     		var date = moment(value, "hh:mm a", true);
+    		if (!date.isValid()) {
+    			date = moment(value, "h:mm a", true);
+    		}
     		if ( !date.isValid() ){
     			ngModel.$setValidity('parse', true);
     			if ( scope && scope.$parent){
@@ -435,8 +438,8 @@ var mainApp = angular.module('dataMovingApp', [
     link: function(scope, elem, attrs){
       scope.connect = attrs.connect;
       scope.nextPageTab = attrs.nextpagetab;
-      if (attrs.confirmbuttondisabled == true || attrs.confirmbuttondisabled == "true") {
-    	  $(".buttonBarConfirm").prop("disabled",true);
+      if (attrs.savebuttondisabled == true || attrs.savebuttondisabled == "true") {
+    	  $(".buttonBarSave").prop("disabled",true);
       }
       if (attrs.skipbuttondisabled == true || attrs.skipbuttondisabled == "true") {
     	  $(".buttonBarSkip").prop("disabled",true);
