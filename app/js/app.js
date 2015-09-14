@@ -205,6 +205,18 @@ var mainApp = angular.module('dataMovingApp', [
 	      alert("Unable to create new pipe: Missing required parameters.");
 	  }
   }
+  
+  $rootScope.createNewPipeNameSet = function() {
+	  var name = newPipeForm.name.value;
+	  if (_.find($scope.pipes, function(pipe) {
+		  return pipe.name == name;
+	  })) {
+		  $scope.newPipeForm.name.$setValidity("exists", false);
+	  }
+	  else {
+		  $scope.newPipeForm.name.$setValidity("exists", true);
+	  }
+  }
 
   $rootScope.collapsePipeNavMenu = function(pipeId) {
 	  var collapsible = null;

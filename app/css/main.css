@@ -241,7 +241,7 @@ tbody > tr.selectedRunDetailFINISHED > td {
 	font-weight: bold;
 	margin: 25px 0;
 	display: inline-block;
-    width: 200px;
+    max-width: 600px;
 }
 .selected-pipe-activiy-btn {
 	float: right;
@@ -253,4 +253,15 @@ tbody > tr.selectedRunDetailFINISHED > td {
 .pipenotfound {
 	font-style: italic;
 	font-size: 0.88em;
+}
+.pipename {
+	max-width: 400px;
+}
+.ellipsize {
+	display: inline-block;
+    max-width: 85%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: top;
+    white-space: nowrap;
 }

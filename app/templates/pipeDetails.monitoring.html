@@ -15,7 +15,7 @@
 	</p>
 
 	<p class="selected-pipe-activiy">
-		<span>{{ allPipesSelected ? 'All Pipes' : selectedPipe.name }} Activity</span>
+		<span class="ellipsize">{{ allPipesSelected ? 'All Pipes' : selectedPipe.name }}</span> <span>Activity</span>
 	</p>
 	<div class="selected-pipe-activiy-btn btn-group">
 	  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
@@ -45,8 +45,8 @@
 			<tr ng-repeat="run in runs" ng-class="{'ERROR':'danger', 'RUNNING':'info', 'FINISHED':'success'}[run.status]"
 				class="{{run.startTime == activeRun.startTime && run.pipeId == activeRun.pipeId && 'selectedRunDetail'+run.status || ''}}">
 				<td>{{run.startTime}}</td>
-				<td ng-if="name=getPipeName(run);allPipesSelected">
-					<span ng-if="name">{{name}}</span>
+				<td ng-if="name=getPipeName(run);allPipesSelected" class="pipename">
+					<span ng-if="name" class="ellipsize">{{name}}</span>
 					<span ng-if="!name" class="pipenotfound">Pipe no longer exists</span>
 				</td>
 				<td>{{run.numRecords}}</td>

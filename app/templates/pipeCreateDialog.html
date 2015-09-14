@@ -12,8 +12,9 @@
 		</div>
 		<div class="form-group" ng-class="{'has-error':newPipeForm.name.$invalid && !newPipeForm.name.$pristine}">
 			<label for="pipe-name">Name:</label>
-			<input type="text" class="form-control" id="pipe-name" name="name" ng-model="creatingConnector.name" required>
-			<p class="help-block" ng-show="newPipeForm.name.$invalid && !newPipeForm.name.$pristine">Name is required.</p>
+			<input type="text" class="form-control" id="pipe-name" name="name" ng-model="creatingConnector.name" ng-change="createNewPipeNameSet()" required>
+			<p class="help-block" ng-show="newPipeForm.name.$error.required && !newPipeForm.name.$pristine">Name is required.</p>
+			<p class="help-block" ng-show="newPipeForm.name.$error.exists && !newPipeForm.name.$pristine">Name already exists.</p>
 		</div>
 		<div class="form-group">
 			<label for="pipe-description">Description:</label>
