@@ -43,7 +43,7 @@
       On the same {{selectedConnector.label}} screen, copy your consumer key and secret and paste them here. Then click the connect button.
     </p>
 
-    <div class="alert alert-warning">
+    <div class="alert alert-warning" ng-show="selectedConnector.id == 'SalesForce'">
       <p>
         <span class="glyphicon glyphicon-warning-sign"></span> If you've just added Simple Data Pipe to {{selectedConnector.label}}, you need to wait ~10 minutes before you can connect.
       </p>
