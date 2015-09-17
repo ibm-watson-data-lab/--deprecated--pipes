@@ -154,28 +154,39 @@ function copyFromStripeToCloudantStep(){
 
 			stripeConUtil.createCloudantDbForTable(logger, table, function( err, result){
 
-				if ( err ){
-					// there was a problem creating the Cloudant database; signal async.series to abort
-					return callback(err);
-				}
+				if(err) {
+					// Instead of raising a fatal error ('return callback(err)'') save the error information and invalidate the database handle
+					// The next step will skip processing.
+					targetDb = null;	
 
-				//result is targetDb
-				targetDb = result;
+					return callback( null, 
+							{
+								tableName : table.name,			// table name
+								numRecords: 0,					// total number of records written to Cloudant
+								expectedRecordCount: 0,			// expected number of records to be written to Cloudant
+								dbName : stripeConUtil.getCloudantDatabaseName(table.name),
+								errors: [err]					// database initialization error information
+							}
+					);
+				}
+				else {
+					targetDb = result; //result is targetDb
+				}
 
 				return callback(null);	// indicate that the next function can be processed by async.series (note that we don't need the result)
 			});
 		});
 
-		// Function 2: copy all data for this table to Cloudant
-		processTableFunctions.push( function( callback ){
-			copyJob.run( logger, table.name, pipe, pipeRunStats, targetDb, stripeHandle, function( err, stats ){
-				if ( err ){
-					// there was a problem reading data from stripe or writing data to Cloudant; signal async.series to abort
-					return callback( err );
-				}
-				//Process for this table was successful, return stats for this copy operation
-				return callback( null, stats );
-			});
+		// Function 2: copy all data for this table to Cloudant if the staging database was created successfully
+			processTableFunctions.push( function( callback ){
+				copyJob.run( logger, table.name, pipe, pipeRunStats, targetDb, stripeHandle, function( err, stats ){
+					if ( err ){
+						// there was a problem reading data from stripe or writing data to Cloudant; signal async.series to abort
+						return callback( err );
+					}
+					//Process for this table was successful, return stats for this copy operation
+					return callback( null, stats );
+				});
 		});
 
 		return processTableFunctions;
