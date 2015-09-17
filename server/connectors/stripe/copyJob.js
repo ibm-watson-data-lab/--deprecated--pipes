@@ -39,8 +39,15 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 			errors: []						// list of errors
 	};
 
-	// save initial runstats for this table	
-	pipeRunStats.addTableStats(stats);
+	if(!dbHandle) {
+		stats.errors.push({message : 'The staging database is unavailable. No data was copied to dashDB.'});
+		pipeRunStats.addTableStats(stats);
+		return callback(null, stats);	// nothing to do. the staging database is not available
+	}
+	else {
+		// save initial runstats for this table	
+		pipeRunStats.addTableStats(stats);
+	}
 
 	/*
 	 * Invoked if an error occurred while an attempt was made to fetch data from stripe.
