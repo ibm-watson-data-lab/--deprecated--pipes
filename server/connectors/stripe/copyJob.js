@@ -17,6 +17,7 @@
 'use strict';
 
 var stripeConUtil = require('./stripeConUtil.js');
+var _ = require('lodash');
 
 //function run(that, tableName, dbHandle, stripeHandle) {
 function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, callback) {
@@ -29,6 +30,9 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 	var bulkSavesPendingCount = 0;	// if non-zero, indicates that data still needs to be saved to the staging database
 	var lastFetchSubmitted = false;	// indicates whether additional records need to be fetched
 	var maxBatchSize = 100;			// defines how many records will be fetched from stripe; max supported is 100
+
+	var subscriptionHasMoreCount = 0; // indicates the total number of incomplete fetches for subscriptions; used only if tableName == 'customer'
+	var sourceHasMoreCount = 0;		  // indicates the total number of incomplete fetches for payment sourcess; used only if tableName == 'customer'	
 
 	// runstats for this table (this information is persisted in a run document in cloudant)
 	var stats = {
@@ -48,6 +52,34 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 		// save initial runstats for this table	
 		pipeRunStats.addTableStats(stats);
 	}
+
+	/*
+	 * Logs a warning message, if it was detected that not all subscriptions or payment sources were copied for at least one customer. 
+	 */
+	var issueTruncationWarning = function() {
+
+		if(tableName != 'customer') {
+			return; // no truncation can occur for stripe objects pther than customer
+		}
+
+		var messageText = '';		
+
+		if(subscriptionHasMoreCount > 0) {
+			// subscriptionHasMoreCount customers hold more subscriptions than were fetched
+			messageText = 'Only 10 subscriptions were copied for ' + subscriptionHasMoreCount + ' customer(s). ';
+		}		
+		if(sourceHasMoreCount > 0) {
+			// sourceHasMoreCount customers have more payment sources than were fetched
+			messageText += 'Only 10 payment sources were copied for ' + sourceHasMoreCount + ' customer(s).';			
+		}		
+
+		if(messageText.length > 0) {
+				logger.warn(messageText);
+				stats.errors.push({message: messageText});
+				pipeRunStats.addTableStats(stats);
+		}
+
+	};
 
 	/*
 	 * Invoked if an error occurred while an attempt was made to fetch data from stripe.
@@ -109,8 +141,10 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 			if(bulkSavesPendingCount < 1) {
 				// there is no more data that needs to be processed; signal to the parent (copyFromStripeToCloudantStep.run) that the job is done
 				if(stats.expectedRecordCount !== stats.numRecords) {
-					logger.warning('Records available from ' + objectList.url + ' (' + stats.numRecords + ') does not match saved record count (' + stats.numRecords + ').');
+					logger.warn('Records available from ' + objectList.url + ' (' + stats.numRecords + ') does not match saved record count (' + stats.numRecords + ').');
 				}
+
+				issueTruncationWarning(); // customer object only
 
 				return callback(null, stats);
 			}
@@ -147,11 +181,32 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 
 							// decrease the number of pending bulk save operations
 							bulkSavesPendingCount--;
+
+							// consistency checking for customer object, which is a compound object
+							if(tableName == 'customer') {
+								/*
+									 For each customer in this list check whether there are 
+									 subscriptions or payment sources that were not fetched by default.
+								*/
+								_.forEach(objectList.data, function(customer) {
+										if((customer.subscriptions.hasOwnProperty('has_more')) && (customer.subscriptions.has_more)) {
+											subscriptionHasMoreCount++;											
+										}
+										if((customer.sources.hasOwnProperty('has_more')) && (customer.sources.has_more)) {
+											sourceHasMoreCount++;											
+										}
+								});	
+							}
+
+
 							if((lastFetchSubmitted)&&(bulkSavesPendingCount < 1)) {
 								// there is no more data that needs to be processed; signal to the parent (copyFromStripeToCloudantStep.run) that the job is done
 								if(stats.expectedRecordCount !== stats.numRecords) {
-									logger.warning('Records available from ' + objectList.url + ' (' + stats.numRecords + ') does not match saved record count (' + stats.numRecords + ').');
+									logger.warn('Records available from ' + objectList.url + ' (' + stats.numRecords + ') does not match saved record count (' + stats.numRecords + ').');
 								}
+
+								issueTruncationWarning(); // customer objects only
+
 								return callback(null, stats);
 							}
 						}
