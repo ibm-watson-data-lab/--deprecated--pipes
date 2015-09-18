@@ -40,7 +40,7 @@ var addScheduledJob = function(pipe){
 
 	var m = moment( moment.utc( pipe.scheduleTime).toDate() );	//Parse in UTC then get local time
 	var rule = new schedule.RecurrenceRule();
-	rule.hour = m.hour()
+	rule.hour = m.hour();
 	rule.minute = m.minute();
 
 	console.log("Add new scheduled job: %d:%d", rule.hour, rule.minute);
@@ -59,8 +59,8 @@ var addScheduledJob = function(pipe){
 		scheduleTime: pipe.scheduleTime,
 		job : job,
 		pipeId : pipe._id
-	}
-}
+	};
+};
 
 var removeScheduledJob = function( pipe ){
 	if ( jobs.hasOwnProperty( pipe._id )){
@@ -69,7 +69,7 @@ var removeScheduledJob = function( pipe ){
 		jobs[pipe._id].job.cancel();
 		delete jobs[pipe._id];
 	}
-}
+};
 
 var viewsManager = new cloudant.views('_design/application');
 viewsManager
@@ -123,10 +123,20 @@ viewsManager
 		}
 	}, 1
 )
+.addView(
+	'run_status_view',
+	{
+		map: function(doc){
+      		if ( doc.pipeId && doc.type === 'run' ) {
+      	  		emit( doc._rev, {pipeId : doc.pipeId, status : doc.status} );
+			}
+      	}
+	}, 1
+);
+
 var pipeDb = new cloudant.db(dbName, viewsManager );
 
 pipeDb.on( "cloudant_ready", function(){
-	console.log("Data Pipe Configuration database (" + dbName + ") ready");
 	
 	//Check pipes for references to stale runs
 	pipeDb.listPipes( function( err, pipes ){
@@ -153,7 +163,7 @@ pipeDb.on( "cloudant_ready", function(){
 					
 					if ( storedPipe && !storedPipe.hasOwnProperty("connectorId") ){
 						//Backward compat, we default to salesforce 
-						storedPipe.connectorId = "SalesForce"
+						storedPipe.connectorId = "SalesForce";
 					}
 					return storedPipe;
 				}, function( err, doc ){
@@ -249,7 +259,7 @@ pipeDb.savePipe = function( pipe, callback ){
 		}
 		return callback( null, outboundPayload(data) );
 	});
-}
+};
 
 pipeDb.listPipes = function( callback ){
 	this.run( function( err, db ){
@@ -266,27 +276,87 @@ pipeDb.listPipes = function( callback ){
 			}
 		);
 	});
-}
+};
 
 pipeDb.removePipe = function( id, callback ){
 	this.getPipe( id, function( err, pipe ){
 		if ( err ){
 			return callback( err );
 		}
-		
+
 		this.run( function( err, db ){
 			if ( err ){
 				return callback(err);
 			}
-			db.destroy( pipe._id, pipe['_rev'], function( err, data ){
-				if ( err ){
-					return callback( err );
+
+			/*
+
+					retrieve run documents using run_status_view:
+					
+					 view definition:
+					 	'run_status_view',
+						{
+							map: function(doc){
+      						if ( doc.pipeId && doc.type === 'run' ) {
+      	  						emit( doc._rev, {pipeId : doc.pipeId, status : doc.status} );
+							}
+      					}
+
+      				example output:
+      				{
+ 						"_id": "88e0a6c8b65ee8d47c003c3d898a2441"					// _id (cloudant internal)
+ 						"key": "145-8bb4e1b6188fd9ec61437dc2193f50a6",				// _rev (cloudant internal)
+ 						"value": {
+  									"pipeId": "88e0a6c8b65ee8d47c003c3d8972a1f8",	// pipe id
+  									"status": "FINISHED"							// pipe run status
+ 								}
+					}	
+					
+			*/
+
+			db.view('application','run_status_view', function (err, body) {
+				if(err) {
+					return callback(err);
 				}
-				return callback( null, data );
-			});
-		});
+
+				// contains the list of pipe and run documents that will be deleted
+				var docList = [];
+
+				// check if all runs for this pipe have terminated
+				if(_.every(body.rows, function (row) {
+					if(row.value.pipeId == pipe._id) {
+						if(row.value.status == 'FINISHED' || row.value.status == 'STOPPED' || row.value.status == 'ERROR') {
+							// mark pipe run for deletion
+							docList.push({_id: row.id, _rev: row.key, _deleted : true});
+							return true;
+						}
+						// run status is something other than 'finished' or 'stopped' (e.g. RUNNING)
+						return false;
+					}
+					// this run is associated with a different pipe; the state is irrelvant to this operation
+					return true;
+				})) {											
+
+					// mark pipe document for deletion 
+					docList.push({_id: pipe._id, _rev: pipe._rev, _deleted : true});
+
+					db.bulk({docs : docList}, 
+						function(err, body, header){
+							if(err) {
+								return callback( err );
+							}
+						return callback( null, body );
+					});
+				}
+				else {
+					// at least one pipe run is in a status other than 'FINISHED', 'STOPPED', or 'ERROR'
+					return callback('At least one run is still in progress for this pipe.');
+				}		
+			});	// view
+		}); // run
+
 	}.bind( this ));
-}
+};
 
 /**
  * Create or Save a Run for specified pipe
@@ -314,7 +384,7 @@ pipeDb.saveRun = function(pipe, run, callback){
 		}
 		return callback( null, runDoc );
 	}.bind(this));
-}
+};
 
 /**
  * Attach a log file to the run document
@@ -339,13 +409,13 @@ pipeDb.attachLogFileToRun = function( logPath, run, callback ){
 			);			
 		});
 	});	
-}
+};
 
 /**
  * fetch a run document by Id from the database
  */
 pipeDb.getRun = function( runId, callback ){
 	this.getDoc( runId, callback );
-}
+};
 
 module.exports = pipeDb;
