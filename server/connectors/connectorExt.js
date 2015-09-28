@@ -38,7 +38,12 @@ var cloudant = require('../storage');
 var recordTransformer = require("../transform/recordTransformer");
 var pipeDb = require("../pipeStorage");
 
-function connectorExt(id, label){
+function connectorExt(id, label, options){
+	options = options || {};
+	if ( !options.hasOwnProperty("copyToDashDb") ){
+		options.copyToDashDb = true;
+	}
+	
 	//Call constructor from super class
 	connector.call(this);
 	
@@ -418,13 +423,13 @@ function connectorExt(id, label){
 	*End of Implementation of connect and copy to cloudant steps
 	**********************************************************************/
 	
-	//Set the 4 steps
-	this.setSteps([
-		new connectStep(),
-		new copyRecordsToCloudantStep(),
-		new (require("../run/cloudantToDashActivitiesStep"))(),
-		new (require("../run/activitiesMonitoringStep"))()
-    ]);
+	//Set the steps
+	var steps = [ new connectStep(), new copyRecordsToCloudantStep()];
+	if ( options.copyToDashDb ){
+		steps.push( new (require("../run/cloudantToDashActivitiesStep"))() );
+		steps.push( new (require("../run/activitiesMonitoringStep"))() );
+	}
+	this.setSteps( steps );
 };
 
 //Extend event Emitter
