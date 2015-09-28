@@ -10,7 +10,8 @@ var express = require('express');
 var fs = require('fs');
 var path = require('path');
 var bodyParser = require('body-parser');
-var cookieParser = require('cookie-parser')
+var cookieParser = require('cookie-parser');
+var expressSession = require("express-session");
 var errorHandler = require('errorhandler');
 var morgan = require('morgan');
 var bluemixHelperConfig = require('bluemix-helper-config');
@@ -41,6 +42,10 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(errorHandler({ dumpExceptions:true, showStack:true }));
+
+app.use(expressSession({
+	secret: "simple_data_pipe"
+}));
 
 var env = app.get('env');
 if ('production' === env) {

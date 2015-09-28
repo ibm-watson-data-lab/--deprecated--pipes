@@ -205,9 +205,20 @@ module.exports = function( app ){
 	 * authCallback: url for OAuth callback
 	 */
 	app.get("/authCallback", function( req, res ){
-		var code = req.query.code;
-		var state = JSON.parse( req.query.state);
-		var pipeId = state.pipe;
+		var code = req.query.code || req.query.oauth_verifier;
+		var pipeId = null;
+		var state = null;
+		
+		if (req.query.state) {
+			state = JSON.parse(req.query.state);
+		}
+		else if (req.session && req.session.state) {
+			state = JSON.parse(req.session.state);
+		}
+		
+		if (state) {
+			pipeId = state.pipe;
+		}
 		
 		console.log("AuthCallback called with return url : " + state.url );
 		
@@ -242,7 +253,7 @@ module.exports = function( app ){
 					res.redirect(state.url);
 				})
 				
-			});
+			}, state);
 		});
 	});
 	
