@@ -155,7 +155,7 @@ function connectorExt(id, label, options){
 
 		//public APIs
 		this.run = function( callback ){
-			this.setStepMessage("Connecting to Salesforce...");
+			this.setStepMessage(this.label + "...");
 			var logger = this.pipeRunStats.logger;
 			var pipe = this.getPipe();
 			var pipeRunner = this.getPipeRunner();
