@@ -84,7 +84,7 @@ module.exports = function( app ){
 			console.log( "Pipe successfully removed : " + JSON.stringify( pipe ) );
 			res.json( pipe );
 		});
-	})
+	});
 	
 	/**
 	 * Returns the last 10 runs
@@ -164,7 +164,7 @@ module.exports = function( app ){
 			}
 			
 		}, true);
-	}
+	};
 	
 	/**
 	 * Start a new pipe run
@@ -220,13 +220,9 @@ module.exports = function( app ){
 			pipeId = state.pipe;
 		}
 		
-		console.log("AuthCallback called with return url : " + state.url );
-		
 		if ( !code || !pipeId ){
 			return global.jsonError( res, "No code or state specified in OAuth callback request");
 		}
-		
-		console.log("OAuth callback called with pipe id: " + pipeId );
 		
 		getPipe( pipeId, function( err, pipe ){
 			if ( err ){
@@ -234,7 +230,7 @@ module.exports = function( app ){
 			}
 			var connector = connectorAPI.getConnector( pipe );
 			if ( !connector ){
-				return global.jsonError( res, "Unable to find connector for " + pipeId)
+				return global.jsonError( res, "Unable to find connector for " + pipeId);
 			}
 			
 			connector.authCallback( code, pipeId, function( err, pipe ){
@@ -251,7 +247,7 @@ module.exports = function( app ){
 					}
 
 					res.redirect(state.url);
-				})
+				});
 				
 			}, state);
 		});
@@ -259,12 +255,24 @@ module.exports = function( app ){
 	
 	//Catch all for uncaught exceptions
 	process.on("uncaughtException", function( err ){
-		console.log("Unexpected exception: " + err );
-		console.log(err.stack || "No stack available");
 		//Something terribly wrong happen within the code, catch it here so we don't crash the app
 		if ( global.currentRun ){
+			// a pipe run was in progress; clean up
+			console.log("Simple Data Pipe: Unexpected exception caught while processing data pipe " + global.currentRun.runDoc.pipeId + ": " + err );
+			console.log(err.stack || "No stack available");
+			// the log gets saved in the run doc
 			global.currentRun.done(err);
-		}		
+		}
+		else {
+			// no pipe run was in progress
+			console.log("Simple Data Pipe: Unexpected exception caught. No pipe run was in progress: " + err );
+			console.log(err.stack || "No stack available");
+		}	
+
+		if(global.getLogger("pipesRun")) {
+			console.log("Simple Data Pipe run log file is located in " + global.getLogger("pipesRun").logPath);
+		}
+
 	});
 	
 	//Listen to scheduled event runs
@@ -300,5 +308,5 @@ module.exports = function( app ){
 				console.log("Web Socket closed");
 			});
 		});
-	}
+	};
 };
