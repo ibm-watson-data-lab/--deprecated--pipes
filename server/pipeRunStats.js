@@ -136,7 +136,7 @@ function pipeRunStats(pipe, steps, callback){
 			runDoc.message = "" + err;
 		}else{
 			runDoc.status = "FINISHED";
-			runDoc.message = "Pipe Run completed Successfully";
+			runDoc.message = "Pipe run completed";	// steps might have produced warnings, hence a completed run is not always a successful run
 		}
 		
 		runDoc.endTime = moment();
@@ -166,7 +166,7 @@ function pipeRunStats(pipe, steps, callback){
 				logger.error("Unable to remove reference to run in pipe %s. Error is %s ", pipe._id, err );
 			}
 			logger.info({
-				message: "Pipe Run complete",
+				message: "Pipe run completed",
 				runDoc: runDoc
 			});
 			
