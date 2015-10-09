@@ -326,9 +326,16 @@ pipeDb.removePipe = function( id, callback ){
 				if(_.every(body.rows, function (row) {
 					if(row.value.pipeId == pipe._id) {
 						if(row.value.status == 'FINISHED' || row.value.status == 'STOPPED' || row.value.status == 'ERROR') {
-							// mark pipe run for deletion
+							// the run document is in a final state
 							docList.push({_id: row.id, _rev: row.key, _deleted : true});
 							return true;
+						} else if(row.value.status == 'NOT_STARTED') {
+							// the pipe run document is not in a final state (i64)
+							// if global.currentRun is set to a non-null value there is a run in progress; make sure the run is not for this pipe 
+							if(! global.currentRun || global.currentRun.runDoc.pipeId != pipe._id) {
+								docList.push({_id: row.id, _rev: row.key, _deleted : true});
+								return true;
+							}
 						}
 						// run status is something other than 'finished' or 'stopped' (e.g. RUNNING)
 						return false;
