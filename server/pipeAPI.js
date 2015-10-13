@@ -149,18 +149,28 @@ module.exports = function( app ){
 			if ( pipe.run ){
 				//Check if the run is finished, if so remove the run
 				pipeDb.getRun( pipe.run, function( err, run ){
-					if ( err || run.status ){
+					// i63
+					if ( err || run.status == 'FINISHED' || run.status == 'STOPPED' || run.status == 'ERROR'){
 						console.log("Pipe has a reference to a run that has already completed. OK to proceed...");
-						//Can't find the run or run completed, ok to run
+						//Can't find the run or run in a final state; ok to run
 						return doRunInstance();
 					}
-					//Can't create a new run while a run is in progress
-					var message = "Error: a run is already in progress for pipe " + pipe.name;
+					//Can't create a new run while a run for this pipe is already in progress
+					var message = "A run is already in progress for pipe " + pipe.name;
 					console.log( message );
 					return callback( message );
 				});
 			}else{
-				doRunInstance();
+				// prevent more than one concurrent pipe run
+				if(global.currentRun) {
+					//Can't create a new run while a run for another pipe is already in progress.
+					var message = "A run is already in progress for another pipe.";
+					console.log( message );
+					return callback( message );
+				}
+				else {
+					doRunInstance();
+				}
 			}
 			
 		}, true);

@@ -97,7 +97,8 @@ function pipeRunStats(pipe, steps, callback){
 		
 		//Set the current run to this
 		if ( global.currentRun ){
-			var msg = require.util( "A run is already in progress %s", global.currentRun._id );
+			// i63
+			var msg = require("util").format("A run is already in progress %s", global.currentRun._id );
 			logger.error( msg );
 			return callback( msg );
 		}
