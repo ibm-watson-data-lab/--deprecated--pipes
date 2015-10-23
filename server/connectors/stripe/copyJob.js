@@ -19,13 +19,17 @@
 var stripeConUtil = require('./stripeConUtil.js');
 var _ = require('lodash');
 
-//function run(that, tableName, dbHandle, stripeHandle) {
-function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, callback) {
+/*
+ * @param logger an instance of the pipe run logger
+ * @param tableName name of the source object (table) that is processed during this run
+ * @param pipe stripe data pipe (configuration)
+ * @param pipeRunStats 
+ * @param storageHandle storage manager handle for the associated Cloudant staging database
+ * @param stripe stripe API handle, which is associated with the pipe's oAuth credentials
+ */
+function run(logger, tableName, pipe, pipeRunStats, storageHandle, stripe, callback) {
 	
 	logger.trace('copyJob.run(' + tableName + ') - Entry');
-
-	var cloudantDB = dbHandle;
-	var stripe = stripeHandle;
 
 	var bulkSavesPendingCount = 0;	// if non-zero, indicates that data still needs to be saved to the staging database
 	var lastFetchSubmitted = false;	// indicates whether additional records need to be fetched
@@ -34,16 +38,16 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 	var subscriptionHasMoreCount = 0; // indicates the total number of incomplete fetches for subscriptions; used only if tableName == 'customer'
 	var sourceHasMoreCount = 0;		  // indicates the total number of incomplete fetches for payment sourcess; used only if tableName == 'customer'	
 
-	// runstats for this table (this information is persisted in a run document in cloudant)
+	// initialize data copy statistics 
 	var stats = {
 			tableName : tableName,			// table name
 			numRecords: 0,					// total number of records written to Cloudant
 			expectedRecordCount: 0,			// expected number of records to be written to Cloudant
 			dbName : stripeConUtil.getCloudantDatabaseName(tableName),
-			errors: []						// list of errors
+			errors: []						// non fatal errors or warnings, if applicable
 	};
 
-	if(!dbHandle) {
+	if(!storageHandle) {
 		stats.errors.push({message : 'The staging database is unavailable. No data was copied to dashDB.'});
 		pipeRunStats.addTableStats(stats);
 		return callback(null, stats);	// nothing to do. the staging database is not available
@@ -79,7 +83,7 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 				pipeRunStats.addTableStats(stats);
 		}
 
-	};
+	}; // issueTruncationWarning
 
 	/*
 	 * Invoked if an error occurred while an attempt was made to fetch data from stripe.
@@ -128,9 +132,12 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 	}; // processStripeRetrievalErrors
 
 	/*
-	 *
+	 * @param objectList result set returned by Stripe in response to a fetch request
 	 */
 	var saveStripeObjectListInCloudant = function (objectList) {
+
+		// objectLists contains a "data" property (an array), which contains the records
+		// that were returned in response to the API call identified by the "url" property 
 
 		logger.trace('copyJob.saveStripeObjectListInCloudant('+ objectList.url + ') - Entry');
 		logger.debug('saveStripeObjectListInCloudant fetch list FFDC: src_url:' + objectList.url + ' data_count:' + objectList.data.length);
@@ -146,6 +153,7 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 
 				issueTruncationWarning(); // customer object only
 
+				// processing is complete. all data has been copied. return control to the caller	
 				return callback(null, stats);
 			}
 			else {
@@ -154,14 +162,23 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 			}
 		}
 	
+		// assemble the bulk-save document
 		var jsonDoc = {docs: objectList.data}; 
 
-		// use the storage utility funtion to perform the bulk insert
-		cloudantDB.run(function(err, db) {
+		// storageHandle is an instance of server/storage.js, which was created by stripeConUtil.createCloudantDbForTable.
+		// Its run method provides a handle for the staging database that was assigned to tableName.
+		storageHandle.run(function(err, db) {
+
+			// the callback function returns an error if a problem was encountered or
+    		// a handle to the cloudant staging database (Refer to https://github.com/cloudant/nodejs-cloudant)
+
 			if(err) {
-				// signal to the parent (copyFromStripeToCloudantStep.run) that an error was encountered during processing
 				logger.error('saveStripeObjectListInCloudant() - Cloudant returned error ' + err + ' in response to a connection request.'); 
-				return callback(err);
+				// save error information
+				stats.errors.push(err);
+				pipeRunStats.addTableStats(stats);
+				// treat this as a non-fatal error; abort processing
+				return callback(null, stats);
 			}
 			// bulk insert (maxBatchSize rows max)
 			db.bulk(
@@ -171,12 +188,16 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 							// signal to the parent (copyFromStripeToCloudantStep.run) that an error was encountered during processing 
 							logger.error('saveStripeObjectListInCloudant() - Cloudant returned error ' + err + ' while storing data fetched from ' + objectList.url + '. Processing aborted.'); 
 							stats.errors.push(err);
-							return callback(err);
+							// treat this as a non-fatal error; abort processing
+							return callback(null, stats);
 						}
 						else {
 							logger.debug('saveStripeObjectListInCloudant(): Saved ' + objectList.data.length + ' documents fetched from ' + objectList.url);
-							// update the statistics
+							
+							// update numRecords to reflect the number of records that were stored in the staging database
 							stats.numRecords = stats.numRecords + objectList.data.length;
+
+							// update the statistics
 							pipeRunStats.addTableStats(stats);
 
 							// decrease the number of pending bulk save operations
@@ -207,6 +228,7 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 
 								issueTruncationWarning(); // customer objects only
 
+								// processing is complete. all data has been copied. return control to the caller	
 								return callback(null, stats);
 							}
 						}
@@ -219,7 +241,7 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 
 	/*
 	* Save a batch of records and fetch next batch, if available.
-	* @param objectList data structure {has_more: <boolean>, data:[<object> , ... , <object> ]}, with <object> defined as {id : <idenitfier>, object : <objectType>, ...}
+	* @param objectList data structure {has_more: <boolean>, data:[<object> , ... , <object> ]}, with <object> defined as {id : <identifier>, object : <objectType>, ...}
 	*/
 	var processStripeObjectList = function(objectList) {
 
@@ -330,7 +352,8 @@ function run(logger, tableName, pipe, pipeRunStats, dbHandle, stripeHandle, call
 	}; // processStripeObjectList
 
 	/*
-	 * Fetch the first batch of records from stripe. This method is only called once
+	 * Fetch the first batch of records from stripe. This method is only called once. As part of this request, the total number of records is requested
+	 * which represents stats.expectedRecordCount.
 	 *
 	 */
 	var copyStripeObjectsToCloudant = function() {

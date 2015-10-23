@@ -29,20 +29,25 @@ var request = require('request');
 var stripeConUtil = require('./stripeConUtil.js');
 
 /**
- * stripe connector
+ * Stripe.com connector implements server/connectors/connector.js
+ * @param parentDirPath
  */
 function stripe( parentDirPath ){
 	//Call constructor from super class
 	connector.call(this);
 	
-	//Set the id
+	// Define the identifying connector properties
 	this.setId(stripeConUtil.getMetaInfo().id);
 	this.setLabel(stripeConUtil.getMetaInfo().label);
 	
-	//Set the steps
+	// Define the pipe processing steps
 	this.setSteps([      
-	    new (require('./copyFromStripeToCloudantStep.js'))(),			// copy data from stripe to cloudant staging databases
+		// copy data from stripe to cloudant staging databases
+	    new (require('./copyFromStripeToCloudantStep.js'))(),
+	    // run dataworks activities that copy data from the staging
+        // databases to dashDB   			
 	    new (require('../../run/cloudantToDashActivitiesStep'))(),
+	    // monitor dataworks activities until completion
 	    new (require('../../run/activitiesMonitoringStep'))()               
     ]);
 	
@@ -50,20 +55,27 @@ function stripe( parentDirPath ){
 	 * This function is invoked after the user has provided an OAuth consumer key and consumer secret.
 	 * The main purpose of this function is to contact the OAuth provider and request the OAuth access token.
 	 * If the request is approved, the OAuth provider will invoke the pipe's callback and provide the access token (see above). 
-	 * @param req
-	 * @param res
-	 * @param pipeId
+	 * @param req incoming request
+	 * @param res outgoing response
+	 * @param pipeId unique identifier of a stripe pipe
 	 * @param url: the value of this parameter must be sent to the OAuth provider using the state property.
 	 * @param callback(err, results)
 	 */
 	this.connectDataSource = function( req, res, pipeId, url, callback ){
 
+		// fetch data pipe configuration from the repository database
 		pipeDb.getPipe( pipeId, function( err, pipe ){
 			if ( err ){
+				// the pipe configuration could not be located
 				return callback( err );
 			}
 
+			// retrieve oAuth connectivity information using the helper utility
 			var oAuthConfig = stripeConUtil.getOAuthConfig(pipe);
+			if(! oAuthConfig) {
+				// this is not a valid stripe pipe
+				return callback(pipeId + ' is not a pipe that can be processed by the ' + stripeConUtil.getMetaInfo().label + ' connector.');
+			}
 
 			// send request for an access code to stripe.com (the response will be processed by authCallback above)
 			res.redirect(oAuthConfig.loginUrl + '?' + qs.stringify({response_type: 'code',
@@ -86,13 +98,17 @@ function stripe( parentDirPath ){
 	 */
 	this.authCallback = function( oAuthCode, pipeId, callback ){
 				
-		// retrieve pipe from the data store
+		 // fetch data pipe configuration from the repository database
 		pipeDb.getPipe( pipeId, function( err, pipe ){
 			if ( err ){
 				return callback( err );
 			}
 
 			var oAuthConfig = stripeConUtil.getOAuthConfig(pipe);
+			if(! oAuthConfig) {
+				// this is not a valid stripe pipe
+				return callback(pipeId + ' is not a pipe that can be processed by the ' + stripeConUtil.getMetaInfo().label + ' connector.');
+			}
 
 			// request an access token from the stripe.com OAuth provider
             var authTokenRequest = {
@@ -109,31 +125,38 @@ function stripe( parentDirPath ){
 		    request.post(authTokenRequest, function(err, response, body) {
 
 	    		if(err) {
+	    			// there was a problem with the request; abort processing
 					return(callback(err, null));
 	    		}
 
+	    		// if stripe returned an error, it is recorded in the message
+            	// body
 	    		err = JSON.parse(body).error_description;
 
 	    		if(err) {
+	    			// abort processing
 					return(callback(err, null));	
 		    	}
 
 		        var accessToken = JSON.parse(body).access_token;
 	
-	    		// save the code (should we save the token instead?)
+            	// save the accessToken in the pipe configuration
+            	// Stripe's accessTokens don't expire, therefore there is  
+            	// no need to request a refresh token
 				pipe.oAuth = { accessToken : accessToken };
 
-				// determine which stripe object types can be retrieved
+				// save the list of stripe objects for which data can be fetched
+            	// in the pipe configuration
 				pipe.tables = stripeConUtil.getTableList();
 
-				// store connector metadata
+				// store optional connector metadata in the pipe configuration
 				pipe.connector = { 'id' : stripeConUtil.getMetaInfo().id, 'version' : stripeConUtil.getMetaInfo().version};
 
-				console.log('authCallback() - exit (pipe)');
+				// return the pipe configuration to the caller who will save it 
 				callback( null, pipe );			
-			});
-		});		
-	};
+			}); // request.post
+		});	 // pipeDb.getPipe	
+	}; // authCallback
 	
 } // stripe
 
