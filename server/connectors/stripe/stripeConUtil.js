@@ -37,18 +37,23 @@ var getMetaInfo = function() {
 var getOAuthConfig = function (pipe){
 
 	// make sure the parameter identifies a valid stripe pipe 
-	if((pipe === null) || (pipe.connectorId !== 'stripe')) {
+	if((pipe === null) || (pipe.connectorId !== connectorMetaInfo.id)) {
 		return null;
 	}
 
 	return {
+		 // stripe oAuth endpoint
 		 loginUrl: 'https://connect.stripe.com/oauth/authorize',
+		 // stripe oAuth endpoint
 		 tokenUrl: 'https://connect.stripe.com/oauth/token',
+		 // oAuth callback URI 
 		 redirectUri: global.getHostUrl() + '/authCallback',
-		 clientId: pipe.clientId,										// CLIENT_ID: issued by stripe
-	     clientSecret: pipe.clientSecret								// API_KEY: issued by stripe
+		 // CLIENT_ID: issued by stripe and entered by the user as "consumer key"
+		 clientId: pipe.clientId,								
+		 // API_KEY: issued by stripe and entered by the user as as "consumer secret"
+	     clientSecret: pipe.clientSecret						
 	};
-};
+}; // getOAuthConfig
 
 /*
 * Returns list of stripe tables (object types) that can be retrieved.
@@ -70,7 +75,6 @@ var getTableList = function() {
 	return([{name : 'account', labelPlural : 'account', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'application_fee', labelPlural : 'application_fee', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'balance_transaction', labelPlural : 'balance_transaction', description : 'See https://stripe.com/docs/api#intro for details'},
-//	requires account ID		{name : 'bank_account', labelPlural : 'bank_account', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'bitcoin_receiver', labelPlural : 'bitcoin_receiver', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'charge', labelPlural : 'charge', description : 'See https://stripe.com/docs/api#intro for details'},
 			{name : 'customer', labelPlural : 'customer', description : 'See https://stripe.com/docs/api#intro for details'},
@@ -85,14 +89,14 @@ var getTableList = function() {
 			{name : 'transfer', labelPlural : 'transfer', description : 'See https://stripe.com/docs/api#intro for details'}
     ]);
 
-};
+}; // getTableList
 
 /*
 * Returns the database name for the specified stripe object type (aka table)
 */
 var getCloudantDatabaseName = function(tableName) {
 	return 'st_' + tableName.toLowerCase(); 
-};
+}; // getCloudantDatabaseName
 
 /*
 *   
