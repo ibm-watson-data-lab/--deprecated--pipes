@@ -19,6 +19,7 @@ function pipeRunStats(pipe, steps, callback){
 	var logger = this.logger = global.getLogger("pipesRun");
 	var runDoc = this.runDoc = {
 		type : "run",
+		connectorId : pipe.connectorId,
 		startTime : moment(),
 		pipeId: pipe._id,
 		status: "NOT_STARTED",
