@@ -2,7 +2,7 @@
 
 # Simple Data Pipe (aka "Pipes")
 
-The Simple Data Pipe is an app that moves your Salesforce data to dashDB, which is the IBM cloud data warehouse. Once you have your Salesforce data in dashDB, you can do all kinds of analysis on it, with all kinds of tools, such as SQL, R, and Looker.
+The Simple Data Pipe is an app that moves your Salesforce or stripe.com data to dashDB, which is the IBM cloud data warehouse. Once you have your Salesforce data in dashDB, you can do all kinds of analysis on it, with all kinds of tools, such as SQL, R, and Looker.
 
 ## Usage
 To use the Simple Data Pipe, developers first grab the code on Github, and then deploy it to IBM Bluemix, where it runs. It lives at a URL in Bluemix, and comes complete with an AngularJS UI for connecting, scheduling, and reporting. We use the Salesforce OAuth to connect, and the powerful IBM DataWorks APIs to move the data.
