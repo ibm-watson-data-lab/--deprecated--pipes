@@ -16,7 +16,8 @@
 
 'use strict';
 
-var cloudant = require('../../storage.js');
+var pipesSDK = require('pipes-sdk');
+var cloudant = pipesSDK.cloudant;
 var global = require('bluemix-helper-config').global;
 var _ = require('lodash');
 

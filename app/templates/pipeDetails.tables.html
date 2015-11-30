@@ -14,7 +14,7 @@
 	</div>
 	<ul class="dropdown-menu" style="max-height: 250px; height: 250px; overflow: auto;width:100%">
 		<li ng-repeat="table in getTablesList()" ng-click="selectTable(table)">
-			<a href="javascript:;" >{{table.labelPlural}} </a>
+			<a href="javascript:;" >{{table.labelPlural || table.name}} </a>
 		</li>
 	</ul>
 </div>

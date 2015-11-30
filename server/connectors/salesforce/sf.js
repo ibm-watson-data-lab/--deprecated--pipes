@@ -8,7 +8,8 @@
 var jsforce = require('jsforce');
 var _ = require('lodash');
 var async = require('async');
-var pipeDb = require('../../pipeStorage');
+var pipesSDK = require('pipes-sdk');
+var pipesDb = pipesSDK.pipesDb;
 var global = require("bluemix-helper-config").global;
 
 /**
@@ -19,7 +20,7 @@ function sf( pipeId ){
 	
 	//Private APIs
 	var getPipe = function( callback, noFilterForOutbound ){
-		pipeDb.getPipe( this.pipeId, function( err, pipe ){
+		pipesDb.getPipe( this.pipeId, function( err, pipe ){
 			if ( err ){
 				return callback( err );
 			}

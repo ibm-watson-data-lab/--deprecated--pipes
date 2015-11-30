@@ -35,6 +35,10 @@ angular.module('pipes', [],function() {
     		}
     		return deferred.promise;
     	},
+    	getConnectorForPipeId: function(pipeId){
+    		var pipe = this.findPipe( pipeId );
+    		return pipe ? this.getConnector(pipe):null;
+    	},
     	getConnector: function( id ){
     		var connectorId = _.isString( id ) ? id : (id && id.connectorId);
     		if ( !connectorId ){

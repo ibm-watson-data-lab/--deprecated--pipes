@@ -83,10 +83,10 @@ var mainApp = angular.module('dataMovingApp', [
         .state('home.pipeDetails', {
             url:'/:id',
             resolve:{
-              //Return a promise that will be resolved before the controller is instantiated
-            pipeList:  function(pipesService){
-               return pipesService.listPipes();
-            }
+            	//Return a promise that will be resolved before the controller is instantiated
+	            pipeList:  function(pipesService){
+	               return pipesService.listPipes();
+	            }
             },
             views: {
               'pipeDetails@' : {
@@ -98,15 +98,36 @@ var mainApp = angular.module('dataMovingApp', [
         .state('home.pipeDetails.tab',{
         	parent: 'home.pipeDetails',
         	url:'/tab/:tab',
-        	templateUrl: function (stateParams){
-        		if ( !stateParams.tab ){
+        	resolve:{
+            	//Return a promise that will be resolved before the controller is instantiated
+	            connectorList:  function(pipesService){
+	               return pipesService.getConnectors();
+	            }
+            },
+        	templateUrl: function ($stateParams){
+        		if ( !$stateParams.tab ){
         			return '/templates/pipeDetails.about.html';
         		}
-        		return '/templates/pipeDetails.' + stateParams.tab + '.html';
+        		//Redirect to the template proxy that will load the correct page for this connector
+        		return '/template/' + $stateParams.id + '/' + $stateParams.tab;
         	},
-        	controllerProvider: function($stateParams) {
+        	controllerProvider: function($stateParams, pipesService) {
         		if ( $stateParams.tab && $stateParams.tab === 'monitoring' ){
         			return 'pipeDetails.tab.' + $stateParams.tab + '.controller';
+        		}
+        		//Ask the connector if it has a custom controller for this page
+        		var connector = pipesService.getConnectorForPipeId( $stateParams.id);
+        		if ( connector && connector.options && connector.options.customControllers ){
+        			var customControllerOption = connector.options.customControllers;
+        			if ( customControllerOption.hasOwnProperty($stateParams.tab) ){
+        				var code = customControllerOption[$stateParams.tab]
+        				try{
+        					var fn = eval( "(" + code + ")" );
+        					return fn;
+        				}catch(e){
+        					console.log("Invalid custom controller provided for this connector", code, e );
+        				}
+        			}
         		}
         		//Default
         		return 'pipeDetails.tab.controller';
@@ -406,18 +427,24 @@ var mainApp = angular.module('dataMovingApp', [
   }
 
   $scope.getTablesList = function(){
-    var tables = [ pipesService.allTables ];
-    if (!$scope.selectedPipe.selectedTableId) {
-    	$scope.selectTable(tables[0]);
+    var tables = [];
+    var connector = pipesService.getConnector( $scope.selectedPipe );
+    if ( !connector || !connector.options.useCustomTables ){
+    	tables.push( pipesService.allTables);
     }
     _.forEach( $scope.selectedPipe.tables, function( table ){
       tables.push( table );
     });
+    
+    if (!$scope.selectedPipe.selectedTableId && tables.length > 0 ) {
+    	$scope.selectTable(tables[0]);
+    }
+    
     return tables;
   }
 
   $scope.selectTable = function(table){
-    $scope.selectedPipe.selectedTableName = table.labelPlural;
+    $scope.selectedPipe.selectedTableName = table.labelPlural || table.name;
     $scope.selectedPipe.selectedTableId = table.name;
   }
 

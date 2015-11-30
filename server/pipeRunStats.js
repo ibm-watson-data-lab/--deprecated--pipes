@@ -6,7 +6,8 @@
 */
 
 var moment = require("moment");
-var pipeDb = require("./pipeStorage");
+var pipesSDK = require('pipes-sdk');
+var pipesDb = pipesSDK.pipesDb;
 var _ = require("lodash");
 var global = require("bluemix-helper-config").global;
 
@@ -41,7 +42,7 @@ function pipeRunStats(pipe, steps, callback){
 	
 	var save = this.save = function(callback, outerError){
 		//Create a new run doc and associate it with this pipe
-		pipeDb.saveRun( pipe, runDoc, function( err, runDocument ){
+		pipesDb.saveRun( pipe, runDoc, function( err, runDocument ){
 			if ( err ){
 				console.log("Unable to save run information: " + err );
 				return callback && callback( err );
@@ -111,7 +112,7 @@ function pipeRunStats(pipe, steps, callback){
 		
 		//Add the run id to the pipe to signify that it is running
 		if ( pipe.run !== runDoc._id ){
-			pipeDb.upsert( pipe._id, function( storedPipe ){
+			pipesDb.upsert( pipe._id, function( storedPipe ){
 				storedPipe.run = runDoc._id;
 				pipe = storedPipe;
 				return storedPipe;
@@ -158,7 +159,7 @@ function pipeRunStats(pipe, steps, callback){
 		save();
 		
 		//Remove the run from the pipe
-		pipeDb.upsert( pipe._id, function( storedPipe ){
+		pipesDb.upsert( pipe._id, function( storedPipe ){
 			if ( storedPipe && storedPipe.hasOwnProperty("run") ){
 				delete storedPipe["run"];
 			}
@@ -173,7 +174,7 @@ function pipeRunStats(pipe, steps, callback){
 			});
 			
 			//Save the log file as an attachment to the run
-			pipeDb.attachLogFileToRun( logger.logPath, runDoc, function(err){
+			pipesDb.attachLogFileToRun( logger.logPath, runDoc, function(err){
 				if ( err ){
 					logger.error("Unable to attach log file %s to run document %s : %s", logger.logPath, runDoc._id, err );
 				}				

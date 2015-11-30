@@ -22,8 +22,9 @@
  * 
  */
 
-var connector = require('../connector');
-var pipeDb = require('../../pipeStorage');
+var pipesSDK = require('pipes-sdk');
+var connector = pipesSDK.connector;
+var pipesDb = pipesSDK.pipesDb;
 var qs = require('querystring');
 var request = require('request');
 var stripeConUtil = require('./stripeConUtil.js');
@@ -46,9 +47,9 @@ function stripe( parentDirPath ){
 	    new (require('./copyFromStripeToCloudantStep.js'))(),
 	    // run dataworks activities that copy data from the staging
         // databases to dashDB   			
-	    new (require('../../run/cloudantToDashActivitiesStep'))(),
+	    new pipesSDK.cloudantToDashActivitiesStep(),
 	    // monitor dataworks activities until completion
-	    new (require('../../run/activitiesMonitoringStep'))()               
+	    new pipesSDK.activitiesMonitoringStep()               
     ]);
 	
 	/**
@@ -64,7 +65,7 @@ function stripe( parentDirPath ){
 	this.connectDataSource = function( req, res, pipeId, url, callback ){
 
 		// fetch data pipe configuration from the repository database
-		pipeDb.getPipe( pipeId, function( err, pipe ){
+		pipesDb.getPipe( pipeId, function( err, pipe ){
 			if ( err ){
 				// the pipe configuration could not be located
 				return callback( err );
@@ -86,7 +87,7 @@ function stripe( parentDirPath ){
 														  				 state: JSON.stringify( {pipe: pipe._id, url: url })})); 
 
 
-		}); // pipeDb.getPipe
+		}); // pipesDb.getPipe
 	}; // connectDataSource
 
 	/**
@@ -99,7 +100,7 @@ function stripe( parentDirPath ){
 	this.authCallback = function( oAuthCode, pipeId, callback ){
 				
 		 // fetch data pipe configuration from the repository database
-		pipeDb.getPipe( pipeId, function( err, pipe ){
+		pipesDb.getPipe( pipeId, function( err, pipe ){
 			if ( err ){
 				return callback( err );
 			}
@@ -155,7 +156,7 @@ function stripe( parentDirPath ){
 				// return the pipe configuration to the caller who will save it 
 				callback( null, pipe );			
 			}); // request.post
-		});	 // pipeDb.getPipe	
+		});	 // pipesDb.getPipe	
 	}; // authCallback
 	
 } // stripe

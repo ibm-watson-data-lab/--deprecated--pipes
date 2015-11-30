@@ -5,10 +5,10 @@
 *	@Author: David Taieb
 */
 
-var cloudant = require('./storage');
+var pipesSDK = require('pipes-sdk');
+var cloudant = pipesSDK.cloudant;
 var _ = require("lodash");
 var async = require("async");
-var pipeDb = require("./pipeStorage");
 var connectorAPI = require("./connectorAPI");
 
 function pipeRunner( pipe ){

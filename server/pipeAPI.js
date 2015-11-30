@@ -5,19 +5,21 @@
 *	@Author: David Taieb
 */
 
-var pipeDb = require( './pipeStorage');
+var pipesSDK = require('pipes-sdk');
+var pipesDb = pipesSDK.pipesDb;
 var global = require('bluemix-helper-config').global;
 var webSocket = require('ws');
 var webSocketServer = webSocket.Server;
 var _  = require('lodash');
 var pipeRunner = require("./pipeRunner");
 var connectorAPI = require("./connectorAPI");
+var nodeStatic = require('node-static');
 
 module.exports = function( app ){
 	
 	//Private APIs
 	var getPipe = function( pipeId, callback, noFilterForOutbound ){
-		pipeDb.getPipe( pipeId, function( err, pipe ){
+		pipesDb.getPipe( pipeId, function( err, pipe ){
 			if ( err ){
 				return callback( err );
 			}
@@ -30,7 +32,7 @@ module.exports = function( app ){
 	 * Get list of existing data pipes
 	 */
 	app.get('/pipes', function(req, res) {
-		pipeDb.listPipes( function( err, pipes ){
+		pipesDb.listPipes( function( err, pipes ){
 			if ( err ){
 				return global.jsonError( res, err );
 			}
@@ -39,12 +41,30 @@ module.exports = function( app ){
 	});
 	
 	function validatePipePayload( pipe ){
-		var requiredFields = null;
+		var requiredFields = ['name', 'connectorId'];
 		if ( pipe.hasOwnProperty("new") ){
-			requiredFields = ['name', 'connectorId'];
 			delete pipe['new'];
 		}else{
-			requiredFields = ['name', 'clientId', 'clientSecret', 'connectorId'];
+			//Ask the connector for required field
+			var connector = connectorAPI.getConnector( pipe );
+			if ( !connector ){
+				throw new Error("Unable to get connector information for pipe");
+			}
+			
+			if ( !!connector.getOption('useOAuth') ){
+				requiredFields.push('clientId');
+				requiredFields.push('clientSecret');
+			}
+			
+			if ( connector.getOption('extraRequiredFields') ){
+				var extraReq = connector.getOption('extraRequiredFields');
+				if ( !_.isArray(extraReq )){
+					extraReq = [extraReq];
+				}
+				_.forEach( extraReq, function(field){
+					requiredFields.push(field);
+				})
+			}
 		}
 		
 		requiredFields.forEach( function( field ){
@@ -64,7 +84,7 @@ module.exports = function( app ){
 		}catch( e ){
 			return global.jsonError( res, e );
 		}
-		pipeDb.savePipe( pipe, function( err, pipe ){
+		pipesDb.savePipe( pipe, function( err, pipe ){
 			if ( err ){
 				return global.jsonError( res, err );
 			}
@@ -77,7 +97,7 @@ module.exports = function( app ){
 	 * Delete
 	 */
 	app.delete('/pipes/:id', function( req, res ){
-		pipeDb.removePipe( req.params.id, function( err, pipe ){
+		pipesDb.removePipe( req.params.id, function( err, pipe ){
 			if ( err ){
 				return global.jsonError( res, err );
 			}
@@ -90,7 +110,7 @@ module.exports = function( app ){
 	 * Returns the last 10 runs
 	 */
 	app.get("/runs", function( req, res ){
-		pipeDb.run( function( err, db ){
+		pipesDb.run( function( err, db ){
 			db.view( 'application', "all_runs", 
 					{startkey: [{}, req.params.pipeid], endKey:[0, req.params.pipeid],'include_docs':true, 'limit': 10, descending:true},
 				function(err, data) {
@@ -109,7 +129,7 @@ module.exports = function( app ){
 	 * Returns the last 10 runs for given pipe
 	 */
 	app.get("/runs/:pipeid", function( req, res ){
-		pipeDb.run( function( err, db ){
+		pipesDb.run( function( err, db ){
 			db.view( 'application', "all_runs_for_pipe", 
 					{key: req.params.pipeid,'include_docs':true, 'limit': 10, descending:true},
 				function(err, data) {
@@ -148,7 +168,7 @@ module.exports = function( app ){
 			
 			if ( pipe.run ){
 				//Check if the run is finished, if so remove the run
-				pipeDb.getRun( pipe.run, function( err, run ){
+				pipesDb.getRun( pipe.run, function( err, run ){
 					// i63
 					if ( err || run.status == 'FINISHED' || run.status == 'STOPPED' || run.status == 'ERROR'){
 						console.log("Pipe has a reference to a run that has already completed. OK to proceed...");
@@ -175,6 +195,30 @@ module.exports = function( app ){
 			
 		}, true);
 	};
+
+	//Default FileServer pointing at the built-in template files
+	var defaultFileServer = new nodeStatic.Server('./app/templates');
+	app.get("/template/:pipeId/:tab", function( req, res ){
+		//Get the connector for this pipeid
+		connectorAPI.getConnectorForPipeId( req.params.pipeId, function( err, connector ){
+			if ( err ){
+				return global.jsonError( res, err );
+			}
+			
+			//The filename to look for (can come from the connector or the default location)
+			var fileName = 'pipeDetails.' + req.params.tab + '.html';
+			
+			//Try the connectorsFileServer first
+			connector.fileServer = connector.fileServer || new nodeStatic.Server( connector.path);
+			connector.fileServer
+				.serveFile( "templates/" + fileName, 200, {}, req, res )
+				.on("error",function(err){
+					//console.log("Not able to serve from connectorsFileServer: " + err );
+					defaultFileServer.serveFile(fileName, 200, {}, req,res);
+				 });
+			
+		});
+	});
 	
 	/**
 	 * Start a new pipe run
@@ -251,7 +295,7 @@ module.exports = function( app ){
 				}
 				
 				//Save the pipe
-				pipeDb.savePipe( pipe, function( err, data ){
+				pipesDb.savePipe( pipe, function( err, data ){
 					if ( err ){
 						return global.jsonError( res, err );
 					}

@@ -8,8 +8,9 @@
  * @author David Taieb
  */
 
-var connectorExt = require("../connectorExt");
-var pipeDb = require("../../pipeStorage");
+var pipesSDK = require('pipes-sdk');
+var connectorExt = pipesSDK.connectorExt;
+var pipesDb = pipesSDK.pipesDb;
 var jsforce = require("jsforce");
 var sf = require("./sf");
 var async = require('async');
@@ -43,7 +44,7 @@ function sfConnector( parentDirPath ){
 			//Refresh the token for next time
 			pipe.sf.accessToken = accessToken;
 			//Save the pipe
-			pipeDb.savePipe( pipe, function( err, storedPipe ){
+			pipesDb.savePipe( pipe, function( err, storedPipe ){
 				if ( err ){
 					return logger.error( "Error saving the refreshed token: " + err );
 				}

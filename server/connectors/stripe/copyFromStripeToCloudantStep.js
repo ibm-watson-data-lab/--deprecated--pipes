@@ -16,7 +16,8 @@
 
 'use strict';
 
-var pipeRunStep = require('../../run/pipeRunStep.js');
+var pipesSDK = require('pipes-sdk');
+var pipeRunStep = pipesSDK.pipeRunStep;
 var Stripe = require('stripe');
 var stripeConUtil = require('./stripeConUtil.js'); 
 var _ = require('lodash');
