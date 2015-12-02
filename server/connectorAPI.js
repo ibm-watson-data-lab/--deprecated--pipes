@@ -29,7 +29,7 @@ function connectorAPI(){
 			readCustomControllers( path.join(connector.path, "controllers"), connector );
 			return connector;
 		}catch(e){
-			console.log("Invalid connector found at location %s. Make sure to export an object that inherit from connector object", parentDirPath );
+			console.log("Invalid connector found at location %s. Make sure to export an object that inherit from connector object", connectorPath );
 			console.log(e.stack);
 			return null;
 		}
