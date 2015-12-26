@@ -250,7 +250,9 @@ module.exports = function( app ){
 				if ( err ){
 					return global.jsonError( res, err );
 				}
-				return res.json( results );
+				if ( !res.headersSent ){
+					return res.json( results );
+				}
 			});
 		});
 	});
