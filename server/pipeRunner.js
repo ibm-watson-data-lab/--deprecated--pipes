@@ -47,8 +47,10 @@ function pipeRunner( pipe ){
 			}.bind(this));
 			return [retTable];
 		}
-		//Return all tables
-		return pipe.tables;
+		//Return all tables, filter out the one with no name
+		return _.filter(pipe.tables, function(table){
+			return !!table.name;
+		});
 	}.bind( this );
 	
 	/**
