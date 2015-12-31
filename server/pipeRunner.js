@@ -31,6 +31,22 @@ function pipeRunner( pipe ){
 		return connector.getSteps();
 	};
 	
+	var runStarted = function(readyCallback){
+		var connector = connectorAPI.getConnector( pipe );
+		if ( !connector ){
+			return console.log("Can't find connector %s", pipe.connectorId );
+		}
+		return connector.runStarted(readyCallback);
+	}
+	
+	var runFinished = function(){
+		var connector = connectorAPI.getConnector( pipe );
+		if ( !connector ){
+			return console.log("Can't find connector %s", pipe.connectorId );
+		}
+		return connector.runFinished();
+	}
+	
 	//Public APIs
 	/**
 	 * getSourceTables
@@ -71,26 +87,32 @@ function pipeRunner( pipe ){
 				if ( err ){
 					return pipeRunStats.done( err );
 				}
-				var logger = pipeRunStats.logger;
-				async.eachSeries( steps, function( step, callback ){
-					try{
-						step.beginStep( this, pipeRunStats );
-						step.run( function( err ){
-							if ( err ){
-								return callback( err );
-							}
-							step.endStep( callback );
-						});
-					}catch(e){
-						//Error caught
-						logger.error("Exception caught: " + e);
-						logger.error("Stack: " + e.stack);
-						step.endStep( callback, e );
+				runStarted(function(err){
+					if ( err ){
+						return pipeRunStats.done(err);
 					}
-				}.bind(this), function( err ){
-					//All done
-					pipeRunStats.done( err );
-				});
+					var logger = pipeRunStats.logger;
+					async.eachSeries( steps, function( step, callback ){
+						try{
+							step.beginStep( this, pipeRunStats );
+							step.run( function( err ){
+								if ( err ){
+									return callback( err );
+								}
+								step.endStep( callback );
+							});
+						}catch(e){
+							//Error caught
+							logger.error("Exception caught: " + e);
+							logger.error("Stack: " + e.stack);
+							step.endStep( callback, e );
+						}
+					}.bind(this), function( err ){
+						//All done
+						runFinished(err);
+						pipeRunStats.done( err );
+					});
+				}.bind(this));
 			}.bind(this));
 			
 			//Request accepted, send response back to the client immediately
