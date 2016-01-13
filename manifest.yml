@@ -7,8 +7,8 @@ declared-services:
     label: dashDB
     plan: Entry
   pipes-dataworks-service:
-    label: DataWorks
-    plan: free
+    label: DataWorks_Gen3
+    plan: Starter
   pipes-sso-service:
     label: SingleSignOn
     plan: standard
