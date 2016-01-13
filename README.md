@@ -39,7 +39,7 @@ Create a dashDB service within Bluemix if one has not already been created:
 
 Create a DataWorks service within Bluemix if one has not already been created:
 
-    $ cf create-service DataWorks free pipes-dataworks-service
+    $ cf create-service DataWorks_Gen3 Starter pipes-dataworks-service
 
 Create a Single Sign On (SSO) service within Bluemix if one has not already been created:
 
