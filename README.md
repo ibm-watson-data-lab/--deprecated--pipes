@@ -19,7 +19,12 @@ The fastest way to deploy this application to Bluemix is to click the **Deploy t
 
 [![Deploy to Bluemix](https://deployment-tracker.mybluemix.net/stats/8c0fa6ec632fc1715cefebeaf0913740/button.svg)](https://bluemix.net/deploy?repository=https://github.com/ibm-cds-labs/pipes)
 
-**Don't have a Bluemix account?** If you haven't already, you'll be prompted to [sign up](http://www.ibm.com/cloud-computing/bluemix/) for a Bluemix account when you click the button.  Sign up, verify your email address, then return here and click the the **Deploy to Bluemix** button again. Your new credentials let you deploy to the platform and also to code online with Bluemix and Git. If you have questions about working in Bluemix, find answers in the [Bluemix Docs](https://www.ng.bluemix.net/docs/).
+If you:
+<ul>
+<li><strong>don't have a Bluemix account</strong>,  you'll be prompted to <a href="http://www.ibm.com/cloud-computing/bluemix/" target="_blank">sign up</a>.  Create your account, verify your email address, then return here and click the the <strong>Deploy to Bluemix</strong> button again. </li>
+<li><strong>have trouble deploying</strong>, make sure you haven't already reached your Bluemix memory and services quotas. You get 10 services with your account's free trial period. If you have questions about working in Bluemix, find answers in the <a href="https://www.ng.bluemix.net/docs/" target="_blank">Bluemix Docs</a>.</li>
+</ul>
+
 
 ### Configuring Cloud Foundry
 
