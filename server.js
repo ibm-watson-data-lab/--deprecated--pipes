@@ -122,5 +122,3 @@ if (process.env.VCAP_APP_HOST){
 if ( wssConfigurator && server ){
 	wssConfigurator( server );
 }
-
-require("cf-deployment-tracker-client").track();
